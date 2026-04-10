@@ -2,11 +2,25 @@
 title: "An introduction to parallelism"
 ---
 
+::: questions
+
+- What is parallelism?
+- What factors should I consider before parallelising my code?
+
+:::
+
+::: objectives
+
+- Understand the difference between task and data parallelism
+- Know the dangers of parallelism
+
+:::
+
+## Serial programming
+
 Serial programming is by far the simplest programming model and is the easiest to reason about.
 
 Serial programming should always be preferred unless performance needs necessitate otherwise.
-
-## Serial programming
 
 ## Task Parallelism
 
