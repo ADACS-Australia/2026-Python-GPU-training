@@ -164,6 +164,7 @@ def psum(xs):
 xs = np.ones(1_000_000)
 print("Sum:", psum(xs))
 ```
+:::
 
 ::: solution
 
