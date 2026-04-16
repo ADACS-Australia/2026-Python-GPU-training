@@ -1078,8 +1078,17 @@ important</li>
 <section><h2 class="section-heading" id="cupy-as-a-drop-in-replacement-for-numpy">CuPy as a drop-in replacement for Numpy<a class="anchor" aria-label="anchor" href="#cupy-as-a-drop-in-replacement-for-numpy"></a>
 </h2>
 <hr class="half-width">
-<p>CuPy is a library that provides a multidimensional array type very
-similar to Numpy’s <code>ndarray</code>.</p>
+<p><a href="https://numpy.org/" class="external-link">Numpy’s</a> innovation has been to make
+high-performance <a href="https://en.wikipedia.org/wiki/Array_programming" class="external-link">array
+programming</a> easily accessible from within Python. It has done this
+thanks to its multidimensional <code>ndarray</code> type which can be
+manipulated using scalar and elementwise operators, a range of
+mathematical functions, and very flexible broadcasting rules.</p>
+<p>CuPy is the GPU equivalent to Numpy, and likewise it is based on its
+own <code>ndarray</code> type that lives on the GPU. If you are
+comforable with numpy, CuPy should feel very familiar. Before attempting
+more advanced GPU programming techniques, CuPy should be your first port
+of call.</p>
 </section><section><h2 class="section-heading" id="cpu-arrays-versus-gpu-arrays">CPU arrays versus GPU arrays<a class="anchor" aria-label="anchor" href="#cpu-arrays-versus-gpu-arrays"></a>
 </h2>
 <hr class="half-width">
@@ -1245,7 +1254,14 @@ immediately, whilst the GPU continued to execute in the background.</p>
 <p>For me, benchmarking shows 0.008 ms recorded by the CPU, and 1.7 ms
 on the GPU — both very similar to what we measured earlier before and
 after we added the explicit synchronisation.</p>
-<div class="exercise">
+<div id="discussion1" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
 <p>Modify the previous benchmark in the following way:</p>
 <ul>
 <li>Create the vectors <code>a</code> and <code>b</code> as numpy arrays
@@ -1254,6 +1270,8 @@ first.</li>
 <code>my_computation</code> function.</li>
 </ul>
 <p>How does this affect the benchmark? Why?</p>
+</div>
+</div>
 </div>
 <div id="accordionSolution1" class="accordion challenge-accordion accordion-flush">
 <div class="accordion-item">
@@ -1507,7 +1525,7 @@ notation</a>, e.g.:</p>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a></span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
 </div>
-<div id="discussion1" class="callout discussion">
+<div id="discussion2" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
