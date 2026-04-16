@@ -17,7 +17,9 @@ title: "CuPy: A Numpy-like GPU experience"
 
 ## CuPy as a drop-in replacement for Numpy
 
-CuPy is a library that provides a multidimensional array type very similar to Numpy's `ndarray`.
+[Numpy's](https://numpy.org/) innovation has been to make high-performance [array programming](https://en.wikipedia.org/wiki/Array_programming) easily accessible from within Python. It has done this thanks to its multidimensional `ndarray` type which can be manipulated using scalar and elementwise operators, a range of mathematical functions, and very flexible broadcasting rules.
+
+CuPy is the GPU equivalent to Numpy, and likewise it is based on its own `ndarray` type that lives on the GPU. If you are comforable with numpy, CuPy should feel very familiar. Before attempting more advanced GPU programming techniques, CuPy should be your first port of call.
 
 ## CPU arrays versus GPU arrays
 
@@ -152,7 +154,7 @@ This function inserts event timers onto the GPU device and is able to measure tw
 
 For me, benchmarking shows 0.008 ms recorded by the CPU, and 1.7 ms on the GPU — both very similar to what we measured earlier before and after we added the explicit synchronisation.
 
-::: exercise
+::: challenge
 
 Modify the previous benchmark in the following way:
 
