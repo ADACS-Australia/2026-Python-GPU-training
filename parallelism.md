@@ -16,6 +16,8 @@ title: "An introduction to parallelism"
 
 :::
 
+
+
 ## Serial programming
 
 Serial programming is by far the simplest programming model and is the easiest to reason about.
