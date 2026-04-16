@@ -270,6 +270,30 @@
 </div>
 <!--/div.accordion-flush-->
 
+<div class="accordion accordion-flush" id="accordionFlush4">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading4">
+        <a href="gpu-deepdive.html">3. A GPU Deep Dive</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush5">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading5">
+        <a href="CuPy.html">4. CuPy: A Numpy-like GPU experience</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
                 </div>
               </div>
             </div>
@@ -322,11 +346,11 @@
         <!-- START: inst/pkgdown/templates/content-extra.html -->
   <div class="col-xl-8 col-lg-12 primary-content">
     <main id="main-content" class="main-content"><div class="container lesson-content">
-        
+        <h1>All in One View</h1>
         
 <section id="aio-introduction"><p>Content from <a href="introduction.html">Using Markdown</a></p>
 <hr>
-<p>Last updated on 2026-03-30 |
+<p>Last updated on 2026-04-16 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/introduction.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -382,6 +406,8 @@ displayed with the questions.</li>
 <code>keypoints</code> are displayed at the end of the episode to
 reinforce the objectives.</li>
 </ol>
+<video height="960" width="540"><source src="../assets/gpu-mythbusters.mkv" type="video/webm" srcset="NA"></source></video><p>Source: Nvidia on Youtube (<a href="https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI" class="external-link uri">https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI</a>)</p>
+
 <div id="challenge-1-can-you-do-it" class="callout challenge">
 <div class="callout-square">
 <i class="callout-icon" data-feather="zap"></i>
@@ -405,7 +431,7 @@ reinforce the objectives.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Output </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper">
 <h3 class="code-label">OUTPUT<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -434,7 +460,7 @@ challenge blocks?</h3>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>You can add a line with at least three colons and a
 <code>solution</code> tag.</p>
@@ -498,7 +524,7 @@ any links that you are not going to use.
  -->
 </section></section><section id="aio-parallelism"><p>Content from <a href="parallelism.html">An introduction to parallelism</a></p>
 <hr>
-<p>Last updated on 2026-04-10 |
+<p>Last updated on 2026-04-16 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/parallelism.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -682,10 +708,10 @@ each item in an array down one element (and wrap around):</p>
 <div class="codewrapper sourceCode" id="cb1">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>xs <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):  <span class="co"># prange executes each iteration of the loop in parallel</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    x <span class="op">=</span> xs[i]</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>    xs[i <span class="op">-</span> <span class="dv">1</span>] <span class="op">=</span> x  <span class="co"># shift down</span></span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1" aria-label="code-block-1-1"></a>xs <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1" aria-label="code-block-1-2"></a><span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):  <span class="co"># prange executes each iteration of the loop in parallel</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>    x <span class="op">=</span> xs[i]</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>    xs[i <span class="op">-</span> <span class="dv">1</span>] <span class="op">=</span> x  <span class="co"># shift down</span></span></code></pre>
 </div>
 <p>This is example of a race condition: the code implicitly expects all
 threads to have read from <code>xs</code> before any thread then writes
@@ -697,11 +723,11 @@ vice versa.</p>
 <div class="codewrapper sourceCode" id="cb2">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>xs <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">2</span>, ...]</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>x_sum <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    x_sum <span class="op">+=</span> xs[i]</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a>xs <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">2</span>, ...]</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a>x_sum <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a>    x_sum <span class="op">+=</span> xs[i]</span></code></pre>
 </div>
 <p>This is also subject to a data race. Even though the operation
 <code>x_sum += xs[i]</code> <em>looks</em> like a single instruction, it
@@ -749,21 +775,21 @@ serial form first, and use this to test your parallel code later.</p>
 <div class="codewrapper sourceCode" id="cb3">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="kw">def</span> psum(xs):</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="co"># We use an array of len=1 to avoid numba automatically</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="co"># fixing our race condition</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    x_sum <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>        x_sum[<span class="dv">0</span>] <span class="op">+=</span> xs[i]</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>    <span class="cf">return</span> x_sum[<span class="dv">0</span>]</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, psum(xs))</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a><span class="kw">def</span> psum(xs):</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a>    <span class="co"># We use an array of len=1 to avoid numba automatically</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a>    <span class="co"># fixing our race condition</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a>    x_sum <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1" aria-label="code-block-3-10"></a>        x_sum[<span class="dv">0</span>] <span class="op">+=</span> xs[i]</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1" aria-label="code-block-3-11"></a></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1" aria-label="code-block-3-12"></a>    <span class="cf">return</span> x_sum[<span class="dv">0</span>]</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1" aria-label="code-block-3-13"></a></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1" aria-label="code-block-3-14"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1" aria-label="code-block-3-15"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, psum(xs))</span></code></pre>
 </div>
 </div>
 </div>
@@ -773,26 +799,26 @@ serial form first, and use this to test your parallel code later.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange, get_num_threads, get_thread_id</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="kw">def</span> psum(xs):</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="co"># Give each thread a unique array index</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    x_sum <span class="op">=</span> np.zeros(get_num_threads())</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>        x_sum[get_thread_id()] <span class="op">+=</span> xs[i]</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="co"># Finally sum the individual thread sums in the main thread</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="cf">return</span> x_sum.<span class="bu">sum</span>()</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, psum(xs))</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" tabindex="-1" aria-label="code-block-4-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1" aria-label="code-block-4-2"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange, get_num_threads, get_thread_id</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1" aria-label="code-block-4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1" aria-label="code-block-4-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1" aria-label="code-block-4-5"></a><span class="kw">def</span> psum(xs):</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1" aria-label="code-block-4-6"></a>    <span class="co"># Give each thread a unique array index</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1" aria-label="code-block-4-7"></a>    x_sum <span class="op">=</span> np.zeros(get_num_threads())</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1" aria-label="code-block-4-8"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1" aria-label="code-block-4-9"></a>        x_sum[get_thread_id()] <span class="op">+=</span> xs[i]</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1" aria-label="code-block-4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1" aria-label="code-block-4-11"></a>    <span class="co"># Finally sum the individual thread sums in the main thread</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1" aria-label="code-block-4-12"></a>    <span class="cf">return</span> x_sum.<span class="bu">sum</span>()</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1" aria-label="code-block-4-13"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1" aria-label="code-block-4-14"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1" aria-label="code-block-4-15"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, psum(xs))</span></code></pre>
 </div>
 </div>
 </div>
@@ -803,6 +829,806 @@ Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
  -->
 </div>
+</section></section><section id="aio-gpu-deepdive"><p>Content from <a href="gpu-deepdive.html">A GPU Deep Dive</a></p>
+<hr>
+<p>Last updated on 2026-04-16 |
+
+        <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
+<div class="text-end">
+          <button role="button" aria-pressed="false" tabindex="0" id="expand-code" class="pull-right" data-expand="Expand All Solutions " data-collapse="Collapse All Solutions "> Expand All Solutions <i aria-hidden="true" data-feather="plus"></i></button>
+        </div>
+<div class="overview card">
+<h2 class="card-header">Overview</h2>
+<div class="row g-0">
+<div class="col-md-4">
+<div class="card-body">
+<div class="inner">
+<h3 class="card-title">Questions</h3>
+<ul>
+<li>What is a GPU?</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="col-md-8">
+<div class="card-body">
+<div class="inner bordered">
+<h3 class="card-title">Objectives</h3>
+<ul>
+<li>Understand a warp why multiples of 32 (or 64) threads is
+important</li>
+<li>Understand the hierarchy of GPU memory</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section><h2 class="section-heading" id="a-little-history">A little history<a class="anchor" aria-label="anchor" href="#a-little-history"></a>
+</h2>
+<hr class="half-width">
+<p>Grahics Processing Units (GPUs) were originally built to offload 2D
+and 3D visualisation computation from the CPU onto a dedicated device.
+The nature of video processing workloads meant that GPUs were built to
+handle data parallel workloads from the start. As GPUs became
+increasingly sophisticated, especially with the advent of programmable
+shaders and floating point support, it became apparent that GPUs offered
+the potential to perform <em>general purpose</em> computation (GPGPU).
+By early as 2003 there were already papers demonstrating how GPU
+graphics primitives could be repurposed to perform linear algebra.</p>
+<p>NVIDIA formalised this general purpose computing on its GPUs with its
+relase of the CUDA library in 2006. Much later in 2016, AMD released
+ROCm which provided a similar GPGPU interface to its own hardware. There
+are also open source APIs including OpenCL and Sycl, Microsoft’s OneAPI
+which claims to bridge a range of accelerators, as well as AMD’s
+cross-platform compatility layer known as HIP. Despite these offerings,
+there remains strong vendor lock-in and NVIDIA and its proprietary CUDA
+API remains dominant.</p>
+<p>Today, GPUs have diverged somewhat in their design depending on
+whether they are destined to function as a true <em>graphics</em>
+processing device or as more general purpose compute
+<em>accelerator</em>. Increasingly, AI workloads are driving design
+decisions that might not be useful for (or even harm!) some scientific
+workloads.</p>
+</section><section><h2 class="section-heading" id="the-gpu">The GPU<a class="anchor" aria-label="anchor" href="#the-gpu"></a>
+</h2>
+<hr class="half-width">
+<p>In most systems, the GPU is phsically distinct from the CPU. It has
+its own computing cores, its own memory, its own floating point units,
+its own controllers, and a host of other units. The CPU and the GPU
+communicate with each other across some kind serialisation link such as
+PCIe.</p>
+<figure><img src="assets/gpu-diagram.png" alt="GPU diagram" class="figure mx-auto d-block"><div class="figcaption">GPU diagram</div>
+</figure><p>In the simplest terms, a GPU is two things:</p>
+<ul>
+<li>Compute, provided by streaming multiprocessors (SM)</li>
+<li>Memory (including DRAM (“global”), SRAM (“shared”), and numerous
+caches)</li>
+</ul>
+<div class="section level3">
+<h3 id="processing-model">Processing model<a class="anchor" aria-label="anchor" href="#processing-model"></a>
+</h3>
+<ul>
+<li>You compute is gridded into thread blocks.</li>
+<li>The GPU scheduler assigns each thread block to an SM when it has
+capacity</li>
+<li>The SM scheduler assigns a warp to a set of 8 cores when those cores
+become free</li>
+<li>Cores become free when: a warp has completed; or a warp “stalls”,
+meaning it is waiting for another unit within the SM such as the memory
+controller, the FPU, or the tensor core</li>
+<li>Each threadblock typically has more threads than there are in one
+warp: this means it will execute as multiple warps</li>
+<li>Each SM typically has multiple threadblocks assigned to it at one
+time. Limits include: register space and shared memory space. If a
+kernel uses a large number of registers or shared memory, this can limit
+the number of thread blocks assigned at any one time to an SM; in turn
+this can mean the SM doesn’t have threads waiting to mask stalls.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="streaming-multiprocessor">Streaming multiprocessor<a class="anchor" aria-label="anchor" href="#streaming-multiprocessor"></a>
+</h3>
+<p>A streaming multiprocessor (SM) is a collection of cores that are
+grouped together and share some resources in common. Take for example
+the recent NVIDIA B200 GPU: this has 148 SM, and each SM has 128
+cores.</p>
+<p>GPU cores (sometimes called a ‘CUDA cores’, or ‘shader processors’)
+are like the cores on your CPU but differ in some important ways:</p>
+<ul>
+<li>They are individually slower. The B200, for example, has clock
+speeds of only 700 MHz. In highly parallelisable computations, thousands
+of slow cores tend to be faster than a handful of very fast cores.</li>
+<li>They are much simpler. This simplicity owes in part to the fact that
+GPUs assume they are always operating in a highly parallel
+configuration: if a core stalls (e.g. waiting for memory), the GPU
+assumes there is always another thread waiting to be assigned so that
+the core won’t sit idle. CPUs, on the other hand, are built assuming
+single-threaded operation, and so use a number of complex techniques to
+make a serial algorthim (partially) parallelisable at the instruction
+level (see e.g. <a href="https://en.wikipedia.org/wiki/Out-of-order_execution" class="external-link">out of order
+execution</a> or <a href="https://en.wikipedia.org/wiki/Branch_predictor" class="external-link">branch
+prediction</a>).</li>
+<li>They are physically smaller, mostly as a result of being slower and
+simpler.</li>
+<li>They don’t have their own register space. Registers are the small
+“scratch pad” of memory that is immediately accessible by a core. On a
+CPU, the register is attached to the core, with the downside that if a
+thread moves between cores it must also move the register memroy. On a
+GPU, the register space is shared amongst the SM, which makes it easy to
+suspend and resume threads with no overhead.</li>
+<li>They always run in SIMD/SIMT mode. Threads are grouped together into
+a batches of 32 (or 64 on AMD hardware) known as a <em>warp</em> and
+assigned to run in lockstep.</li>
+</ul>
+<p>A SM has a number of resources shared amongst the cores. We’ve
+already seen that the reigster space is shared. In addition, it has a
+shared floating point unit (FPU) where, just like on the CPU, when
+floating point math needs to be performed, the work will be delegated to
+this shared unit. Unlike on CPUs, these FPUs also have specialised
+hardware for computing some more complex math functions, like exponents,
+logarithms and trigonometry. More modern GPUs also have tensor cores
+which are specialised for matrix operations.</p>
+<p>You might ask, why have the streaming mutliprocessor at all? Why have
+this intermediary entity in the hierarchy between the GPU scheduler and
+the cores themselves? The answer: physical locality. A GPU is a physical
+device and distance matters. By grouping the cores and assigning each a
+set shared resources that reside nearby on the die, we can make their
+use cheaper and faster.</p>
+</div>
+<div class="section level3">
+<h3 id="understanding-memory">Understanding memory<a class="anchor" aria-label="anchor" href="#understanding-memory"></a>
+</h3>
+<p>Both a CPU and a GPU have different layers of memory.</p>
+<p>You might already know that reading from disk is very slow compared
+to reading from memory. But “reading from memory” comes in many
+different flavours too.</p>
+<p>For a CPU, the slowest form of memory is reading from system memory.
+So CPU’s have developed all sorts of tricks to “pre-fetch” memory onto
+caches stored within the CPU itself. These are separated by levels
+depending on how far away they are to CPU, the so-called L1, L2, and L3
+caches. The CPU does this automatically, and CPU optimisation often
+involves aligning the CPU’s automatic prefetching with an algorithms
+memory needs.</p>
+<p>With a GPU, there is a lot more manual memory management than you
+might be used to.</p>
+<p>In the first instance, you need to transfer memory from the CPU to
+the GPU’s DRAM or “global” memory. Normally, the GPU can’t “see” memory
+that is stored on the host. This is a particularly slow operation and it
+is important to design algorithms that minimise host to device (or
+device to host) transfers.</p>
+<p>But DRAM is still very slow. The GPU has a number of automatic caches
+designed to make the DRAM faster. The Level 2 cache is a shared by the
+whole GPU and the faster L1 cache is shared by each SM.</p>
+<p>In addition, each SM has its own “shared” memory. This shared memory
+can be manually managed by the programmer and should be used where
+automatic caching is not sufficient.</p>
+<p>Finally, there is also the register space.</p>
+<p>All three of the registers, the shared memory and the L1 cache
+compete for space on a single physical piece of SRAM memory.</p>
+</div>
+</section><div class="section level1">
+<h1 id="some-confusing-terms">Some confusing terms<a class="anchor" aria-label="anchor" href="#some-confusing-terms"></a>
+</h1>
+<p>When you start writing your own kernels, you will need to describe
+how to parallelise those kernels over your data. This is done by
+configuring a <em>grid</em> which is itself composed of a configurable
+number of <em>threads</em>. For example, if you are adding two vectors
+together, you might create as many threads as there are elements of the
+vectors.</p>
+<p>CUDA adds a complication: threads are grouped together into
+<em>thread blocks</em>, and all thread blocks must have the same number
+of threads.</p>
+<figure><img src="assets/threadblocks.png" alt="Grids, composed of thread blocks, composed of threads" class="figure mx-auto d-block"><div class="figcaption">Grids, composed of thread blocks, composed of
+threads</div>
+</figure><p>It can be easy to conflate this software hierarchy (thread blocks)
+with the hardware hierarchy (SMs, cores). They are separate. programming
+model of grid/thread blocks/threads maps onto the physical hardware in
+the following way:</p>
+<ul>
+<li>The thread blocks are collected and readied to be worked on</li>
+<li>When a SM has capacity, a new thread block will be allocated to
+it.</li>
+<li>Multiple thread blocks can be in progress at one time on each SM
+(cf. latency hiding)</li>
+<li>The actual work done as a wap</li>
+</ul>
+<p>You might want to bookmark this section for later once we describe
+launching your own kernels. It is very easy to confuse the software and
+hardware hierarchies.</p>
+<!--
+Place links that you need to refer to multiple times across pages here. Delete
+any links that you are not going to use.
+ -->
+</div></section><section id="aio-CuPy"><p>Content from <a href="CuPy.html">CuPy: A Numpy-like GPU experience</a></p>
+<hr>
+<p>Last updated on 2026-04-16 |
+
+        <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/CuPy.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
+<div class="text-end">
+          <button role="button" aria-pressed="false" tabindex="0" id="expand-code" class="pull-right" data-expand="Expand All Solutions " data-collapse="Collapse All Solutions "> Expand All Solutions <i aria-hidden="true" data-feather="plus"></i></button>
+        </div>
+<div class="overview card">
+<h2 class="card-header">Overview</h2>
+<div class="row g-0">
+<div class="col-md-4">
+<div class="card-body">
+<div class="inner">
+<h3 class="card-title">Questions</h3>
+<ul>
+<li>What is a GPU?</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="col-md-8">
+<div class="card-body">
+<div class="inner bordered">
+<h3 class="card-title">Objectives</h3>
+<ul>
+<li>Understand a warp why multiples of 32 (or 64) threads is
+important</li>
+<li>Understand the hierarchy of GPU memory</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section><h2 class="section-heading" id="cupy-as-a-drop-in-replacement-for-numpy">CuPy as a drop-in replacement for Numpy<a class="anchor" aria-label="anchor" href="#cupy-as-a-drop-in-replacement-for-numpy"></a>
+</h2>
+<hr class="half-width">
+<p>CuPy is a library that provides a multidimensional array type very
+similar to Numpy’s <code>ndarray</code>.</p>
+</section><section><h2 class="section-heading" id="cpu-arrays-versus-gpu-arrays">CPU arrays versus GPU arrays<a class="anchor" aria-label="anchor" href="#cpu-arrays-versus-gpu-arrays"></a>
+</h2>
+<hr class="half-width">
+<p>Numpy’s and CuPy’s arrays are both multidimensional arrays, and they
+both expose similar APIs.</p>
+<p>They differ in <em>where</em> they reside. The CPU (host) and the GPU
+(device) each have their own independent memory, which is something we
+will cover in much more detail later. Objects stored in host memory
+can’t be “seen” by the GPU without first transferring the data across to
+the device, and vice versa.</p>
+<p>Numpy arrays exist in host memory and CuPy arrays exist on the GPU.
+To perform operations involving multiple arrays you must ensure that
+each array is within the same portion of memory: if all the arrays are
+on the host, the computation will be performed by the CPU; if they are
+all on the device, the computation will be peformed by the GPU.</p>
+<p>It’s up to you to handle transferring arrays back and forth between
+the host and device.</p>
+<p>In <code>Numpy</code> we can create a numerical array from a range of
+iterables:</p>
+<div class="codewrapper sourceCode" id="cb1">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1" aria-label="code-block-1-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1" aria-label="code-block-1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>arr1 <span class="op">=</span> np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]). <span class="co"># from a list</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>arr2 <span class="op">=</span> np.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, step<span class="op">=</span><span class="dv">2</span>))  <span class="co"># from a range</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1" aria-label="code-block-1-5"></a>arr3 <span class="op">=</span> np.array([x<span class="op">**</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">100</span>)])  <span class="co"># from a list comprehension</span></span></code></pre>
+</div>
+<p>These arrays all reside in host (CPU) memory.</p>
+<p>To create a CuPy GPU array we can do something very similar and
+merely need to swap out <code>np</code> for <code>cupy</code>:</p>
+<div class="codewrapper sourceCode" id="cb2">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a><span class="im">import</span> cupy</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a>arr1_d <span class="op">=</span> cupy.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])  <span class="co"># from a list</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a>arr2_d <span class="op">=</span> cupy.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, step<span class="op">=</span><span class="dv">2</span>))  <span class="co"># from a range</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a>arr3_d <span class="op">=</span> cupy.array([x<span class="op">**</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">100</span>)])  <span class="co"># from a list comprehension</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="co"># Or transfer across an existing numpy array:</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a>arr4 <span class="op">=</span> np.random.normal(shape<span class="op">=</span><span class="dv">1_000_000</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1" aria-label="code-block-2-10"></a>arr4_d <span class="op">=</span> cupy.array(arr4)  <span class="co"># this is a copy!</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1" aria-label="code-block-2-11"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1" aria-label="code-block-2-12"></a><span class="co"># And to return back to the host:</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1" aria-label="code-block-2-13"></a>arr3 <span class="op">=</span> cupy.asnumpy(arr3_d)</span></code></pre>
+</div>
+<p>Note the convention of appending <code>_d</code> to the names of
+arrays that are on the GPU <strong>d</strong>evice. This is purely
+convention but, in the absence of types, this can help you keep track of
+where an array is located.</p>
+<p>(There’s also <code>cupy.asarray(otherarray)</code>: this will create
+a GPU array <em>only if</em> <code>otherarray</code> isn’t already on
+the GPU device. It’s handy function to ensure an array is on the GPU but
+will avoid a copy if it isn’t needed.)</p>
+</section><section><h2 class="section-heading" id="an-aside-on-benchmarking">An aside: on benchmarking<a class="anchor" aria-label="anchor" href="#an-aside-on-benchmarking"></a>
+</h2>
+<hr class="half-width">
+<div class="section level3">
+<h3 id="pythons-timeit">Python’s <code>timeit</code>
+<a class="anchor" aria-label="anchor" href="#pythons-timeit"></a>
+</h3>
+<p>In Python, the easiest way to benchmark some code is to use the
+built-in module <code>timeit</code>.</p>
+<p>For example:</p>
+<div class="codewrapper sourceCode" id="cb3">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="im">import</span> timeit</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a>a <span class="op">=</span> np.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a>b <span class="op">=</span> np.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a><span class="kw">def</span> my_computation(a, b):</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>    a <span class="op">+=</span> b</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1" aria-label="code-block-3-10"></a></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1" aria-label="code-block-3-11"></a>timer <span class="op">=</span> timeit.Timer(<span class="kw">lambda</span>: my_computation(a, b))</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1" aria-label="code-block-3-12"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1" aria-label="code-block-3-13"></a><span class="co"># Call `do_some_work()` just once, and repeat this 10 times</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1" aria-label="code-block-3-14"></a>elapsed_times <span class="op">=</span> timer.repeat(repeat<span class="op">=</span><span class="dv">10</span>, number<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1" aria-label="code-block-3-15"></a><span class="bu">print</span>(<span class="bu">min</span>(elapsed_times))</span></code></pre>
+</div>
+<p>The first argument to <code>Timer()</code> must be a callable that
+takes no arguments; we use a lambda function to capture and pass in the
+arguments. The method <code>repeat()</code> will return a set of times
+for each iteration. In most cases, you want to take the <em>minimum</em>
+value from these repeats.</p>
+<p>Now we can try running this same code on the GPU using CuPy:</p>
+<div class="codewrapper sourceCode" id="cb4">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" tabindex="-1" aria-label="code-block-4-1"></a><span class="im">import</span> timeit</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1" aria-label="code-block-4-2"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1" aria-label="code-block-4-3"></a><span class="im">import</span> cupy</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1" aria-label="code-block-4-4"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1" aria-label="code-block-4-5"></a>a <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1" aria-label="code-block-4-6"></a>b <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1" aria-label="code-block-4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1" aria-label="code-block-4-8"></a><span class="kw">def</span> my_computation(a, b):</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1" aria-label="code-block-4-9"></a>    a <span class="op">+=</span> b</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1" aria-label="code-block-4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1" aria-label="code-block-4-11"></a>timer <span class="op">=</span> timeit.Timer(<span class="kw">lambda</span>: my_computation(a, b))</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1" aria-label="code-block-4-12"></a></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1" aria-label="code-block-4-13"></a><span class="co"># Call `do_some_work()` just once, and repeat this 10 times</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1" aria-label="code-block-4-14"></a>elapsed_times <span class="op">=</span> timer.repeat(repeat<span class="op">=</span><span class="dv">10</span>, number<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1" aria-label="code-block-4-15"></a><span class="bu">print</span>(<span class="bu">min</span>(elapsed_times))</span></code></pre>
+</div>
+<p>Notice all we did to run this on the GPU was to swap the
+<code>np</code> namespace calls to <code>cupy</code>.</p>
+<p>The time looks great. On my machine, the Numpy computation takes 0.44
+ms whilst the CuPy takes 0.005 ms.</p>
+<p>But there’s a problem with this benchmarking. The CuPy code is being
+executed asynchronously: we are sending the computation to the GPU and
+then immediately continuing without waiting for the result. Since the
+CPU and the GPU are separate devices this is a great way to keep sending
+work across to the GPU, but it hides the true time of the
+computation.</p>
+<p>One solution here is to force the code to behave synchronously. And
+we can do that by manually inserting a synchronisation call at the tail
+of our computation function:</p>
+<div class="codewrapper sourceCode" id="cb5">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" tabindex="-1" aria-label="code-block-5-1"></a><span class="kw">def</span> my_computation(a, b):</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1" aria-label="code-block-5-2"></a>    a <span class="op">+=</span> b</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1" aria-label="code-block-5-3"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1" aria-label="code-block-5-4"></a>    <span class="co"># Wait here until the GPU is finished</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1" aria-label="code-block-5-5"></a>    cupy.cuda.get_current_stream().synchronize()</span></code></pre>
+</div>
+<p>Now if we measure the timings, the CuPy version on my machine takes
+1.8 ms. That’s still a great time but its 3 orders of magnitude slower
+than we first reported!</p>
+</div>
+<div class="section level3">
+<h3 id="using-cupyx-benchmark">Using <code>cupyx.benchmark()</code>
+<a class="anchor" aria-label="anchor" href="#using-cupyx-benchmark"></a>
+</h3>
+<p>Another way to avoid these issues is to use the benchmarking function
+provided by CuPy:</p>
+<div class="codewrapper sourceCode" id="cb6">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" tabindex="-1" aria-label="code-block-6-1"></a><span class="im">import</span> cupy</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1" aria-label="code-block-6-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1" aria-label="code-block-6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1" aria-label="code-block-6-4"></a>a <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1" aria-label="code-block-6-5"></a>b <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1" aria-label="code-block-6-6"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1" aria-label="code-block-6-7"></a><span class="kw">def</span> my_computation(a, b):</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1" aria-label="code-block-6-8"></a>    a <span class="op">+=</span> b</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1" aria-label="code-block-6-9"></a></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1" aria-label="code-block-6-10"></a>results <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: my_computation(a, b), n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1" aria-label="code-block-6-11"></a><span class="bu">print</span>(results)</span></code></pre>
+</div>
+<p>This function inserts event timers onto the GPU device and is able to
+measure two different times: the CPU time and the GPU time. If you run
+this, you’ll notice that the CPU time is much less than the GPU time,
+since the asynchronous computation returned control to the CPU almost
+immediately, whilst the GPU continued to execute in the background.</p>
+<p>For me, benchmarking shows 0.008 ms recorded by the CPU, and 1.7 ms
+on the GPU — both very similar to what we measured earlier before and
+after we added the explicit synchronisation.</p>
+<div class="exercise">
+<p>Modify the previous benchmark in the following way:</p>
+<ul>
+<li>Create the vectors <code>a</code> and <code>b</code> as numpy arrays
+first.</li>
+<li>Transfer these to GPU arrays <em>inside</em> the
+<code>my_computation</code> function.</li>
+</ul>
+<p>How does this affect the benchmark? Why?</p>
+</div>
+<div id="accordionSolution1" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
+  <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
+</button>
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div class="accordion-body">
+<div class="codewrapper sourceCode" id="cb7">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" tabindex="-1" aria-label="code-block-7-1"></a><span class="im">import</span> cupy</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1" aria-label="code-block-7-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1" aria-label="code-block-7-3"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1" aria-label="code-block-7-4"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1" aria-label="code-block-7-5"></a>a <span class="op">=</span> np.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1" aria-label="code-block-7-6"></a>b <span class="op">=</span> np.random.normal(size<span class="op">=</span><span class="dv">100_000_000</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1" aria-label="code-block-7-7"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1" aria-label="code-block-7-8"></a><span class="kw">def</span> my_computation(a, b):</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1" aria-label="code-block-7-9"></a>    a_d <span class="op">=</span> cupy.array(a)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1" aria-label="code-block-7-10"></a>    b_d <span class="op">=</span> cupy.array(b)</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1" aria-label="code-block-7-11"></a>    a_d <span class="op">+=</span> b_d</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1" aria-label="code-block-7-12"></a></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1" aria-label="code-block-7-13"></a>results <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: my_computation(a, b), n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1" aria-label="code-block-7-14"></a><span class="bu">print</span>(results)</span></code></pre>
+</div>
+<p>The benchmark is significantly longer in this version due to the time
+taken for memory to be copied from host to device.</p>
+<p>This is an important consideration to make in all your work with
+GPUs: even if the computation itself is faster, you must be careful that
+setup costs like memory transfers don’t eclipse you’re savings.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section><section><h2 class="section-heading" id="broadcasting">Broadcasting<a class="anchor" aria-label="anchor" href="#broadcasting"></a>
+</h2>
+<hr class="half-width">
+<p>Let’s use our new powers to speed up some computations. Almost all of
+the standard numpy functions are available to you, including the <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html" class="external-link">broadcasting
+rules</a> you will be familiar with.</p>
+<p>Let’s take a look at a couple of examples.</p>
+<div class="section level3">
+<h3 id="discrete-fourier-transform">Discrete Fourier transform<a class="anchor" aria-label="anchor" href="#discrete-fourier-transform"></a>
+</h3>
+<p>First we consider the <a href="https://en.wikipedia.org/wiki/Discrete_Fourier_transform" class="external-link">discrete
+Fourier transform</a>. Recall that this is defined as:</p>
+<p><span class="math inline">\(X_k = \sum_n^N x_n  e^{-2 i \pi \frac{k
+n}{N}}\)</span></p>
+<p>We can write this as a broadcasting operation across 2 dimensions (k
+by n), followed by a sum along the n’th dimension:</p>
+<div class="codewrapper sourceCode" id="cb8">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" tabindex="-1" aria-label="code-block-8-1"></a><span class="im">import</span> cupy</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1" aria-label="code-block-8-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1" aria-label="code-block-8-3"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1" aria-label="code-block-8-4"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1" aria-label="code-block-8-5"></a><span class="kw">def</span> DFT(xs):</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1" aria-label="code-block-8-6"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1" aria-label="code-block-8-7"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1" aria-label="code-block-8-8"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1" aria-label="code-block-8-9"></a></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1" aria-label="code-block-8-10"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1" aria-label="code-block-8-11"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1" aria-label="code-block-8-12"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1" aria-label="code-block-8-13"></a></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1" aria-label="code-block-8-14"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1" aria-label="code-block-8-15"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1" aria-label="code-block-8-16"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> np.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1" aria-label="code-block-8-17"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1" aria-label="code-block-8-18"></a>    )</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1" aria-label="code-block-8-19"></a></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1" aria-label="code-block-8-20"></a><span class="co"># Create a compex valued input where both real and imaginary components</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1" aria-label="code-block-8-21"></a><span class="co"># are normally distributed.</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1" aria-label="code-block-8-22"></a>xs <span class="op">=</span> np.random.normal(size<span class="op">=</span><span class="dv">1000</span>) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> np.random.normal(size<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1" aria-label="code-block-8-23"></a>xs_d <span class="op">=</span> cupy.array(xs)</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1" aria-label="code-block-8-24"></a></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1" aria-label="code-block-8-25"></a><span class="co"># Sanity check! Does our version agree with numpy's own library?</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1" aria-label="code-block-8-26"></a>np.testing.assert_allclose(DFT(xs), np.fft.fft(xs))</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1" aria-label="code-block-8-27"></a></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1" aria-label="code-block-8-28"></a><span class="co"># CPU benchmark</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1" aria-label="code-block-8-29"></a>result <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: DFT(xs), n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1" aria-label="code-block-8-30"></a><span class="bu">print</span>(result)</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1" aria-label="code-block-8-31"></a></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1" aria-label="code-block-8-32"></a><span class="co"># GPU benchmark</span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1" aria-label="code-block-8-33"></a>result <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: DFT(xs_d), n_repeat<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1" aria-label="code-block-8-34"></a><span class="bu">print</span>(result)</span></code></pre>
+</div>
+<p>This is a function with elementwise multiplication, complex
+eponentiation, scalar multiplication and summation. When our inputs are
+GPU arrays it happens entirely on the GPU. Run this on your own machine
+and take note of the runtime comparison between the CPU and GPU
+versions.</p>
+<p>Also take note of the function
+<code>cupy.get_array_module(arr)</code>: this is a useful helper
+function to write device-agnostic code.</p>
+</div>
+<div class="section level3">
+<h3 id="matrix-multuplication">Matrix multuplication<a class="anchor" aria-label="anchor" href="#matrix-multuplication"></a>
+</h3>
+<p>Try benchmarking on your machine the following where we implement
+matrix multiplication as a pair of broadcasting and sum operations:</p>
+<div class="codewrapper sourceCode" id="cb9">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" tabindex="-1" aria-label="code-block-9-1"></a><span class="im">import</span> cupy</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1" aria-label="code-block-9-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1" aria-label="code-block-9-3"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1" aria-label="code-block-9-4"></a></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1" aria-label="code-block-9-5"></a><span class="kw">def</span> matmul(A, B):</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1" aria-label="code-block-9-6"></a>    <span class="co"># Matrix multiplication using broadcasting</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1" aria-label="code-block-9-7"></a>    <span class="cf">return</span> (A[:, :, <span class="va">None</span>] <span class="op">*</span> B[<span class="va">None</span>, :, :]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1" aria-label="code-block-9-8"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1" aria-label="code-block-9-9"></a>A <span class="op">=</span> np.random.normal(size<span class="op">=</span>(<span class="dv">100</span>, <span class="dv">1000</span>))</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1" aria-label="code-block-9-10"></a>B <span class="op">=</span> np.random.normal(size<span class="op">=</span>(<span class="dv">1000</span>, <span class="dv">100</span>))</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1" aria-label="code-block-9-11"></a>A_d <span class="op">=</span> cupy.array(A)</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1" aria-label="code-block-9-12"></a>B_d <span class="op">=</span> cupy.array(B)</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1" aria-label="code-block-9-13"></a></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1" aria-label="code-block-9-14"></a><span class="co"># Sanity check</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1" aria-label="code-block-9-15"></a>cupy.testing.assert_allclose(matmul(A, B), A <span class="op">@</span> B)</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1" aria-label="code-block-9-16"></a></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1" aria-label="code-block-9-17"></a><span class="co"># CPU benchmark</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1" aria-label="code-block-9-18"></a>result <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: matmul(A, B), n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1" aria-label="code-block-9-19"></a><span class="bu">print</span>(result)</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1" aria-label="code-block-9-20"></a></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1" aria-label="code-block-9-21"></a><span class="co"># GPU benchmark</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1" aria-label="code-block-9-22"></a>result <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: matmul(A_d, B_d), n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1" aria-label="code-block-9-23"></a><span class="bu">print</span>(result)</span></code></pre>
+</div>
+<p>On my machine, the GPU result comes out clearly ahead by a factor of
+over 60! (Bonus points: Can you spot a danger in using this broadcasting
+algorithm for matrix multiplication? Hint: What happens if the matrices
+get larger?)</p>
+</div>
+<div class="section level3">
+<h3 id="fusing-operations">Fusing operations<a class="anchor" aria-label="anchor" href="#fusing-operations"></a>
+</h3>
+<p>Just like numpy, a series of array operations are applied to CuPy
+arrays sequentially. This means that each operator (e.g. an addition, a
+scaler multiplication, perhaps a trigonometric function) is applied as a
+separate kernel, which must in turn read and write through the entirety
+of the arrays each time. This kernel dispatch overhead and the
+associated memory churn can be a considerable performance penalty.</p>
+<p>CuPy offers the ability to fuse <em>simple</em> operators into a
+single operation by using a simple function decorator. In practice this
+means the operators are applied as a single kernel.</p>
+<p>Try running the following on your own machine and see how the speeds
+compare:</p>
+<div class="codewrapper sourceCode" id="cb10">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" tabindex="-1" aria-label="code-block-10-1"></a><span class="im">import</span> cupy</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1" aria-label="code-block-10-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1" aria-label="code-block-10-3"></a></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1" aria-label="code-block-10-4"></a>xs <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">100_000</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1" aria-label="code-block-10-5"></a>ys <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">100_000</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1" aria-label="code-block-10-6"></a></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1" aria-label="code-block-10-7"></a><span class="kw">def</span> sequential(xs, ys):</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1" aria-label="code-block-10-8"></a>    <span class="cf">return</span> (<span class="dv">2</span> <span class="op">*</span> xs <span class="op">+</span> <span class="dv">3</span>) <span class="op">*</span> cupy.sin(ys)<span class="op">**</span><span class="dv">4</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1" aria-label="code-block-10-9"></a></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1" aria-label="code-block-10-10"></a><span class="at">@cupy.fuse</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1" aria-label="code-block-10-11"></a><span class="kw">def</span> fused(xs, ys):</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1" aria-label="code-block-10-12"></a>    <span class="cf">return</span> (<span class="dv">2</span> <span class="op">*</span> xs <span class="op">+</span> <span class="dv">3</span>) <span class="op">*</span> cupy.sin(ys)<span class="op">**</span><span class="dv">4</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1" aria-label="code-block-10-13"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1" aria-label="code-block-10-14"></a>result <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: sequential(xs, ys), n_repeat<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1" aria-label="code-block-10-15"></a><span class="bu">print</span>(result)</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1" aria-label="code-block-10-16"></a></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1" aria-label="code-block-10-17"></a>result <span class="op">=</span> cupyx.profiler.benchmark(<span class="kw">lambda</span>: fused(xs, ys), n_repeat<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1" aria-label="code-block-10-18"></a><span class="bu">print</span>(result)</span></code></pre>
+</div>
+<p>On my machine I see an approximately threefold speed improvement but,
+as always, benchmark and profile your code.</p>
+</div>
+</section><section><h2 class="section-heading" id="linear-algebra">Linear Algebra<a class="anchor" aria-label="anchor" href="#linear-algebra"></a>
+</h2>
+<hr class="half-width">
+<p>CUDA includes an extensive linear algebra library that is highly
+optimised, and CuPy’s <code>linalg</code> routines provide an accessible
+interface to this library. If you can rewrite your problem succinctly as
+a series of linear algebra operations this will almost always be faster
+than a custom kernel.</p>
+<p>Consider the example of a large matrix multiplication on both CPU and
+GPU:</p>
+<div class="codewrapper sourceCode" id="cb11">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" tabindex="-1" aria-label="code-block-11-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1" aria-label="code-block-11-2"></a><span class="im">import</span> cupy</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1" aria-label="code-block-11-3"></a><span class="im">import</span> cupyx</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1" aria-label="code-block-11-5"></a>A <span class="op">=</span> np.random.normal(size<span class="op">=</span>(<span class="dv">10_000</span>, <span class="dv">10_000</span>))</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1" aria-label="code-block-11-6"></a>B <span class="op">=</span> np.random.normal(size<span class="op">=</span>(<span class="dv">10_000</span>, <span class="dv">10_000</span>))</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a>A_d <span class="op">=</span> cupy.array(A)</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a>B_d <span class="op">=</span> cupy.array(B)</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a><span class="bu">print</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1" aria-label="code-block-11-12"></a>    cupyx.profiler.benchmark(<span class="kw">lambda</span>: A <span class="op">@</span> B, n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1" aria-label="code-block-11-13"></a>)</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1" aria-label="code-block-11-14"></a></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1" aria-label="code-block-11-15"></a><span class="bu">print</span>(</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1" aria-label="code-block-11-16"></a>    cupyx.profiler.benchmark(<span class="kw">lambda</span>: A_d <span class="op">@</span> B_d, n_repeat<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1" aria-label="code-block-11-17"></a>)</span></code></pre>
+</div>
+<p>Note that here we’ve used the matrix multiplication operator,
+<code>@</code>, which is shorthand for either
+<code>np.linalg.matmul</code> or <code>cupy.linalg.matmul</code>
+depending on the array type.</p>
+<p>The speed-up is huge: on my own hardware, we observe 16.6 s versus
+just 107 ms.</p>
+<p>Similarly, we can perform matrix inversion or decomposition just as
+we would using numpy:</p>
+<div class="codewrapper sourceCode" id="cb12">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1" aria-label="code-block-12-1"></a><span class="im">import</span> cupy</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1" aria-label="code-block-12-2"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1" aria-label="code-block-12-3"></a><span class="co"># Let's solve for x in: Ax = y</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1" aria-label="code-block-12-4"></a>A <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">1000</span>, <span class="dv">1000</span>))</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1" aria-label="code-block-12-5"></a>y <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1" aria-label="code-block-12-6"></a></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1" aria-label="code-block-12-7"></a>Ainv <span class="op">=</span> cupy.linalg.inv(A)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1" aria-label="code-block-12-8"></a>x0 <span class="op">=</span> Ainv <span class="op">@</span> y</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1" aria-label="code-block-12-9"></a></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1" aria-label="code-block-12-10"></a><span class="co"># solve() uses a decomposition algorithm that is more</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1" aria-label="code-block-12-11"></a><span class="co"># numerically stable than the inverse matrix</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1" aria-label="code-block-12-12"></a>x1 <span class="op">=</span> cupy.linalg.solve(A, y)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1" aria-label="code-block-12-13"></a></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1" aria-label="code-block-12-14"></a><span class="co"># Check that both methods return that same solution</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1" aria-label="code-block-12-15"></a>cupy.testing.assert_allclose(x0, x1)</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1" aria-label="code-block-12-16"></a></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1" aria-label="code-block-12-17"></a><span class="co"># Perform QR decomposition</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1" aria-label="code-block-12-18"></a>Q, R <span class="op">=</span> cupy.linalg.qr(A)</span></code></pre>
+</div>
+<p>There’s also the <code>einsum()</code> method which is not a linear
+algebra method but which is very powerful if you can write your
+equations using <a href="https://en.wikipedia.org/wiki/Einstein_notation" class="external-link">Einstein
+notation</a>, e.g.:</p>
+<div class="codewrapper sourceCode" id="cb13">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" tabindex="-1" aria-label="code-block-13-1"></a><span class="im">import</span> cupy</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1" aria-label="code-block-13-2"></a></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a>A <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">1000</span>, <span class="dv">10_000</span>))</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a>B <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">10_000</span>, <span class="dv">1000</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a><span class="co"># Einstein notation for matrix multiplication</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1" aria-label="code-block-13-7"></a>C <span class="op">=</span> cupy.einsum(<span class="st">"ij, jk -&gt; ik"</span>, A, B)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
+</div>
+<div id="discussion1" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>Compute the <a href="https://en.wikipedia.org/wiki/Outer_product" class="external-link">outer product</a> of
+two large vectors, <code>x</code> and <code>y</code>, using both CuPy
+built-in <code>cupy.outer</code> routine and using
+<code>einsum()</code>. Check that the different methods give the same
+result.</p>
+<div class="codewrapper sourceCode" id="cb14">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a><span class="im">import</span> cupy</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>x <span class="op">=</span> cupy.random.normal(shape<span class="op">=</span><span class="dv">10_000</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a>y <span class="op">=</span> cupy.random.normal(shape<span class="op">=</span><span class="dv">10_000</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1" aria-label="code-block-14-5"></a></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1" aria-label="code-block-14-6"></a><span class="co"># To do...</span></span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div id="accordionSolution2" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
+  <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
+</button>
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div class="accordion-body">
+<div class="codewrapper sourceCode" id="cb15">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" tabindex="-1" aria-label="code-block-15-1"></a><span class="im">import</span> cupy</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1" aria-label="code-block-15-2"></a></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1" aria-label="code-block-15-3"></a>x <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">10_000</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1" aria-label="code-block-15-4"></a>y <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">10_000</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1" aria-label="code-block-15-5"></a></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1" aria-label="code-block-15-6"></a>A0 <span class="op">=</span> cupy.outer(x, y)</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1" aria-label="code-block-15-7"></a></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1" aria-label="code-block-15-8"></a>A1 <span class="op">=</span> cupy.einsum(<span class="st">"i, j -&gt; ij"</span>, x, y)</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1" aria-label="code-block-15-9"></a></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1" aria-label="code-block-15-10"></a>cupy.testing.assert_allclose(A0, A1)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section><section><h2 class="section-heading" id="fft">FFT<a class="anchor" aria-label="anchor" href="#fft"></a>
+</h2>
+<hr class="half-width">
+<p>The Fourier transform is a staple of signal processing, and the
+<em>fast</em> Fourier transform (FFT) algorithm is already a massive
+improvement on the naive sum.</p>
+<p>CUDA provides highly optimised libraries for performing FFTs and CuPy
+provides a high level wrapper that mirrors the numpy routines. In
+addition, it also exposes some lower-level routines that might be
+essential to getting good performance.</p>
+<p>In numpy, for example, we can do the following FFT:</p>
+<div class="codewrapper sourceCode" id="cb16">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" tabindex="-1" aria-label="code-block-16-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1" aria-label="code-block-16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1" aria-label="code-block-16-3"></a><span class="co"># Create a complex valued 4 x 1024 x 1024 array where real</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1" aria-label="code-block-16-4"></a><span class="co"># and imaginary components are both normally distributed</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1" aria-label="code-block-16-5"></a>a <span class="op">=</span> np.random.normal(size<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">1024</span>, <span class="dv">1024</span>)) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> np.random.normal(size<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">1024</span>, <span class="dv">1024</span>))</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1" aria-label="code-block-16-6"></a></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1" aria-label="code-block-16-7"></a><span class="co"># Perform a 2D fft for each of the 4 1024 x 1024 matrices</span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1" aria-label="code-block-16-8"></a>A <span class="op">=</span> np.fft.fftn(a, axes<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span></code></pre>
+</div>
+<p>Performing this on the GPU involves the same steps as before: ensure
+the arrays reside in GPU memory and replace numpy with CuPY prefixed
+methods:</p>
+<div class="codewrapper sourceCode" id="cb17">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" tabindex="-1" aria-label="code-block-17-1"></a><span class="im">import</span> cupy</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1" aria-label="code-block-17-2"></a></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1" aria-label="code-block-17-3"></a><span class="co"># Create a complex valued 4 x 1024 x 1024 array where real</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1" aria-label="code-block-17-4"></a><span class="co"># and imaginary components are both normally distributed</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1" aria-label="code-block-17-5"></a>a <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">1024</span>, <span class="dv">1024</span>)) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">1024</span>, <span class="dv">1024</span>))</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1" aria-label="code-block-17-6"></a></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1" aria-label="code-block-17-7"></a><span class="co"># Perform a 2D fft for each of the 4 1024 x 1024 matrices</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1" aria-label="code-block-17-8"></a>A <span class="op">=</span> cupy.fft.fftn(a, axes<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span></code></pre>
+</div>
+<p>Try benchmarking the results: is it faster?</p>
+<p>When you run a FFT the CUDA library actually does two things:</p>
+<ul>
+<li>It creates a plan: depending on your input data, the axes you care
+about, etc. it needs to work out how best to do this. This will almost
+always involve reserving some memory to use as a working space.</li>
+<li>It then executes a plan.</li>
+</ul>
+<p>If you’re executing the same FFT multiple times you might want to
+save on the overhead of creating the plan. CuPy lets you do this:</p>
+<div class="codewrapper sourceCode" id="cb18">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" tabindex="-1" aria-label="code-block-18-1"></a><span class="im">import</span> cupy</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1" aria-label="code-block-18-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1" aria-label="code-block-18-3"></a></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1" aria-label="code-block-18-4"></a><span class="co"># Create a complex valued 4 x 1024 x 1024 array where real</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1" aria-label="code-block-18-5"></a><span class="co"># and imaginary components are both normally distributed</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1" aria-label="code-block-18-6"></a>a <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">1024</span>, <span class="dv">1024</span>)) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">1024</span>, <span class="dv">1024</span>))</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1" aria-label="code-block-18-7"></a></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1" aria-label="code-block-18-8"></a><span class="co"># Create a plan</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1" aria-label="code-block-18-9"></a>plan <span class="op">=</span> cupyx.scipy.fft.get_fft_plan(a, axes<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1" aria-label="code-block-18-10"></a></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1" aria-label="code-block-18-11"></a><span class="co"># Plan acts as a context manager</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1" aria-label="code-block-18-12"></a><span class="cf">with</span> plan:</span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1" aria-label="code-block-18-13"></a>    A <span class="op">=</span> cupy.fft.fftn(a, axes<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span></code></pre>
+</div>
+<p>(Although in my testing, this doesn’t provide a speed-up, and
+possibly isn’t working as expected in the current versions.)</p>
+<!--
+Place links that you need to refer to multiple times across pages here. Delete
+any links that you are not going to use.
+ -->
 </section></section>
 </div>
     </main>
@@ -834,7 +1660,7 @@ any links that you are not going to use.
         <p>Materials licensed under <a href="LICENSE.html">CC-BY 4.0</a> by the authors</p>
 
         <p>Template licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" class="external-link">CC-BY 4.0</a> by <a href="https://carpentries.org/" class="external-link">The Carpentries</a></p>
-        <p>Built with <a href="https://github.com/carpentries/sandpaper/tree/" class="external-link">sandpaper (0.20.0)</a>, <a href="https://github.com/carpentries/pegboard/tree/" class="external-link">pegboard (0.7.9)</a>, and <a href="https://github.com/adacs-australia/varnish/tree/3d0f995f5beafe80d7b61fc49da22ab66f29241c" class="external-link">varnish (1.0.9)</a></p>
+        <p>Built with <a href="https://github.com/carpentries/sandpaper/tree/" class="external-link">sandpaper (0.20.1)</a>, <a href="https://github.com/carpentries/pegboard/tree/" class="external-link">pegboard (0.7.9)</a>, and <a href="https://github.com/adacs-australia/varnish/tree/3d0f995f5beafe80d7b61fc49da22ab66f29241c" class="external-link">varnish (1.0.9)</a></p>
 		</div>
 		</footer>
 </div> <!-- / div.container -->
@@ -856,9 +1682,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/aio.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/aio.html",
-  "dateCreated": "2026-04-10",
-  "dateModified": "2026-04-14",
-  "datePublished": "2026-04-14"
+  "dateCreated": "2026-04-16",
+  "dateModified": "2026-04-16",
+  "datePublished": "2026-04-16"
 }
 
   </script><script>

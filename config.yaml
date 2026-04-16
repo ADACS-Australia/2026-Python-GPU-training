@@ -68,6 +68,8 @@ contact: 'team@carpentries.org' # FIXME
 episodes:
 - introduction.md
 - parallelism.md
+- gpu-deepdive.md
+- CuPy.md
 
 # Information for Learners
 learners:
