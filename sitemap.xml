@@ -19,6 +19,9 @@
     <loc>https://carpentries.github.io/workbench-template-md/citation.html</loc>
   </url>
   <url>
+    <loc>https://carpentries.github.io/workbench-template-md/first-kernels.html</loc>
+  </url>
+  <url>
     <loc>https://carpentries.github.io/workbench-template-md/gpu-deepdive.html</loc>
   </url>
   <url>
@@ -44,6 +47,9 @@
   </url>
   <url>
     <loc>https://carpentries.github.io/workbench-template-md/instructor/citation.html</loc>
+  </url>
+  <url>
+    <loc>https://carpentries.github.io/workbench-template-md/instructor/first-kernels.html</loc>
   </url>
   <url>
     <loc>https://carpentries.github.io/workbench-template-md/instructor/gpu-deepdive.html</loc>
