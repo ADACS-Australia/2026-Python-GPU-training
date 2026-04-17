@@ -295,7 +295,7 @@ To answer the first question, there are in fact many different units of parallel
 Once we understand the unit of parallelisation, the grid configuration becomes more obvious: a 2D grid that spans $m \times p$.
 
 
-=== challenge
+::: challenge
 
 Have a go at filling in the missing lines from within the kernel definition. Hint: you want to implement in code the summation for `C[i, j]`.
 
@@ -320,9 +320,10 @@ matmul[(nblockx, nblocky), (threads, threads)](A, B, C)
 
 cupy.testing.assert_allclose(C, A @ B)
 ```
-===
 
-=== solution
+:::
+
+::: solution
 
 One solution looks like this:
 
@@ -351,15 +352,15 @@ def matmul(A, B, C):
 
 Try benchmarking these two versions. Which is faster? Can you guess why?
 
-===
+:::
 
-=== challenge
+::: challenge
 
 Rewrite the matrix multiplication using a 1D grid. Under this configuration, every kernel is still responsible for a single element of $C$ but it must map from a 1D index to a 2D index. What is the span of the 1D grid?
 
-===
+:::
 
-=== solution
+::: solution
 
 ```python
 import math
@@ -389,7 +390,7 @@ matmul[nblocks, threads](A, B, C)
 cupy.testing.assert_allclose(C, A @ B)
 ```
 
-===
+:::
 
 ## Discrete Fourier transform
 
@@ -409,6 +410,7 @@ for varying values of N.
 
 
 ::: challenge
+
 ### Part 1
 
 Write the DFT using a simple python `for` loop. At this stage, set `N` to be small (~100).
@@ -431,7 +433,10 @@ def dft(xs):
     return Xs
 ```
 
+:::
+
 ::: challenge
+
 ### Part 2
 
 Parallelise your code using numba's `prange` function. Which loop or loops are parallel? What is the unit of parallelisation?
@@ -458,6 +463,8 @@ def dft(xs):
 
     return Xs
 ```
+
+:::
 
 ::: challenge
 ### Part 3
@@ -513,7 +520,7 @@ cupy.testing.assert_allclose(Xs, cupy.fft.fft(xs))
 
 ## Advanced topic: Parallel reductions
 
-A [reduction](https://en.wikipedia.org/wiki/Reduction_operator) is an operation that combines multiple elements down to one. Think, for example, summing an array where the reduction operator is simple addition (`+`). Often times the input array will be modified first (known as a map) and then reduced, known as a [mapreduce](https://en.wikipedia.org/wiki/MapReduce).
+A [reduction](https://en.wikipedia.org/wiki/Reduction_operator) is an operation that combines multiple elements down to one. Think, for example, summing an array where the reduction operator is addition (`+`). Often times the input array will be modified first (known as a map) and then reduced, with the combined operation known as a [mapreduce](https://en.wikipedia.org/wiki/MapReduce).
 
 In parallel contexts, reductions are not easy to write. Consider the following implementation of a sum:
 
@@ -563,15 +570,11 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 - We will construct a shared memory array that has a size that exactly matches the threads per block.
 - Each thread in a threadblock will set its associated entry in the shared array to its partial sum.
 - The threadblock will sum the contents of its shared memory using a binary reduction (see diagram).
-- Finally, thead ID=0 of the thread block will perform an atomic add to global memory.
-
-:::
+- Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
 <img src="../assets/binary-reduction.png" height=300 alt="Binary reduction">
 
 **Caption:** An illustration of a binary reduction within thread block. On each step, only half the number of threads participate in the reduction as in the previous step. [[Source]](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
-
-:::
 
 One such implementation looks like this:
 
