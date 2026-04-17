@@ -320,6 +320,7 @@ matmul[(nblockx, nblocky), (threads, threads)](A, B, C)
 
 cupy.testing.assert_allclose(C, A @ B)
 ```
+
 :::
 
 ::: solution
@@ -409,6 +410,7 @@ for varying values of N.
 
 
 ::: challenge
+
 ### Part 1
 
 Write the DFT using a simple python `for` loop. At this stage, set `N` to be small (~100).
@@ -434,6 +436,7 @@ def dft(xs):
 :::
 
 ::: challenge
+
 ### Part 2
 
 Parallelise your code using numba's `prange` function. Which loop or loops are parallel? What is the unit of parallelisation?
@@ -460,6 +463,7 @@ def dft(xs):
 
     return Xs
 ```
+
 :::
 
 ::: challenge
