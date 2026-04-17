@@ -572,13 +572,9 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 - The threadblock will sum the contents of its shared memory using a binary reduction (see diagram).
 - Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
-:::
-
 <img src="../assets/binary-reduction.png" height=300 alt="Binary reduction">
 
 **Caption:** An illustration of a binary reduction within thread block. On each step, only half the number of threads participate in the reduction as in the previous step. [[Source]](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
-
-:::
 
 One such implementation looks like this:
 
