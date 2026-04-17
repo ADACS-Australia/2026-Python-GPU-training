@@ -1306,7 +1306,7 @@ first.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1584,7 +1584,7 @@ result.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb15">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2162,7 +2162,14 @@ instead. (Think about this! How would separate kernels safely add their
 partial contributions to <span class="math inline">\(C\)</span>?)</p>
 <p>Once we understand the unit of parallelisation, the grid
 configuration becomes more obvious: a 2D grid that spans <span class="math inline">\(m \times p\)</span>.</p>
-<p>=== challenge</p>
+<div id="discussion4" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
 <p>Have a go at filling in the missing lines from within the kernel
 definition. Hint: you want to implement in code the summation for
 <code>C[i, j]</code>.</p>
@@ -2189,8 +2196,16 @@ definition. Hint: you want to implement in code the summation for
 <span id="cb8-18"><a href="#cb8-18" tabindex="-1" aria-label="code-block-8-18"></a></span>
 <span id="cb8-19"><a href="#cb8-19" tabindex="-1" aria-label="code-block-8-19"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
 </div>
-<p>===</p>
-<p>=== solution</p>
+</div>
+</div>
+</div>
+<div id="accordionSolution4" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
+  <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
+</button>
+<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div class="accordion-body">
 <p>One solution looks like this:</p>
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2220,14 +2235,32 @@ variable before writing out to the global memory location at
 </div>
 <p>Try benchmarking these two versions. Which is faster? Can you guess
 why?</p>
-<p>===</p>
-<p>=== challenge</p>
+</div>
+</div>
+</div>
+</div>
+<div id="discussion5" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
 <p>Rewrite the matrix multiplication using a 1D grid. Under this
 configuration, every kernel is still responsible for a single element of
 <span class="math inline">\(C\)</span> but it must map from a 1D index
 to a 2D index. What is the span of the 1D grid?</p>
-<p>===</p>
-<p>=== solution</p>
+</div>
+</div>
+</div>
+<div id="accordionSolution5" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
+  <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
+</button>
+<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb11">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -2257,7 +2290,10 @@ to a 2D index. What is the span of the 1D grid?</p>
 <span id="cb11-24"><a href="#cb11-24" tabindex="-1" aria-label="code-block-11-24"></a></span>
 <span id="cb11-25"><a href="#cb11-25" tabindex="-1" aria-label="code-block-11-25"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
 </div>
-<p>===</p>
+</div>
+</div>
+</div>
+</div>
 </section><section><h2 class="section-heading" id="discrete-fourier-transform">Discrete Fourier transform<a class="anchor" aria-label="anchor" href="#discrete-fourier-transform"></a>
 </h2>
 <hr class="half-width">
@@ -2309,6 +2345,10 @@ stage, set <code>N</code> to be small (~100).</p>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a></span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a>    <span class="cf">return</span> Xs</span></code></pre>
 </div>
+</div>
+</div>
+</div>
+</div>
 <div id="part-2" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
@@ -2324,12 +2364,12 @@ parallelisation?</p>
 </div>
 </div>
 </div>
-<div id="accordionSolution5" class="accordion challenge-accordion accordion-flush">
+<div id="accordionSolution7" class="accordion challenge-accordion accordion-flush">
 <div class="accordion-item">
-<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
-  <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
+  <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb14">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2348,6 +2388,10 @@ parallelisation?</p>
 <span id="cb14-12"><a href="#cb14-12" tabindex="-1" aria-label="code-block-14-12"></a>        kernel(k, xs, Xs)</span>
 <span id="cb14-13"><a href="#cb14-13" tabindex="-1" aria-label="code-block-14-13"></a></span>
 <span id="cb14-14"><a href="#cb14-14" tabindex="-1" aria-label="code-block-14-14"></a>    <span class="cf">return</span> Xs</span></code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="part-3" class="callout discussion">
 <div class="callout-square">
@@ -2380,12 +2424,12 @@ computation. That is:
 </div>
 </div>
 </div>
-<div id="accordionSolution4" class="accordion challenge-accordion accordion-flush">
+<div id="accordionSolution8" class="accordion challenge-accordion accordion-flush">
 <div class="accordion-item">
-<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
-  <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
+  <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb15">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2424,14 +2468,15 @@ computation. That is:
 </div>
 </div>
 </div>
-<div class="section level2">
-<h2 id="advanced-topic-parallel-reductions">Advanced topic: Parallel reductions<a class="anchor" aria-label="anchor" href="#advanced-topic-parallel-reductions"></a>
+</section><section><h2 class="section-heading" id="advanced-topic-parallel-reductions">Advanced topic: Parallel reductions<a class="anchor" aria-label="anchor" href="#advanced-topic-parallel-reductions"></a>
 </h2>
+<hr class="half-width">
 <p>A <a href="https://en.wikipedia.org/wiki/Reduction_operator" class="external-link">reduction</a> is
 an operation that combines multiple elements down to one. Think, for
-example, summing an array where the reduction operator is simple
-addition (<code>+</code>). Often times the input array will be modified
-first (known as a map) and then reduced, known as a <a href="https://en.wikipedia.org/wiki/MapReduce" class="external-link">mapreduce</a>.</p>
+example, summing an array where the reduction operator is addition
+(<code>+</code>). Often times the input array will be modified first
+(known as a map) and then reduced, with the combined operation known as
+a <a href="https://en.wikipedia.org/wiki/MapReduce" class="external-link">mapreduce</a>.</p>
 <p>In parallel contexts, reductions are not easy to write. Consider the
 following implementation of a sum:</p>
 <div class="codewrapper sourceCode" id="cb16">
@@ -2495,21 +2540,12 @@ matches the threads per block.</li>
 shared array to its partial sum.</li>
 <li>The threadblock will sum the contents of its shared memory using a
 binary reduction (see diagram).</li>
-<li>Finally, thead ID=0 of the thread block will perform an atomic add
+<li>Finally, thread ID=0 of the thread block will perform an atomic add
 to global memory.</li>
 </ul>
-</div>
-</div>
-</div>
-</div>
-</div>
 <figure><img src="../../assets/binary-reduction.png" height="300" alt="Binary reduction" class="figure mx-auto d-block"></figure><p><strong>Caption:</strong> An illustration of a binary reduction
 within thread block. On each step, only half the number of threads
 participate in the reduction as in the previous step. <a href="https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf" class="external-link">[Source]</a></p>
-</div>
-</div>
-</div>
-</div>
 <p>One such implementation looks like this:</p>
 <div class="codewrapper sourceCode" id="cb18">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
