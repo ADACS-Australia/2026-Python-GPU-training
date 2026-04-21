@@ -443,7 +443,7 @@ reinforce the objectives.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Output </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper">
 <h3 class="code-label">OUTPUT<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -472,7 +472,7 @@ challenge blocks?</h3>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>You can add a line with at least three colons and a
 <code>solution</code> tag.</p>
@@ -2118,7 +2118,14 @@ breaches the length of the underlying arrays.</p>
 </section><section><h2 class="section-heading" id="mutliplier">Mutliplier<a class="anchor" aria-label="anchor" href="#mutliplier"></a>
 </h2>
 <hr class="half-width">
-<div class="exercise">
+<div id="discussion4" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
 <p>With just minor modifications, change the 1D <code>adder</code>
 kernel to a <code>mutliplier</code> kernel that computes elementwise
 multiplication. e.g. <span class="math inline">\(z_i = x_i \times
@@ -2145,6 +2152,8 @@ y_i\)</span>.</p>
 <span id="cb8-16"><a href="#cb8-16" tabindex="-1" aria-label="code-block-8-16"></a><span class="co"># 1. Configure the thread and block count</span></span>
 <span id="cb8-17"><a href="#cb8-17" tabindex="-1" aria-label="code-block-8-17"></a><span class="co"># 2. Call the kernel</span></span>
 <span id="cb8-18"><a href="#cb8-18" tabindex="-1" aria-label="code-block-8-18"></a><span class="co"># 3. Test output using cupy.testing.assert_allclose()</span></span></code></pre>
+</div>
+</div>
 </div>
 </div>
 <div id="accordionSolution4" class="accordion challenge-accordion accordion-flush">
@@ -2222,7 +2231,14 @@ matrix? Is it a row or column?</li>
 <li>How should we configure our grid? What is the span of the grid and
 what is its dimension?</li>
 </ul>
-<div class="exercise">
+<div id="discussion5" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
 <p>Consider the following three different variants of kernels and
 associated grid configurations. What is the preferred choice and
 why?</p>
@@ -2249,6 +2265,8 @@ why?</p>
 <span id="cb11-17"><a href="#cb11-17" tabindex="-1" aria-label="code-block-11-17"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(C.shape[<span class="dv">1</span>]):</span>
 <span id="cb11-18"><a href="#cb11-18" tabindex="-1" aria-label="code-block-11-18"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
 <span id="cb11-19"><a href="#cb11-19" tabindex="-1" aria-label="code-block-11-19"></a>            C[i, j] <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span></code></pre>
+</div>
+</div>
 </div>
 </div>
 <div id="accordionSolution5" class="accordion challenge-accordion accordion-flush">
@@ -2289,7 +2307,7 @@ j\)</span>.</p>
 </div>
 </div>
 </div>
-<div id="discussion4" class="callout discussion">
+<div id="discussion6" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -2365,7 +2383,7 @@ why?</p>
 </div>
 </div>
 </div>
-<div id="discussion5" class="callout discussion">
+<div id="discussion7" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
