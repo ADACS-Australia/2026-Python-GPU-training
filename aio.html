@@ -443,7 +443,7 @@ reinforce the objectives.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Output </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper">
 <h3 class="code-label">OUTPUT<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -472,7 +472,7 @@ challenge blocks?</h3>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>You can add a line with at least three colons and a
 <code>solution</code> tag.</p>
@@ -1359,9 +1359,16 @@ in GPU arrays:</p>
 <span id="cb9-9"><a href="#cb9-9" tabindex="-1" aria-label="code-block-9-9"></a>ys <span class="op">=</span> cupy.zeros_like(xs)</span>
 <span id="cb9-10"><a href="#cb9-10" tabindex="-1" aria-label="code-block-9-10"></a>cupy.testing.assert_allclose(exp(xs, ys), cupy.exp(xs))</span></code></pre>
 </div>
-<p>One point to note is that <code>math.factorial()</code> did not
-change. This is computed on the CPU and since it is a simple scalar
-value it is automatically transferred to the GPU.</p>
+<p>To have this compute on the GPU we did just two things:</p>
+<ul>
+<li>We ensured arrays were created (or transferred to) the GPU.</li>
+<li>We swapped out <code>np</code> module prefixes for
+<code>cupy</code>, e.g. by calling <code>cupy.exp()</code>.</li>
+</ul>
+<p>The nitty gritty of <em>how</em> CuPy compiles this to GPU code and
+the way in which it chooses to parallelise the code is out of our hands.
+In return, we get operations that are no more complicated than
+Numpy.</p>
 <div class="section level3">
 <h3 id="fusing-operations">Fusing operations<a class="anchor" aria-label="anchor" href="#fusing-operations"></a>
 </h3>
