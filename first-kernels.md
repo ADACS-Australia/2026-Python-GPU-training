@@ -283,7 +283,7 @@ In the previous `adder` kernel, you will notice warp divergence occurs in exactl
 
 ## Mutliplier
 
-::: exercise
+::: challenge
 
 With just minor modifications, change the 1D `adder` kernel to a `mutliplier` kernel that computes elementwise multiplication. e.g. $z_i = x_i \times y_i$.
 
@@ -368,7 +368,7 @@ When considering how to design a kernel for this problem, we need to answer a fe
 - What is a unit of parallelisation? Or put differently, what does the index of each kernel map to in our problem domain? Is it an element in one (or both) of the input matrices? Is it an element of the output matrix? Is it a row or column?
 - How should we configure our grid? What is the span of the grid and what is its dimension?
 
-::: exercise
+::: challenge
 
 Consider the following three different variants of kernels and associated grid configurations. What is the preferred choice and why?
 
