@@ -165,7 +165,7 @@ A grid is composed of one or more _thread blocks_, each with a fixed number of _
 When a kernel is run, the work is distributed in the following manner:
 
 1. The GPU scheduler parcels off thread blocks, and enqueues it to each streaming multiprocessor (SM) as it has some availability.
-2. Each SM is then, in turn, responsible for scheduling the thread block to run as a series of warps (32 or 64 threads that run in lock step) as soon as it has idle cores.
+2. Each SM is then, in turn, responsible for scheduling the thread block to run as a series of warps (32 or 64 threads that run in lockstep) as soon as it has idle cores.
 
 Pictorially, this looks something like this:
 
@@ -384,7 +384,7 @@ def kernel2(i, j, A, B, C):
     for k in range(A.shape[1]):
         C[i, j] += A[i, k] * B[k, j]
 
-# Grid: 2D grid over all value sof i, k
+# Grid: 2D grid over all values of i, k
 def kernel3(i, k, A, B, C):
     for j in range(C.shape[1]):
         C[i, j] += A[i, k] * B[k, j]
@@ -402,10 +402,10 @@ def kernel3(i, A, B, C):
 
 Two considerations stand out when comparing the kernel options:
 
-* **Race conditions:** Recall that reading, computing, and writing to memory in parallel code does not happen all at once, and multiple threads competing to do this to _the same memory location_ will introduce _race conditions_. Kernels 1 and 3 both introduce kernels with race conditions. In kenrel 1, for each `i,j` coorindate there will be `k` competing kernels. The situation is similar for kernel 3. There are (complex) ways to mitigate these race conditions but we would have to be justified in taking this route.
+* **Race conditions:** Recall that reading, computing, and writing to memory in parallel code does not happen all at once, and multiple threads competing to do this to _the same memory location_ will introduce _race conditions_. Kernels 1 and 3 both introduce kernels with race conditions. In kenrel 1, for each `i,j` coordindate there will be `k` competing kernels. The situation is similar for kernel 3. There are (complex) ways to mitigate these race conditions but we would have to be justified in taking this route.
 * **Maximal parallisation:** All things being equal, we would typically want to maximise the degree of parallelisation and fan out the work across the many thousands of cores of the GPU. Kernel 1 has $i \times j \times k$ threads which, if it didn't suffer from race conditions, would be ideal. In constrast, kernel 3 parallelises only over the $i$ rows of $A$ and for most sizes of matrices even with thousands of rows, this will poorly utilise the GPU (also known as poor occupancy). Kernel 2, on the other hand, has $i \times j$ threads, which even for kernels with dimensions of only a few hundred rows and columns results in tens of thousands of threads.
 
-On these grounds, kernel 2 is the preferred option with a 2D grid configuration than spans $i \times j$.
+On these grounds, kernel 2 is the preferred option with a 2D grid configuration that spans $i \times j$.
 
 :::
 
@@ -448,6 +448,15 @@ def matmul(A, B, C):
     if i < C.shape[0] and j < C.shape[1]:
         for k in range(A.shape[1]):
             C[i, j] += A[i, k] * B[k, j]
+```
+
+And with the following grid configuration:
+
+```python
+threads = 16
+nblockx = math.ceil(C.size[0] / threads)
+nblocky = math.ceil(C.size[1] / threads)
+matmul[(nblockx, nblocky), (threads, threads)](A, B, C)
 ```
 
 An alternative is to store the partial sum in a _local_ variable before writing out to the global memory location at `C[i, j]`. For example:
@@ -514,7 +523,7 @@ For simplicity, we'll consider just a one-dimensional transform which is defined
 
 $X_k = \sum_n^N x_n  e^{-2 i \pi \frac{k n}{N}}$
 
-In all the examples, we'll using a complex input given by:
+In all the examples, we'll be using a complex input given by:
 
 ```python
 xs = np.random.normal(N) + 1j * np.random.normal(N)
@@ -553,13 +562,15 @@ def dft(xs):
 
 ### Part 2
 
-Parallelise your code using numba's `prange` function. Which loop or loops are parallel? What is the unit of parallelisation?
+Parallelise your code on the CPU using numba's `prange` function and `njit` decorator. Which loop or loops are parallel? What is the unit of parallelisation?
 
 Extract the inner loop as a standalone kernel function.
 
 :::
 
 ::: solution
+
+We parallelise over $k$ but not $n$, since including $n$ would introduce race conditions.
 
 ```python
 @njit
@@ -661,7 +672,7 @@ In general, this will fail. Can you see why?
 
 As we saw in the parallelism section, this fails due to a race condition: each thread is attempting to read, add, and write a value to global memory, walking all over each other.
 
-One tool in our toolbox is [_atomic operations_](https://nvidia.github.io/numba-cuda/user/intrinsics.html#supported-atomic-operations). These are a limited set of operations (e.g. +, `max`, `min`, but not multiplication!) on a limited set of types (mostly just floats and integers) that allow us to do something like a read-add-write _as a single operation._ In this case, we can use `cuda.atomic_add()` and see how this works:
+One tool in our toolbox are [_atomic operations_](https://nvidia.github.io/numba-cuda/user/intrinsics.html#supported-atomic-operations). These are a limited set of operations (e.g. +, `max`, `min`, but not multiplication!) on a limited set of types (mostly just floats and integers) that allow us to do something like a read-add-write _as a single operation._ In this case, we can use `cuda.atomic_add()` and see how this works:
 
 ```python
 @cuda.jit
@@ -676,7 +687,7 @@ def sum(xs, acc):
 
 The tests pass, meaning that this is at least correct. But if we benchmark you'll see that it is very slow. And the simple reason is that atomic operations don't come for free. It still ultimately forces some kind of serialisation of the operations.
 
-The idiomatic solution to a reduction is twofold: perform a reduction _within_ a thread block, followed by a reduction across the full grid.
+**The idiomatic solution to a reduction is twofold:** perform a reduction _within_ a thread block, followed by a reduction across the full grid.
 
 To do this, we're going to introduce shared memory: shared memory is memory that is visible by each member of a thread block. The general idea is this:
 
@@ -719,7 +730,7 @@ def sum(xs, acc):
         cuda.atomic.add(acc, 0, shared[0] + shared[1])
 ```
 
-Notice the use of `cuda.syncthreads()`: this is a synchronisation method that ensures all threads in a thread block have reached this point. (Remember that only warps execute in lock step.) This is necessary once we start interacting with shared memory, since we need to guarantee that the entirety of the thread block has fully written to its shared memory address before any thread tries to make a read.
+Notice the use of `cuda.syncthreads()`: this is a synchronisation method that ensures all threads in a thread block have reached this point. (Remember that only warps execute in lockstep.) This is necessary once we start interacting with shared memory, since we need to guarantee that the entirety of the thread block has fully written to its shared memory address before any thread tries to make a read.
 
 Benchmarking shows this function is now quite fast. The cost of the atomic add is now mitigated by the fact that it is called only once for every thread block. For large arrays, this function is almost as fast as the highly optimised `cupy.sum()`.
 
