@@ -312,7 +312,7 @@ This is a function with elementwise multiplication, complex exponentiation, scal
 
 Also take note of the function `cupy.get_array_module(arr)`: this is a useful helper function to write device-agnostic code.
 
-::: challange
+::: challenge
 
 1. Benchmark this code on both the CPU and GPU using a 1D input with normally distributed real and imaginary components: `xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)`
 2. Rewrite the code by extracting the elementwise component of the calculation into its own helper function and using the decorator `@cupy.fuse`. Does this speed up the computation? (Hint: you might need to experiment with a few different options.)
