@@ -267,9 +267,7 @@ Most complex computation will rely on Numpy's [broadcasting rules](https://numpy
 
 Consider the multiplication of two matrices: $A$ (sized $m \times n$) and $B$ (sized $n \times p$). Their product $C$ is a $m \times p$ matrix having elements $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
 
-We can write this by broadcasting multiplication over $A$ and $B$ so as to produce as $m \times n \times p$ 3-dimensial array, followed by a sum over the 2 dimension. (Pause and check this is true).
-
-Try benchmarking on your machine the following where we implement matrix multiplication as a pair of broadcasting and sum operations:
+We can write this by broadcasting multiplication over $A$ and $B$ so as to produce as $m \times n \times p$ 3-dimensional array, followed by a sum over the second dimension. (Pause and check this is true).
 
 ```python
 def matmul(A, B):
@@ -279,7 +277,7 @@ def matmul(A, B):
 
 ::: challenge
 
-Benchmark the `matmul()` function on both the CPU and GPU using, for example, input matrices with dimensions 100 $\times$ 1000 and 1000 $\times$ 100. You will need to create input matrices that reside both on the host and the GPU.
+Benchmark the `matmul()` function on both the CPU and GPU using input matrices with dimensions 100 $\times$ 1000 and 1000 $\times$ 100. You will need to create input matrices that reside both on the host and the GPU and set up the benchmarking functions.
 
 Boonus question: can you spot the danger of using this broadcasting algorithm for matrix multiplication? Hint: what happens if the matrices get larger?
 
@@ -291,7 +289,7 @@ The [discrete Fourier transform](https://en.wikipedia.org/wiki/Discrete_Fourier_
 
 $X_k = \sum_n^N x_n  e^{-2 i \pi \frac{k n}{N}}$
 
-We can write this as a broadcasting operation across 2 dimensions (k by n), followed by a sum along the n'th dimension:
+We can write this as a broadcasting operation across 2 dimensions (k by n), followed by a sum along the second dimension:
 
 ```python
 def DFT(xs):
@@ -310,11 +308,11 @@ def DFT(xs):
     )
 ```
 
-This is a function with elementwise multiplication, complex exponentiation, scalar multiplication and summation. When our inputs are GPU arrays it happens entirely on the GPU. Run this on your own machine and take note of the runtime comparison between the CPU and GPU versions.
+This is a function with elementwise multiplication, complex exponentiation, scalar multiplication and summation. When our inputs are GPU arrays it happens entirely on the GPU.
 
 Also take note of the function `cupy.get_array_module(arr)`: this is a useful helper function to write device-agnostic code.
 
-::: exercise
+::: challange
 
 1. Benchmark this code on both the CPU and GPU using a 1D input with normally distributed real and imaginary components: `xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)`
 2. Rewrite the code by extracting the elementwise component of the calculation into its own helper function and using the decorator `@cupy.fuse`. Does this speed up the computation? (Hint: you might need to experiment with a few different options.)
@@ -323,7 +321,7 @@ Also take note of the function `cupy.get_array_module(arr)`: this is a useful he
 
 ::: solution
 
-Since `@cupy.fuse` does a fair bit of black magic, it takes some experimentation to find the right subset of instructions to attempt to fuse. I found that any broadcast operations resulted in "stretched" dimensions resulted in an overall slowdown of the code.
+Since `@cupy.fuse` does a fair bit of black magic, it takes some experimentation to find the right subset of instructions to attempt to fuse. I found that any broadcast operations that resulted in "stretched" dimensions resulted in an overall slowdown of the code.
 
 The following resulted in a moderate speed increase:
 
