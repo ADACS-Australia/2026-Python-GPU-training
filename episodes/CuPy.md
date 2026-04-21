@@ -191,25 +191,104 @@ This is an important consideration to make in all your work with GPUs: even if t
 :::
 
 
+## Numpy-style computation
+
+Addition, subtraction, trignometric functions and so: these all work just as they with Numpy.
+
+Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = sum_n \frac{x^n}{x!}$. In numpy would could compute this expansion as:
+
+```python
+import math
+import numpy as np
+
+def exp(xs, ys, degree=12):
+    for n in range(degree):
+        ys += xs**n / math.factorial(n)
+
+xs = np.random.uniform(-1, 1, size=1_000_000)
+ys = np.zeros_like(xs)
+np.testing.assert_allclose(exp(xs, ys), np.exp(xs))
+```
+
+We can ensure these computations occur on the GPU simply by swapping in GPU arrays:
+
+```python
+import math
+import cupy
+
+def exp(xs, ys, degree=12):
+    for n in range(degree):
+        ys += xs**n / math.factorial(n)
+
+xs = cupy.random.uniform(-1, 1, size=1_000_000)
+ys = cupy.zeros_like(xs)
+cupy.testing.assert_allclose(exp(xs, ys), cupy.exp(xs))
+```
+
+One point to note is that `math.factorial()` did not change. This is computed on the CPU and since it is a simple scalar value it is automatically transferred to the GPU.
+
+### Fusing operations
+
+Just like numpy, a series of array operations are applied to CuPy arrays sequentially. This means that each operator (e.g. an addition, a scaler multiplication, perhaps a trigonometric function) is applied as a separate kernel, which must in turn read and write through the entirety of the arrays each time. This kernel dispatch overhead and the associated memory churn can be a considerable performance penalty.
+
+CuPy offers the (experimental) ability to fuse _simple_ operators into a single operation by using the function decorator `@cupy.fuse`. In practice this means the operators are applied as a single kernel and in a single pass of the array
+
+Try running the following on your own machine and see how the speed compares to the non-fused example:
+
+```python
+import math
+import cupy
+import cupyx
+
+@cupy.fuse
+def exp_fused(xs, ys, degree=12):
+    for n in range(degree):
+        ys += xs**n / math.factorial(n)
+
+xs = cupy.random.uniform(-1, 1, size=1000)
+ys = cupy.zeros_like(xs)
+cupy.testing.assert_allclose(exp_fused(xs, ys), cupy.exp(xs))
+
+print(cupyx.profiler.benchmark(lambda: exp_fused(xs, ys), n_repeat=100))
+```
+
+On my machine I see an approximately 15x speed improvement. The fusing decorator is experiemental and works best when the contents of the function are purely elementwise. Operations like array allocations, certain types of broadcasting, or sums may break or not cause the speedup you'd expect and are best omitted from the fused function. As always, test and benchmark your code.
+
 ## Broadcasting
 
-Let's use our new powers to speed up some computations. Almost all of the standard numpy functions are available to you, including the [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html) you will be familiar with.
+Most complex computation will rely on Numpy's [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html). Broadcasting rules control how array dimensions are matched, with special rules that apply to dimensions having a length of 1. We are going to assume you are already familiar with these rules and work through a couple of examples that demonstrate the flexibility of CuPy.
 
-Let's take a look at a couple of examples.
+### Example: Matrix multuplication
 
-### Discrete Fourier transform
+Consider the multiplication of two matrices: $A$ (sized $m \times n$) and $B$ (sized $n \times p$). Their product $C$ is a $m \times p$ matrix having elements $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
 
-First we consider the [discrete Fourier transform](https://en.wikipedia.org/wiki/Discrete_Fourier_transform). Recall that this is defined as:
+We can write this by broadcasting multiplication over $A$ and $B$ so as to produce as $m \times n \times p$ 3-dimensial array, followed by a sum over the 2 dimension. (Pause and check this is true).
+
+Try benchmarking on your machine the following where we implement matrix multiplication as a pair of broadcasting and sum operations:
+
+```python
+def matmul(A, B):
+    # Matrix multiplication using broadcasting
+    return (A[:, :, None] * B[None, :, :]).sum(axis=1)
+```
+
+::: challenge
+
+Benchmark the `matmul()` function on both the CPU and GPU using, for example, input matrices with dimensions 100 $\times$ 1000 and 1000 $\times$ 100. You will need to create input matrices that reside both on the host and the GPU.
+
+Boonus question: can you spot the danger of using this broadcasting algorithm for matrix multiplication? Hint: what happens if the matrices get larger?
+
+:::
+
+### Example: Discrete Fourier transform
+
+The [discrete Fourier transform](https://en.wikipedia.org/wiki/Discrete_Fourier_transform) is defined as:
 
 $X_k = \sum_n^N x_n  e^{-2 i \pi \frac{k n}{N}}$
 
 We can write this as a broadcasting operation across 2 dimensions (k by n), followed by a sum along the n'th dimension:
 
 ```python
-import cupy
-import cupyx
-import numpy as np
-
 def DFT(xs):
     # This function returns either np or cupy module depending on array type
     # which lets us write device-agnostic code.
@@ -221,92 +300,46 @@ def DFT(xs):
 
     phases = ks[:, None] * ns[None, :] / N
     return xp.sum(
-        xs[None, :] * np.exp(-2j * np.pi * phases),
+        xs[None, :] * xp.exp(-2j * np.pi * phases),
         axis=1
     )
-
-# Create a compex valued input where both real and imaginary components
-# are normally distributed.
-xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)
-xs_d = cupy.array(xs)
-
-# Sanity check! Does our version agree with numpy's own library?
-np.testing.assert_allclose(DFT(xs), np.fft.fft(xs))
-
-# CPU benchmark
-result = cupyx.profiler.benchmark(lambda: DFT(xs), n_repeat=10)
-print(result)
-
-# GPU benchmark
-result = cupyx.profiler.benchmark(lambda: DFT(xs_d), n_repeat=100)
-print(result)
 ```
 
-This is a function with elementwise multiplication, complex eponentiation, scalar multiplication and summation. When our inputs are GPU arrays it happens entirely on the GPU. Run this on your own machine and take note of the runtime comparison between the CPU and GPU versions.
+This is a function with elementwise multiplication, complex exponentiation, scalar multiplication and summation. When our inputs are GPU arrays it happens entirely on the GPU. Run this on your own machine and take note of the runtime comparison between the CPU and GPU versions.
 
 Also take note of the function `cupy.get_array_module(arr)`: this is a useful helper function to write device-agnostic code.
 
-### Matrix multuplication
+::: exercise
 
-Try benchmarking on your machine the following where we implement matrix multiplication as a pair of broadcasting and sum operations:
+1. Benchmark this code on both the CPU and GPU using a 1D input with normally distributed real and imaginary components: `xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)`
+2. Rewrite the code by extracting the elementwise component of the calculation into its own helper function and using the decorator `@cupy.fuse`. Does this speed up the computation? (Hint: you might need to experiment with a few different options.)
 
-```python
-import cupy
-import cupyx
-import numpy as np
+:::
 
-def matmul(A, B):
-    # Matrix multiplication using broadcasting
-    return (A[:, :, None] * B[None, :, :]).sum(axis=1)
+::: solution
 
-A = np.random.normal(size=(100, 1000))
-B = np.random.normal(size=(1000, 100))
-A_d = cupy.array(A)
-B_d = cupy.array(B)
+Since `@cupy.fuse` does a fair bit of black magic, it takes some experimentation to find the right subset of instructions to attempt to fuse. I found that any broadcast operations resulted in "stretched" dimensions resulted in an overall slowdown of the code.
 
-# Sanity check
-cupy.testing.assert_allclose(matmul(A, B), A @ B)
-
-# CPU benchmark
-result = cupyx.profiler.benchmark(lambda: matmul(A, B), n_repeat=10)
-print(result)
-
-# GPU benchmark
-result = cupyx.profiler.benchmark(lambda: matmul(A_d, B_d), n_repeat=10)
-print(result)
-```
-On my machine, the GPU result comes out clearly ahead by a factor of over 60! (Bonus points: Can you spot a danger in using this broadcasting algorithm for matrix multiplication? Hint: What happens if the matrices get larger?)
-
-### Fusing operations
-
-Just like numpy, a series of array operations are applied to CuPy arrays sequentially. This means that each operator (e.g. an addition, a scaler multiplication, perhaps a trigonometric function) is applied as a separate kernel, which must in turn read and write through the entirety of the arrays each time. This kernel dispatch overhead and the associated memory churn can be a considerable performance penalty.
-
-CuPy offers the ability to fuse _simple_ operators into a single operation by using a simple function decorator. In practice this means the operators are applied as a single kernel.
-
-Try running the following on your own machine and see how the speeds compare:
+The following resulted in a moderate speed increase:
 
 ```python
-import cupy
-import cupyx
-
-xs = cupy.random.normal(size=100_000)
-ys = cupy.random.normal(size=100_000)
-
-def sequential(xs, ys):
-    return (2 * xs + 3) * cupy.sin(ys)**4
-
 @cupy.fuse
-def fused(xs, ys):
-    return (2 * xs + 3) * cupy.sin(ys)**4
+def _DFT_fused(kns, N):
+    return cupy.exp(-2j * np.pi * kns / N)
 
-result = cupyx.profiler.benchmark(lambda: sequential(xs, ys), n_repeat=100)
-print(result)
+def DFT_fused(xs):
+    N = len(xs)
+    ks = cupy.arange(0, N)
+    ns = cupy.arange(0, N)
 
-result = cupyx.profiler.benchmark(lambda: fused(xs, ys), n_repeat=100)
-print(result)
+    # This broadcast operation results in a "stretch" of the dimensions
+    kns = ks[:, None] * ns[None, :]
+
+    # The sum is a reduction operation that shouldn't be fused
+    return cupy.sum(xs[None, :] *  _DFT_fused(kns, N), axis=1)
 ```
 
-On my machine I see an approximately threefold speed improvement but, as always, benchmark and profile your code.
+:::
 
 ## Linear Algebra
 
