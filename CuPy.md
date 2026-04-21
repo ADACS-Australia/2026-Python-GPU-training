@@ -279,7 +279,7 @@ def matmul(A, B):
 
 Benchmark the `matmul()` function on both the CPU and GPU using input matrices with dimensions 100 $\times$ 1000 and 1000 $\times$ 100. You will need to create input matrices that reside both on the host and the GPU and set up the benchmarking functions.
 
-Boonus question: can you spot the danger of using this broadcasting algorithm for matrix multiplication? Hint: what happens if the matrices get larger?
+Bonus question: can you spot the danger of using this broadcasting algorithm for matrix multiplication? Hint: what happens if the matrices get larger?
 
 :::
 
