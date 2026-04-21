@@ -169,7 +169,7 @@ When a kernel is run, the work is distributed in the following manner:
 
 Pictorially, this looks something like this:
 
-![](../assets/gpu-scheduling.png)
+![](assets/gpu-scheduling.png)
 
 You might wonder at this point: threads make sense as they're the fundamental unit of parallelisation, but why do I need to group them into blocks? And the answer is linked to the hardware design of the GPU. Inter-thread coordination, synchronisation and communication can only occur _within_ a SM, which in turn means only within a thread block. So far we've seen kernel examples that don't require these facilities, but many workloads (and optimisations) need inter-thread coordination or communication.
 
@@ -275,29 +275,143 @@ We've talked earlier about how a warp executes its threads in lockstep. But in t
 When a warp encounters a condition, it will first evaluate the condition. Then:
 
 - If the condition evaluates _identically_ across the warp (e.g. each thread evaluates to true), then the warp will continue executing the one conditional branch.
-- On the other hand, if threads evaluate _differently_ across the warp then we get _warp divergence_. In this case, the warp must evaluate both branches of the condition, and due to the lockstep nature of SIMT, it will do this sequentially: first one branch, and then the other. Each thread that is not part of the current conditional branch will be masked, essentially performing a "no-op" for their processor cycle.
+- On the other hand, if threads evaluate _differently_ across the warp then we get _warp divergence_. In this case, the warp must evaluate both branches of the condition, and due to the lockstep nature of SIMT, it will do this sequentially: first one branch, and then the other. Each thread that is not part of the current conditional branch will be masked, essentially performing a "no-op" for eachof their respective processor cycles.
 
-Warp divergence is expensive since it wastes processor cycles. You will want to ensure warp divergence occurs in as few warps as possible, and this play a factor in both kernel design and grid configuration.
+Warp divergence is expensive since it wastes processor cycles. You will want to ensure warp divergence occurs in as few warps as possible, and this plays a factor in both kernel design and grid configuration.
 
 In the previous `adder` kernel, you will notice warp divergence occurs in exactly one warp: the warp whose index range breaches the length of the underlying arrays.
+
+## Mutliplier
+
+::: exercise
+
+With just minor modifications, change the 1D `adder` kernel to a `mutliplier` kernel that computes elementwise multiplication. e.g. $z_i = x_i \times y_i$.
+
+Add a test to ensure correctness.
+
+```python
+import math
+
+import cupy
+from numba import cuda
+
+@cuda.jit
+def multiplier(xs, ys, zs):
+    # TODO
+
+N = 12_000_000
+xs_d = cupy.random.normal(size=N)
+ys_d = cupy.random.normal(size=N)
+zs_d = cupy.empty_like(xs_d)
+
+# TODO:
+# 1. Configure the thread and block count
+# 2. Call the kernel
+# 3. Test output using cupy.testing.assert_allclose()
+```
+
+:::
+
+::: solution
+
+```python
+import math
+
+import cupy
+from numba import cuda
+
+@cuda.jit
+def multiplier(xs, ys, zs):
+    i = cuda.grid(1)
+    zs[i] = xs[i] * ys[i]
+
+N = 12_000_000
+xs_d = cupy.random.normal(size=N)
+ys_d = cupy.random.normal(size=N)
+zs_d = cupy.empty_like(xs_d)
+
+nthreads = 256
+nblocks = math.ceil(N / nthreads)
+multiplier[nblocks, nthreads](xs_d, ys_d, zs_d)
+
+cupy.testing.assert_allclose(zs_d, xs_d * ys_d)
+```
+
+:::
 
 ## Matrix multiplication
 
 Let's attempt to write our own kernel that performs matrix multiplication. Recall that if $A$ is an $m \times n$ matrix, and $B$ a $n \times p$ matrix, then their product is a $m \times p$ matrix $C$ having elements $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
+
+Let's begin by first writing this in simple Python as a series of for loops:
+
+```python
+import numpy as np
+
+def matmul(A, B, C):
+    for i in range(C.shape[0]):
+        for j in range(C.shape[1]):
+            for k in range(A.shape[1]):
+                C[i, j] += A[i, k] * B[k, j]
+
+A = np.random.normal(size=(32, 16))
+B = np.random.normal(size=(16, 24))
+C = np.zeros((32, 24))
+matmul(A, B, C)
+
+np.testing.assert_allclose(C, A @ B)
+
+```
 
 When considering how to design a kernel for this problem, we need to answer a few interrelated questions:
 
 - What is a unit of parallelisation? Or put differently, what does the index of each kernel map to in our problem domain? Is it an element in one (or both) of the input matrices? Is it an element of the output matrix? Is it a row or column?
 - How should we configure our grid? What is the span of the grid and what is its dimension?
 
-To answer the first question, there are in fact many different units of parallelisation we could consider but the simplest is to parallise over the elements of $C$. This means each kernel is responsible for making the summation over the combination of elements from $A$ and $b$ and then writing once to a unique element of $C$. Not only is this form suggested by the equation given earlier, but it helps us avoid data races that would occur if we were to parallelise over the inputs instead. (Think about this! How would separate kernels safely add their partial contributions to $C$?)
+::: exercise
 
-Once we understand the unit of parallelisation, the grid configuration becomes more obvious: a 2D grid that spans $m \times p$.
+Consider the following three different variants of kernels and associated grid configurations. What is the preferred choice and why?
 
+**Option 1:**
+
+```python
+# Grid: 3D grid over all values of i, j, k
+def kernel1(i, j, k, A, B , C):
+    C[i, j] += A[i, k] * B[k, j]
+
+# Grid: 2D grid over all values of i, j
+def kernel2(i, j, A, B, C):
+    for k in range(A.shape[1]):
+        C[i, j] += A[i, k] * B[k, j]
+
+# Grid: 2D grid over all value sof i, k
+def kernel3(i, k, A, B, C):
+    for j in range(C.shape[1]):
+        C[i, j] += A[i, k] * B[k, j]
+
+# Grid: 1D grid over all values of i
+def kernel3(i, A, B, C):
+    for j in range(C.shape[1]):
+        for k in range(A.shape[1]):
+            C[i, j] += A[i, k] * B[k, j]
+```
+
+:::
+
+::: solution
+
+Two considerations stand out when comparing the kernel options:
+
+* **Race conditions:** Recall that reading, computing, and writing to memory in parallel code does not happen all at once, and multiple threads competing to do this to _the same memory location_ will introduce _race conditions_. Kernels 1 and 3 both introduce kernels with race conditions. In kenrel 1, for each `i,j` coorindate there will be `k` competing kernels. The situation is similar for kernel 3. There are (complex) ways to mitigate these race conditions but we would have to be justified in taking this route.
+* **Maximal parallisation:** All things being equal, we would typically want to maximise the degree of parallelisation and fan out the work across the many thousands of cores of the GPU. Kernel 1 has $i \times j \times k$ threads which, if it didn't suffer from race conditions, would be ideal. In constrast, kernel 3 parallelises only over the $i$ rows of $A$ and for most sizes of matrices even with thousands of rows, this will poorly utilise the GPU (also known as poor occupancy). Kernel 2, on the other hand, has $i \times j$ threads, which even for kernels with dimensions of only a few hundred rows and columns results in tens of thousands of threads.
+
+On these grounds, kernel 2 is the preferred option with a 2D grid configuration than spans $i \times j$.
+
+:::
 
 ::: challenge
 
-Have a go at filling in the missing lines from within the kernel definition. Hint: you want to implement in code the summation for `C[i, j]`.
+Have a go at filling in the missing lines from within the kernel definition and grid configuration.
 
 ```python
 import cupy
@@ -314,8 +428,8 @@ B = cupy.random.normal(size=(200, 150))
 C = cupy.zeros((100, 150))
 
 threads = 16
-nblockx = math.ceil(C.shape[0] / threads)
-nblocky = math.ceil(C.shape[1] / threads)
+nblockx = math.ceil( #TODO )
+nblocky = math.ceil( #TODO )
 matmul[(nblockx, nblocky), (threads, threads)](A, B, C)
 
 cupy.testing.assert_allclose(C, A @ B)
@@ -356,7 +470,7 @@ Try benchmarking these two versions. Which is faster? Can you guess why?
 
 ::: challenge
 
-Rewrite the matrix multiplication using a 1D grid. Under this configuration, every kernel is still responsible for a single element of $C$ but it must map from a 1D index to a 2D index. What is the span of the 1D grid?
+Rewrite the matrix multiplication using a 1D grid. Under this configuration, every kernel is still responsible for a single element of $C$ but it must map from a 1D index to a 2D index. What is the span of the 1D grid? Hint: familiarise yourself with the Python function `divmod()`.
 
 :::
 
@@ -572,7 +686,7 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 - The threadblock will sum the contents of its shared memory using a binary reduction (see diagram).
 - Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
-<img src="../assets/binary-reduction.png" height=300 alt="Binary reduction">
+<img src="assets/binary-reduction.png" height=300 alt="Binary reduction">
 
 **Caption:** An illustration of a binary reduction within thread block. On each step, only half the number of threads participate in the reduction as in the previous step. [[Source]](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
 
