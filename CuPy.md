@@ -225,7 +225,12 @@ ys = cupy.zeros_like(xs)
 cupy.testing.assert_allclose(exp(xs, ys), cupy.exp(xs))
 ```
 
-One point to note is that `math.factorial()` did not change. This is computed on the CPU and since it is a simple scalar value it is automatically transferred to the GPU.
+To have this compute on the GPU we did just two things:
+
+* We ensured arrays were created (or transferred to) the GPU.
+* We swapped out `np` module prefixes for `cupy`, e.g. by calling `cupy.exp()`.
+
+The nitty gritty of _how_ CuPy compiles this to GPU code and the way in which it chooses to parallelise the code is out of our hands. In return, we get operations that are no more complicated than Numpy.
 
 ### Fusing operations
 
