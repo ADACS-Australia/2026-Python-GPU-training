@@ -443,7 +443,7 @@ reinforce the objectives.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Output </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper">
 <h3 class="code-label">OUTPUT<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -472,7 +472,7 @@ challenge blocks?</h3>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <p>You can add a line with at least three colons and a
 <code>solution</code> tag.</p>
@@ -811,7 +811,7 @@ serial form first, and use this to test your parallel code later.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1290,7 +1290,7 @@ first.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1568,7 +1568,7 @@ result.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb15">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1909,8 +1909,8 @@ manner:</p>
 <li>The GPU scheduler parcels off thread blocks, and enqueues it to each
 streaming multiprocessor (SM) as it has some availability.</li>
 <li>Each SM is then, in turn, responsible for scheduling the thread
-block to run as a series of warps (32 or 64 threads that run in lock
-step) as soon as it has idle cores.</li>
+block to run as a series of warps (32 or 64 threads that run in
+lockstep) as soon as it has idle cores.</li>
 </ol>
 <p>Pictorially, this looks something like this:</p>
 <figure><img src="assets/gpu-scheduling.png" class="figure mx-auto d-block"></figure><p>You might wonder at this point: threads make sense as they’re the
@@ -2255,7 +2255,7 @@ why?</p>
 <span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
 <span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a>        C[i, j] <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
 <span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a></span>
-<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a><span class="co"># Grid: 2D grid over all value sof i, k</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a><span class="co"># Grid: 2D grid over all values of i, k</span></span>
 <span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a><span class="kw">def</span> kernel3(i, k, A, B, C):</span>
 <span id="cb11-12"><a href="#cb11-12" tabindex="-1" aria-label="code-block-11-12"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(C.shape[<span class="dv">1</span>]):</span>
 <span id="cb11-13"><a href="#cb11-13" tabindex="-1" aria-label="code-block-11-13"></a>        C[i, j] <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
@@ -2284,7 +2284,7 @@ and writing to memory in parallel code does not happen all at once, and
 multiple threads competing to do this to <em>the same memory
 location</em> will introduce <em>race conditions</em>. Kernels 1 and 3
 both introduce kernels with race conditions. In kenrel 1, for each
-<code>i,j</code> coorindate there will be <code>k</code> competing
+<code>i,j</code> coordindate there will be <code>k</code> competing
 kernels. The situation is similar for kernel 3. There are (complex) ways
 to mitigate these race conditions but we would have to be justified in
 taking this route.</li>
@@ -2301,7 +2301,7 @@ kernels with dimensions of only a few hundred rows and columns results
 in tens of thousands of threads.</li>
 </ul>
 <p>On these grounds, kernel 2 is the preferred option with a 2D grid
-configuration than spans <span class="math inline">\(i \times
+configuration that spans <span class="math inline">\(i \times
 j\)</span>.</p>
 </div>
 </div>
@@ -2361,21 +2361,30 @@ definition and grid configuration.</p>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
 <span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a>            C[i, j] <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span></code></pre>
 </div>
-<p>An alternative is to store the partial sum in a <em>local</em>
-variable before writing out to the global memory location at
-<code>C[i, j]</code>. For example:</p>
+<p>And with the following grid configuration:</p>
 <div class="codewrapper sourceCode" id="cb14">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a><span class="at">@cuda.jit</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a><span class="kw">def</span> matmul(A, B, C):</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>    i, j <span class="op">=</span> cuda.grid(<span class="dv">2</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a>    <span class="cf">if</span> i <span class="op">&lt;</span> C.shape[<span class="dv">0</span>] <span class="kw">and</span> j <span class="op">&lt;</span> C.shape[<span class="dv">1</span>]:</span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1" aria-label="code-block-14-5"></a>        cij <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1" aria-label="code-block-14-6"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1" aria-label="code-block-14-7"></a>            cij <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1" aria-label="code-block-14-8"></a></span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1" aria-label="code-block-14-9"></a>        C[i, j] <span class="op">=</span> cij</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a>threads <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a>nblockx <span class="op">=</span> math.ceil(C.size[<span class="dv">0</span>] <span class="op">/</span> threads)</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>nblocky <span class="op">=</span> math.ceil(C.size[<span class="dv">1</span>] <span class="op">/</span> threads)</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a>matmul[(nblockx, nblocky), (threads, threads)](A, B, C)</span></code></pre>
+</div>
+<p>An alternative is to store the partial sum in a <em>local</em>
+variable before writing out to the global memory location at
+<code>C[i, j]</code>. For example:</p>
+<div class="codewrapper sourceCode" id="cb15">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" tabindex="-1" aria-label="code-block-15-1"></a><span class="at">@cuda.jit</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1" aria-label="code-block-15-2"></a><span class="kw">def</span> matmul(A, B, C):</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1" aria-label="code-block-15-3"></a>    i, j <span class="op">=</span> cuda.grid(<span class="dv">2</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1" aria-label="code-block-15-4"></a>    <span class="cf">if</span> i <span class="op">&lt;</span> C.shape[<span class="dv">0</span>] <span class="kw">and</span> j <span class="op">&lt;</span> C.shape[<span class="dv">1</span>]:</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1" aria-label="code-block-15-5"></a>        cij <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1" aria-label="code-block-15-6"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1" aria-label="code-block-15-7"></a>            cij <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1" aria-label="code-block-15-8"></a></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1" aria-label="code-block-15-9"></a>        C[i, j] <span class="op">=</span> cij</span></code></pre>
 </div>
 <p>Try benchmarking these two versions. Which is faster? Can you guess
 why?</p>
@@ -2406,34 +2415,34 @@ yourself with the Python function <code>divmod()</code>.</p>
 </button>
 <div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
 <div class="accordion-body">
-<div class="codewrapper sourceCode" id="cb15">
+<div class="codewrapper sourceCode" id="cb16">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" tabindex="-1" aria-label="code-block-15-1"></a><span class="im">import</span> math</span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1" aria-label="code-block-15-2"></a></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1" aria-label="code-block-15-3"></a><span class="im">import</span> cupy</span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1" aria-label="code-block-15-4"></a><span class="im">from</span> numba <span class="im">import</span> cuda</span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1" aria-label="code-block-15-5"></a></span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1" aria-label="code-block-15-6"></a><span class="at">@cuda.jit</span></span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1" aria-label="code-block-15-7"></a><span class="kw">def</span> matmul(A, B, C):</span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1" aria-label="code-block-15-8"></a>    ij <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1" aria-label="code-block-15-9"></a></span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1" aria-label="code-block-15-10"></a>    <span class="cf">if</span> ij <span class="op">&lt;</span> C.size:</span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1" aria-label="code-block-15-11"></a>        i, j <span class="op">=</span> <span class="bu">divmod</span>(ij, C.shape[<span class="dv">1</span>])</span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1" aria-label="code-block-15-12"></a></span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1" aria-label="code-block-15-13"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1" aria-label="code-block-15-14"></a>            C[i, j] <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
-<span id="cb15-15"><a href="#cb15-15" tabindex="-1" aria-label="code-block-15-15"></a></span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1" aria-label="code-block-15-16"></a></span>
-<span id="cb15-17"><a href="#cb15-17" tabindex="-1" aria-label="code-block-15-17"></a>A <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">100</span>, <span class="dv">200</span>))</span>
-<span id="cb15-18"><a href="#cb15-18" tabindex="-1" aria-label="code-block-15-18"></a>B <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">200</span>, <span class="dv">150</span>))</span>
-<span id="cb15-19"><a href="#cb15-19" tabindex="-1" aria-label="code-block-15-19"></a>C <span class="op">=</span> cupy.zeros((<span class="dv">100</span>, <span class="dv">150</span>))</span>
-<span id="cb15-20"><a href="#cb15-20" tabindex="-1" aria-label="code-block-15-20"></a></span>
-<span id="cb15-21"><a href="#cb15-21" tabindex="-1" aria-label="code-block-15-21"></a>threads <span class="op">=</span> <span class="dv">256</span></span>
-<span id="cb15-22"><a href="#cb15-22" tabindex="-1" aria-label="code-block-15-22"></a>nblocks <span class="op">=</span> math.ceil(C.size <span class="op">/</span> threads)</span>
-<span id="cb15-23"><a href="#cb15-23" tabindex="-1" aria-label="code-block-15-23"></a>matmul[nblocks, threads](A, B, C)</span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1" aria-label="code-block-15-24"></a></span>
-<span id="cb15-25"><a href="#cb15-25" tabindex="-1" aria-label="code-block-15-25"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" tabindex="-1" aria-label="code-block-16-1"></a><span class="im">import</span> math</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1" aria-label="code-block-16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1" aria-label="code-block-16-3"></a><span class="im">import</span> cupy</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1" aria-label="code-block-16-4"></a><span class="im">from</span> numba <span class="im">import</span> cuda</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1" aria-label="code-block-16-5"></a></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1" aria-label="code-block-16-6"></a><span class="at">@cuda.jit</span></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1" aria-label="code-block-16-7"></a><span class="kw">def</span> matmul(A, B, C):</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1" aria-label="code-block-16-8"></a>    ij <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1" aria-label="code-block-16-9"></a></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1" aria-label="code-block-16-10"></a>    <span class="cf">if</span> ij <span class="op">&lt;</span> C.size:</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1" aria-label="code-block-16-11"></a>        i, j <span class="op">=</span> <span class="bu">divmod</span>(ij, C.shape[<span class="dv">1</span>])</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1" aria-label="code-block-16-12"></a></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1" aria-label="code-block-16-13"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1" aria-label="code-block-16-14"></a>            C[i, j] <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1" aria-label="code-block-16-15"></a></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1" aria-label="code-block-16-16"></a></span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1" aria-label="code-block-16-17"></a>A <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">100</span>, <span class="dv">200</span>))</span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1" aria-label="code-block-16-18"></a>B <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>(<span class="dv">200</span>, <span class="dv">150</span>))</span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1" aria-label="code-block-16-19"></a>C <span class="op">=</span> cupy.zeros((<span class="dv">100</span>, <span class="dv">150</span>))</span>
+<span id="cb16-20"><a href="#cb16-20" tabindex="-1" aria-label="code-block-16-20"></a></span>
+<span id="cb16-21"><a href="#cb16-21" tabindex="-1" aria-label="code-block-16-21"></a>threads <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb16-22"><a href="#cb16-22" tabindex="-1" aria-label="code-block-16-22"></a>nblocks <span class="op">=</span> math.ceil(C.size <span class="op">/</span> threads)</span>
+<span id="cb16-23"><a href="#cb16-23" tabindex="-1" aria-label="code-block-16-23"></a>matmul[nblocks, threads](A, B, C)</span>
+<span id="cb16-24"><a href="#cb16-24" tabindex="-1" aria-label="code-block-16-24"></a></span>
+<span id="cb16-25"><a href="#cb16-25" tabindex="-1" aria-label="code-block-16-25"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
 </div>
 </div>
 </div>
@@ -2449,11 +2458,11 @@ own from scratch.</p>
 is defined as:</p>
 <p><span class="math inline">\(X_k = \sum_n^N x_n  e^{-2 i \pi \frac{k
 n}{N}}\)</span></p>
-<p>In all the examples, we’ll using a complex input given by:</p>
-<div class="codewrapper sourceCode" id="cb16">
+<p>In all the examples, we’ll be using a complex input given by:</p>
+<div class="codewrapper sourceCode" id="cb17">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" tabindex="-1" aria-label="code-block-16-1"></a>xs <span class="op">=</span> np.random.normal(N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> np.random.normal(N)</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" tabindex="-1" aria-label="code-block-17-1"></a>xs <span class="op">=</span> np.random.normal(N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> np.random.normal(N)</span></code></pre>
 </div>
 <p>for varying values of N.</p>
 <div id="part-1" class="callout discussion">
@@ -2477,18 +2486,18 @@ stage, set <code>N</code> to be small (~100).</p>
 </button>
 <div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
 <div class="accordion-body">
-<div class="codewrapper sourceCode" id="cb17">
+<div class="codewrapper sourceCode" id="cb18">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" tabindex="-1" aria-label="code-block-17-1"></a><span class="kw">def</span> dft(xs):</span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1" aria-label="code-block-17-2"></a>    Xs <span class="op">=</span> np.zeros_like(xs)</span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1" aria-label="code-block-17-3"></a></span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1" aria-label="code-block-17-4"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1" aria-label="code-block-17-5"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(N):</span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1" aria-label="code-block-17-6"></a>        <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1" aria-label="code-block-17-7"></a>            Xs[k] <span class="op">+=</span> xs[n] <span class="op">*</span> np.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N)</span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1" aria-label="code-block-17-8"></a></span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1" aria-label="code-block-17-9"></a>    <span class="cf">return</span> Xs</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" tabindex="-1" aria-label="code-block-18-1"></a><span class="kw">def</span> dft(xs):</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1" aria-label="code-block-18-2"></a>    Xs <span class="op">=</span> np.zeros_like(xs)</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1" aria-label="code-block-18-3"></a></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1" aria-label="code-block-18-4"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1" aria-label="code-block-18-5"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1" aria-label="code-block-18-6"></a>        <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1" aria-label="code-block-18-7"></a>            Xs[k] <span class="op">+=</span> xs[n] <span class="op">*</span> np.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N)</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1" aria-label="code-block-18-8"></a></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1" aria-label="code-block-18-9"></a>    <span class="cf">return</span> Xs</span></code></pre>
 </div>
 </div>
 </div>
@@ -2502,9 +2511,9 @@ stage, set <code>N</code> to be small (~100).</p>
 <div id="part-2" class="callout-inner">
 <h3 class="callout-title">Part 2</h3>
 <div class="callout-content">
-<p>Parallelise your code using numba’s <code>prange</code> function.
-Which loop or loops are parallel? What is the unit of
-parallelisation?</p>
+<p>Parallelise your code on the CPU using numba’s <code>prange</code>
+function and <code>njit</code> decorator. Which loop or loops are
+parallel? What is the unit of parallelisation?</p>
 <p>Extract the inner loop as a standalone kernel function.</p>
 </div>
 </div>
@@ -2516,23 +2525,25 @@ parallelisation?</p>
 </button>
 <div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
 <div class="accordion-body">
-<div class="codewrapper sourceCode" id="cb18">
+<p>We parallelise over <span class="math inline">\(k\)</span> but not
+<span class="math inline">\(n\)</span>, since including <span class="math inline">\(n\)</span> would introduce race conditions.</p>
+<div class="codewrapper sourceCode" id="cb19">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" tabindex="-1" aria-label="code-block-18-1"></a><span class="at">@njit</span></span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1" aria-label="code-block-18-2"></a><span class="kw">def</span> kernel(k, xs, Xs):</span>
-<span id="cb18-3"><a href="#cb18-3" tabindex="-1" aria-label="code-block-18-3"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb18-4"><a href="#cb18-4" tabindex="-1" aria-label="code-block-18-4"></a>    <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
-<span id="cb18-5"><a href="#cb18-5" tabindex="-1" aria-label="code-block-18-5"></a>        Xs[k] <span class="op">+=</span> xs[n] <span class="op">*</span> np.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N)</span>
-<span id="cb18-6"><a href="#cb18-6" tabindex="-1" aria-label="code-block-18-6"></a></span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1" aria-label="code-block-18-7"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb18-8"><a href="#cb18-8" tabindex="-1" aria-label="code-block-18-8"></a><span class="kw">def</span> dft(xs):</span>
-<span id="cb18-9"><a href="#cb18-9" tabindex="-1" aria-label="code-block-18-9"></a>    Xs <span class="op">=</span> np.zeros_like(xs)</span>
-<span id="cb18-10"><a href="#cb18-10" tabindex="-1" aria-label="code-block-18-10"></a></span>
-<span id="cb18-11"><a href="#cb18-11" tabindex="-1" aria-label="code-block-18-11"></a>    <span class="cf">for</span> k <span class="kw">in</span> prange(N):</span>
-<span id="cb18-12"><a href="#cb18-12" tabindex="-1" aria-label="code-block-18-12"></a>        kernel(k, xs, Xs)</span>
-<span id="cb18-13"><a href="#cb18-13" tabindex="-1" aria-label="code-block-18-13"></a></span>
-<span id="cb18-14"><a href="#cb18-14" tabindex="-1" aria-label="code-block-18-14"></a>    <span class="cf">return</span> Xs</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" tabindex="-1" aria-label="code-block-19-1"></a><span class="at">@njit</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1" aria-label="code-block-19-2"></a><span class="kw">def</span> kernel(k, xs, Xs):</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1" aria-label="code-block-19-3"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1" aria-label="code-block-19-4"></a>    <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1" aria-label="code-block-19-5"></a>        Xs[k] <span class="op">+=</span> xs[n] <span class="op">*</span> np.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N)</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1" aria-label="code-block-19-6"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1" aria-label="code-block-19-7"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1" aria-label="code-block-19-8"></a><span class="kw">def</span> dft(xs):</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1" aria-label="code-block-19-9"></a>    Xs <span class="op">=</span> np.zeros_like(xs)</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a>    <span class="cf">for</span> k <span class="kw">in</span> prange(N):</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>        kernel(k, xs, Xs)</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a>    <span class="cf">return</span> Xs</span></code></pre>
 </div>
 </div>
 </div>
@@ -2576,38 +2587,38 @@ computation. That is:
 </button>
 <div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
 <div class="accordion-body">
-<div class="codewrapper sourceCode" id="cb19">
+<div class="codewrapper sourceCode" id="cb20">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" tabindex="-1" aria-label="code-block-19-1"></a><span class="im">import</span> math</span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1" aria-label="code-block-19-2"></a></span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1" aria-label="code-block-19-3"></a><span class="im">import</span> cupy</span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1" aria-label="code-block-19-4"></a><span class="im">from</span> numba <span class="im">import</span> cuda</span>
-<span id="cb19-5"><a href="#cb19-5" tabindex="-1" aria-label="code-block-19-5"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb19-6"><a href="#cb19-6" tabindex="-1" aria-label="code-block-19-6"></a></span>
-<span id="cb19-7"><a href="#cb19-7" tabindex="-1" aria-label="code-block-19-7"></a><span class="at">@cuda.jit</span></span>
-<span id="cb19-8"><a href="#cb19-8" tabindex="-1" aria-label="code-block-19-8"></a><span class="kw">def</span> dft(xs, Xs):</span>
-<span id="cb19-9"><a href="#cb19-9" tabindex="-1" aria-label="code-block-19-9"></a>    k <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a></span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>    <span class="cf">if</span> k <span class="op">&lt;</span> N:</span>
-<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a>        xs_k <span class="op">=</span> <span class="bu">complex</span>(<span class="dv">0</span>)</span>
-<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a>        <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
-<span id="cb19-15"><a href="#cb19-15" tabindex="-1" aria-label="code-block-19-15"></a>            phase <span class="op">=</span> <span class="op">-</span><span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N</span>
-<span id="cb19-16"><a href="#cb19-16" tabindex="-1" aria-label="code-block-19-16"></a>            xs_k <span class="op">+=</span> xs[n] <span class="op">*</span> <span class="bu">complex</span>(math.cos(phase), math.sin(phase))</span>
-<span id="cb19-17"><a href="#cb19-17" tabindex="-1" aria-label="code-block-19-17"></a></span>
-<span id="cb19-18"><a href="#cb19-18" tabindex="-1" aria-label="code-block-19-18"></a>        Xs[k] <span class="op">=</span> xs_k</span>
-<span id="cb19-19"><a href="#cb19-19" tabindex="-1" aria-label="code-block-19-19"></a></span>
-<span id="cb19-20"><a href="#cb19-20" tabindex="-1" aria-label="code-block-19-20"></a>N <span class="op">=</span> <span class="dv">100_000</span></span>
-<span id="cb19-21"><a href="#cb19-21" tabindex="-1" aria-label="code-block-19-21"></a>xs <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> cupy.random.normal(size<span class="op">=</span>N)</span>
-<span id="cb19-22"><a href="#cb19-22" tabindex="-1" aria-label="code-block-19-22"></a>Xs <span class="op">=</span> cupy.zeros_like(xs)</span>
-<span id="cb19-23"><a href="#cb19-23" tabindex="-1" aria-label="code-block-19-23"></a></span>
-<span id="cb19-24"><a href="#cb19-24" tabindex="-1" aria-label="code-block-19-24"></a>threads <span class="op">=</span> <span class="dv">256</span></span>
-<span id="cb19-25"><a href="#cb19-25" tabindex="-1" aria-label="code-block-19-25"></a>nblocks <span class="op">=</span> math.ceil(N <span class="op">/</span> threads)</span>
-<span id="cb19-26"><a href="#cb19-26" tabindex="-1" aria-label="code-block-19-26"></a></span>
-<span id="cb19-27"><a href="#cb19-27" tabindex="-1" aria-label="code-block-19-27"></a>dft[nblocks, threads](xs, Xs)</span>
-<span id="cb19-28"><a href="#cb19-28" tabindex="-1" aria-label="code-block-19-28"></a></span>
-<span id="cb19-29"><a href="#cb19-29" tabindex="-1" aria-label="code-block-19-29"></a>cupy.testing.assert_allclose(Xs, cupy.fft.fft(xs))</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" tabindex="-1" aria-label="code-block-20-1"></a><span class="im">import</span> math</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1" aria-label="code-block-20-2"></a></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1" aria-label="code-block-20-3"></a><span class="im">import</span> cupy</span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1" aria-label="code-block-20-4"></a><span class="im">from</span> numba <span class="im">import</span> cuda</span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1" aria-label="code-block-20-5"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1" aria-label="code-block-20-6"></a></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1" aria-label="code-block-20-7"></a><span class="at">@cuda.jit</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1" aria-label="code-block-20-8"></a><span class="kw">def</span> dft(xs, Xs):</span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1" aria-label="code-block-20-9"></a>    k <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1" aria-label="code-block-20-10"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1" aria-label="code-block-20-11"></a></span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1" aria-label="code-block-20-12"></a>    <span class="cf">if</span> k <span class="op">&lt;</span> N:</span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1" aria-label="code-block-20-13"></a>        xs_k <span class="op">=</span> <span class="bu">complex</span>(<span class="dv">0</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1" aria-label="code-block-20-14"></a>        <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1" aria-label="code-block-20-15"></a>            phase <span class="op">=</span> <span class="op">-</span><span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N</span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1" aria-label="code-block-20-16"></a>            xs_k <span class="op">+=</span> xs[n] <span class="op">*</span> <span class="bu">complex</span>(math.cos(phase), math.sin(phase))</span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1" aria-label="code-block-20-17"></a></span>
+<span id="cb20-18"><a href="#cb20-18" tabindex="-1" aria-label="code-block-20-18"></a>        Xs[k] <span class="op">=</span> xs_k</span>
+<span id="cb20-19"><a href="#cb20-19" tabindex="-1" aria-label="code-block-20-19"></a></span>
+<span id="cb20-20"><a href="#cb20-20" tabindex="-1" aria-label="code-block-20-20"></a>N <span class="op">=</span> <span class="dv">100_000</span></span>
+<span id="cb20-21"><a href="#cb20-21" tabindex="-1" aria-label="code-block-20-21"></a>xs <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> cupy.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1" aria-label="code-block-20-22"></a>Xs <span class="op">=</span> cupy.zeros_like(xs)</span>
+<span id="cb20-23"><a href="#cb20-23" tabindex="-1" aria-label="code-block-20-23"></a></span>
+<span id="cb20-24"><a href="#cb20-24" tabindex="-1" aria-label="code-block-20-24"></a>threads <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb20-25"><a href="#cb20-25" tabindex="-1" aria-label="code-block-20-25"></a>nblocks <span class="op">=</span> math.ceil(N <span class="op">/</span> threads)</span>
+<span id="cb20-26"><a href="#cb20-26" tabindex="-1" aria-label="code-block-20-26"></a></span>
+<span id="cb20-27"><a href="#cb20-27" tabindex="-1" aria-label="code-block-20-27"></a>dft[nblocks, threads](xs, Xs)</span>
+<span id="cb20-28"><a href="#cb20-28" tabindex="-1" aria-label="code-block-20-28"></a></span>
+<span id="cb20-29"><a href="#cb20-29" tabindex="-1" aria-label="code-block-20-29"></a>cupy.testing.assert_allclose(Xs, cupy.fft.fft(xs))</span></code></pre>
 </div>
 </div>
 </div>
@@ -2624,37 +2635,6 @@ example, summing an array where the reduction operator is addition
 a <a href="https://en.wikipedia.org/wiki/MapReduce" class="external-link">mapreduce</a>.</p>
 <p>In parallel contexts, reductions are not easy to write. Consider the
 following implementation of a sum:</p>
-<div class="codewrapper sourceCode" id="cb20">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" tabindex="-1" aria-label="code-block-20-1"></a><span class="at">@cuda.jit</span></span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1" aria-label="code-block-20-2"></a><span class="kw">def</span> <span class="bu">sum</span>(xs, acc):</span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1" aria-label="code-block-20-3"></a>    <span class="co"># Each thread performs a partial sum</span></span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1" aria-label="code-block-20-4"></a>    _acc <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1" aria-label="code-block-20-5"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(cuda.grid(<span class="dv">1</span>), <span class="bu">len</span>(xs), cuda.gridsize(<span class="dv">1</span>)):</span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1" aria-label="code-block-20-6"></a>        _acc <span class="op">+=</span> xs[i]</span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1" aria-label="code-block-20-7"></a></span>
-<span id="cb20-8"><a href="#cb20-8" tabindex="-1" aria-label="code-block-20-8"></a>    acc[<span class="dv">0</span>] <span class="op">+=</span> _acc</span>
-<span id="cb20-9"><a href="#cb20-9" tabindex="-1" aria-label="code-block-20-9"></a></span>
-<span id="cb20-10"><a href="#cb20-10" tabindex="-1" aria-label="code-block-20-10"></a>N <span class="op">=</span> <span class="dv">100_000_000</span></span>
-<span id="cb20-11"><a href="#cb20-11" tabindex="-1" aria-label="code-block-20-11"></a>xs <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>N)</span>
-<span id="cb20-12"><a href="#cb20-12" tabindex="-1" aria-label="code-block-20-12"></a>acc <span class="op">=</span> cupy.zeros(<span class="dv">1</span>)</span>
-<span id="cb20-13"><a href="#cb20-13" tabindex="-1" aria-label="code-block-20-13"></a></span>
-<span id="cb20-14"><a href="#cb20-14" tabindex="-1" aria-label="code-block-20-14"></a>threads <span class="op">=</span> <span class="dv">256</span></span>
-<span id="cb20-15"><a href="#cb20-15" tabindex="-1" aria-label="code-block-20-15"></a>nblocks <span class="op">=</span> math.ceil(N <span class="op">/</span> threads <span class="op">/</span> <span class="dv">4</span>)  <span class="co"># each thread will add 4 elements of xs</span></span>
-<span id="cb20-16"><a href="#cb20-16" tabindex="-1" aria-label="code-block-20-16"></a><span class="bu">sum</span>[nblocks, threads](xs, acc)</span></code></pre>
-</div>
-<p>In general, this will fail. Can you see why?</p>
-<p>As we saw in the parallelism section, this fails due to a race
-condition: each thread is attempting to read, add, and write a value to
-global memory, walking all over each other.</p>
-<p>One tool in our toolbox is <a href="https://nvidia.github.io/numba-cuda/user/intrinsics.html#supported-atomic-operations" class="external-link"><em>atomic
-operations</em></a>. These are a limited set of operations (e.g. +,
-<code>max</code>, <code>min</code>, but not multiplication!) on a
-limited set of types (mostly just floats and integers) that allow us to
-do something like a read-add-write <em>as a single operation.</em> In
-this case, we can use <code>cuda.atomic_add()</code> and see how this
-works:</p>
 <div class="codewrapper sourceCode" id="cb21">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -2665,15 +2645,46 @@ works:</p>
 <span id="cb21-5"><a href="#cb21-5" tabindex="-1" aria-label="code-block-21-5"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(cuda.grid(<span class="dv">1</span>), <span class="bu">len</span>(xs), cuda.gridsize(<span class="dv">1</span>)):</span>
 <span id="cb21-6"><a href="#cb21-6" tabindex="-1" aria-label="code-block-21-6"></a>        _acc <span class="op">+=</span> xs[i]</span>
 <span id="cb21-7"><a href="#cb21-7" tabindex="-1" aria-label="code-block-21-7"></a></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1" aria-label="code-block-21-8"></a>    cuda.atomic.add(acc, <span class="dv">0</span>, _acc)</span></code></pre>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1" aria-label="code-block-21-8"></a>    acc[<span class="dv">0</span>] <span class="op">+=</span> _acc</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1" aria-label="code-block-21-9"></a></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1" aria-label="code-block-21-10"></a>N <span class="op">=</span> <span class="dv">100_000_000</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1" aria-label="code-block-21-11"></a>xs <span class="op">=</span> cupy.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1" aria-label="code-block-21-12"></a>acc <span class="op">=</span> cupy.zeros(<span class="dv">1</span>)</span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1" aria-label="code-block-21-13"></a></span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1" aria-label="code-block-21-14"></a>threads <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1" aria-label="code-block-21-15"></a>nblocks <span class="op">=</span> math.ceil(N <span class="op">/</span> threads <span class="op">/</span> <span class="dv">4</span>)  <span class="co"># each thread will add 4 elements of xs</span></span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1" aria-label="code-block-21-16"></a><span class="bu">sum</span>[nblocks, threads](xs, acc)</span></code></pre>
+</div>
+<p>In general, this will fail. Can you see why?</p>
+<p>As we saw in the parallelism section, this fails due to a race
+condition: each thread is attempting to read, add, and write a value to
+global memory, walking all over each other.</p>
+<p>One tool in our toolbox are <a href="https://nvidia.github.io/numba-cuda/user/intrinsics.html#supported-atomic-operations" class="external-link"><em>atomic
+operations</em></a>. These are a limited set of operations (e.g. +,
+<code>max</code>, <code>min</code>, but not multiplication!) on a
+limited set of types (mostly just floats and integers) that allow us to
+do something like a read-add-write <em>as a single operation.</em> In
+this case, we can use <code>cuda.atomic_add()</code> and see how this
+works:</p>
+<div class="codewrapper sourceCode" id="cb22">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" tabindex="-1" aria-label="code-block-22-1"></a><span class="at">@cuda.jit</span></span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1" aria-label="code-block-22-2"></a><span class="kw">def</span> <span class="bu">sum</span>(xs, acc):</span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1" aria-label="code-block-22-3"></a>    <span class="co"># Each thread performs a partial sum</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1" aria-label="code-block-22-4"></a>    _acc <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1" aria-label="code-block-22-5"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(cuda.grid(<span class="dv">1</span>), <span class="bu">len</span>(xs), cuda.gridsize(<span class="dv">1</span>)):</span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1" aria-label="code-block-22-6"></a>        _acc <span class="op">+=</span> xs[i]</span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1" aria-label="code-block-22-7"></a></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1" aria-label="code-block-22-8"></a>    cuda.atomic.add(acc, <span class="dv">0</span>, _acc)</span></code></pre>
 </div>
 <p>The tests pass, meaning that this is at least correct. But if we
 benchmark you’ll see that it is very slow. And the simple reason is that
 atomic operations don’t come for free. It still ultimately forces some
 kind of serialisation of the operations.</p>
-<p>The idiomatic solution to a reduction is twofold: perform a reduction
-<em>within</em> a thread block, followed by a reduction across the full
-grid.</p>
+<p><strong>The idiomatic solution to a reduction is twofold:</strong>
+perform a reduction <em>within</em> a thread block, followed by a
+reduction across the full grid.</p>
 <p>To do this, we’re going to introduce shared memory: shared memory is
 memory that is visible by each member of a thread block. The general
 idea is this:</p>
@@ -2692,41 +2703,40 @@ to global memory.</li>
 within thread block. On each step, only half the number of threads
 participate in the reduction as in the previous step. <a href="https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf" class="external-link">[Source]</a></p>
 <p>One such implementation looks like this:</p>
-<div class="codewrapper sourceCode" id="cb22">
+<div class="codewrapper sourceCode" id="cb23">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" tabindex="-1" aria-label="code-block-22-1"></a><span class="at">@cuda.jit</span></span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1" aria-label="code-block-22-2"></a><span class="kw">def</span> <span class="bu">sum</span>(xs, acc):</span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1" aria-label="code-block-22-3"></a>    <span class="co"># Allocate a shared array sized to match the threads per block</span></span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1" aria-label="code-block-22-4"></a>    shared <span class="op">=</span> cuda.shared.array(<span class="dv">256</span>, dtype<span class="op">=</span>np.float64)</span>
-<span id="cb22-5"><a href="#cb22-5" tabindex="-1" aria-label="code-block-22-5"></a></span>
-<span id="cb22-6"><a href="#cb22-6" tabindex="-1" aria-label="code-block-22-6"></a>    <span class="co"># Each thread performs a partial sum</span></span>
-<span id="cb22-7"><a href="#cb22-7" tabindex="-1" aria-label="code-block-22-7"></a>    _acc <span class="op">=</span> <span class="bu">float</span>(<span class="dv">0</span>)</span>
-<span id="cb22-8"><a href="#cb22-8" tabindex="-1" aria-label="code-block-22-8"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(cuda.grid(<span class="dv">1</span>), <span class="bu">len</span>(xs), cuda.gridsize(<span class="dv">1</span>)):</span>
-<span id="cb22-9"><a href="#cb22-9" tabindex="-1" aria-label="code-block-22-9"></a>        _acc <span class="op">+=</span> xs[i]</span>
-<span id="cb22-10"><a href="#cb22-10" tabindex="-1" aria-label="code-block-22-10"></a></span>
-<span id="cb22-11"><a href="#cb22-11" tabindex="-1" aria-label="code-block-22-11"></a>    <span class="co"># Every thread loads its partial sum into its associated shared memory address</span></span>
-<span id="cb22-12"><a href="#cb22-12" tabindex="-1" aria-label="code-block-22-12"></a>    tid <span class="op">=</span> cuda.threadIdx.x  <span class="co"># thread ID - not grid ID!</span></span>
-<span id="cb22-13"><a href="#cb22-13" tabindex="-1" aria-label="code-block-22-13"></a>    shared[tid] <span class="op">=</span> _acc</span>
-<span id="cb22-14"><a href="#cb22-14" tabindex="-1" aria-label="code-block-22-14"></a>    cuda.syncthreads()</span>
-<span id="cb22-15"><a href="#cb22-15" tabindex="-1" aria-label="code-block-22-15"></a></span>
-<span id="cb22-16"><a href="#cb22-16" tabindex="-1" aria-label="code-block-22-16"></a>    <span class="co"># Reduction of the shared memory across the thread block</span></span>
-<span id="cb22-17"><a href="#cb22-17" tabindex="-1" aria-label="code-block-22-17"></a>    <span class="cf">for</span> offset <span class="kw">in</span> (<span class="dv">128</span>, <span class="dv">64</span>, <span class="dv">32</span>, <span class="dv">16</span>, <span class="dv">8</span>, <span class="dv">4</span>, <span class="dv">2</span>):</span>
-<span id="cb22-18"><a href="#cb22-18" tabindex="-1" aria-label="code-block-22-18"></a>        <span class="cf">if</span> tid <span class="op">&lt;</span> offset:</span>
-<span id="cb22-19"><a href="#cb22-19" tabindex="-1" aria-label="code-block-22-19"></a>            shared[tid] <span class="op">+=</span> shared[tid <span class="op">+</span> offset]</span>
-<span id="cb22-20"><a href="#cb22-20" tabindex="-1" aria-label="code-block-22-20"></a>            cuda.syncthreads()</span>
-<span id="cb22-21"><a href="#cb22-21" tabindex="-1" aria-label="code-block-22-21"></a></span>
-<span id="cb22-22"><a href="#cb22-22" tabindex="-1" aria-label="code-block-22-22"></a>    <span class="co"># Thread ID=0 adds the entire threadblock sum to global memory</span></span>
-<span id="cb22-23"><a href="#cb22-23" tabindex="-1" aria-label="code-block-22-23"></a>    <span class="cf">if</span> tid <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb22-24"><a href="#cb22-24" tabindex="-1" aria-label="code-block-22-24"></a>        cuda.atomic.add(acc, <span class="dv">0</span>, shared[<span class="dv">0</span>] <span class="op">+</span> shared[<span class="dv">1</span>])</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" tabindex="-1" aria-label="code-block-23-1"></a><span class="at">@cuda.jit</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1" aria-label="code-block-23-2"></a><span class="kw">def</span> <span class="bu">sum</span>(xs, acc):</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1" aria-label="code-block-23-3"></a>    <span class="co"># Allocate a shared array sized to match the threads per block</span></span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1" aria-label="code-block-23-4"></a>    shared <span class="op">=</span> cuda.shared.array(<span class="dv">256</span>, dtype<span class="op">=</span>np.float64)</span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1" aria-label="code-block-23-5"></a></span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1" aria-label="code-block-23-6"></a>    <span class="co"># Each thread performs a partial sum</span></span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1" aria-label="code-block-23-7"></a>    _acc <span class="op">=</span> <span class="bu">float</span>(<span class="dv">0</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1" aria-label="code-block-23-8"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(cuda.grid(<span class="dv">1</span>), <span class="bu">len</span>(xs), cuda.gridsize(<span class="dv">1</span>)):</span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1" aria-label="code-block-23-9"></a>        _acc <span class="op">+=</span> xs[i]</span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1" aria-label="code-block-23-10"></a></span>
+<span id="cb23-11"><a href="#cb23-11" tabindex="-1" aria-label="code-block-23-11"></a>    <span class="co"># Every thread loads its partial sum into its associated shared memory address</span></span>
+<span id="cb23-12"><a href="#cb23-12" tabindex="-1" aria-label="code-block-23-12"></a>    tid <span class="op">=</span> cuda.threadIdx.x  <span class="co"># thread ID - not grid ID!</span></span>
+<span id="cb23-13"><a href="#cb23-13" tabindex="-1" aria-label="code-block-23-13"></a>    shared[tid] <span class="op">=</span> _acc</span>
+<span id="cb23-14"><a href="#cb23-14" tabindex="-1" aria-label="code-block-23-14"></a>    cuda.syncthreads()</span>
+<span id="cb23-15"><a href="#cb23-15" tabindex="-1" aria-label="code-block-23-15"></a></span>
+<span id="cb23-16"><a href="#cb23-16" tabindex="-1" aria-label="code-block-23-16"></a>    <span class="co"># Reduction of the shared memory across the thread block</span></span>
+<span id="cb23-17"><a href="#cb23-17" tabindex="-1" aria-label="code-block-23-17"></a>    <span class="cf">for</span> offset <span class="kw">in</span> (<span class="dv">128</span>, <span class="dv">64</span>, <span class="dv">32</span>, <span class="dv">16</span>, <span class="dv">8</span>, <span class="dv">4</span>, <span class="dv">2</span>):</span>
+<span id="cb23-18"><a href="#cb23-18" tabindex="-1" aria-label="code-block-23-18"></a>        <span class="cf">if</span> tid <span class="op">&lt;</span> offset:</span>
+<span id="cb23-19"><a href="#cb23-19" tabindex="-1" aria-label="code-block-23-19"></a>            shared[tid] <span class="op">+=</span> shared[tid <span class="op">+</span> offset]</span>
+<span id="cb23-20"><a href="#cb23-20" tabindex="-1" aria-label="code-block-23-20"></a>            cuda.syncthreads()</span>
+<span id="cb23-21"><a href="#cb23-21" tabindex="-1" aria-label="code-block-23-21"></a></span>
+<span id="cb23-22"><a href="#cb23-22" tabindex="-1" aria-label="code-block-23-22"></a>    <span class="co"># Thread ID=0 adds the entire threadblock sum to global memory</span></span>
+<span id="cb23-23"><a href="#cb23-23" tabindex="-1" aria-label="code-block-23-23"></a>    <span class="cf">if</span> tid <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb23-24"><a href="#cb23-24" tabindex="-1" aria-label="code-block-23-24"></a>        cuda.atomic.add(acc, <span class="dv">0</span>, shared[<span class="dv">0</span>] <span class="op">+</span> shared[<span class="dv">1</span>])</span></code></pre>
 </div>
 <p>Notice the use of <code>cuda.syncthreads()</code>: this is a
 synchronisation method that ensures all threads in a thread block have
-reached this point. (Remember that only warps execute in lock step.)
-This is necessary once we start interacting with shared memory, since we
-need to guarantee that the entirety of the thread block has fully
-written to its shared memory address before any thread tries to make a
-read.</p>
+reached this point. (Remember that only warps execute in lockstep.) This
+is necessary once we start interacting with shared memory, since we need
+to guarantee that the entirety of the thread block has fully written to
+its shared memory address before any thread tries to make a read.</p>
 <p>Benchmarking shows this function is now quite fast. The cost of the
 atomic add is now mitigated by the fact that it is called only once for
 every thread block. For large arrays, this function is almost as fast as
