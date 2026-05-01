@@ -34,7 +34,7 @@ Image sizes are typically thousands of pixels by thousands of pixels; whilst vis
 
 By the end, we hope to be able to image the large radio lobes of Fornax A from the raw visibility data.
 
-![](episodes/diagrams/fornaxA.png)
+![](episodes/fig/fornaxA.png)
 
 ## A first implementation
 
@@ -120,7 +120,7 @@ def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
 
 Even with only a fifthieth of the data we start to see something resembling the radio lobes:
 
-![](episodes/diagrams/fornaxA-fiftieth.png)
+![](episodes/fig/fornaxA-fiftieth.png)
 
 :::
 
@@ -160,7 +160,7 @@ def kernel1(us, vs, ws, data, ls, ms, ndashes, img):
 
 On my machine, this is fast enough to allow us to image the full set of data giving a lovely image of Fornax A:
 
-![](episodes/diagrams/fornaxA-fulldata.png)
+![](episodes/fig/fornaxA-fulldata.png)
 
 :::
 
