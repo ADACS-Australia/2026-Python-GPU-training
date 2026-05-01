@@ -28,7 +28,7 @@ Today, GPUs have diverged somewhat in their design depending on whether they are
 
 In most systems, the GPU is phsically distinct from the CPU. It has its own computing cores, its own memory, its own floating point units, its own controllers, and a host of other units. The CPU and the GPU communicate with each other across some kind serialisation link such as PCIe.
 
-![GPU diagram](episodes/assets/gpu-diagram.png)
+![GPU diagram](episodes/diagrams/gpu-diagram.png)
 
 In the simplest terms, a GPU is two things:
 
@@ -86,7 +86,7 @@ When you start writing your own kernels, you will need to describe how to parall
 
 CUDA adds a complication: threads are grouped together into _thread blocks_, and all thread blocks must have the same number of threads.
 
-![Grids, composed of thread blocks, composed of threads](episodes/assets/threadblocks.png)
+![Grids, composed of thread blocks, composed of threads](episodes/diagrams/threadblocks.png)
 
 It can be easy to conflate this software hierarchy (thread  blocks) with the hardware hierarchy (SMs, cores). They are separate.  programming model of grid/thread blocks/threads maps onto the physical hardware in the following way:
 
