@@ -171,7 +171,7 @@ When a kernel is run, the work is distributed in the following manner:
 
 Pictorially, this looks something like this:
 
-![]episodes/assets/gpu-scheduling.png)
+![]episodes/diagrams/gpu-scheduling.png)
 
 You might wonder at this point: threads make sense as they're the fundamental unit of parallelisation, but why do I need to group them into blocks? And the answer is linked to the hardware design of the GPU. Inter-thread coordination, synchronisation and communication can only occur _within_ a SM, which in turn means only within a thread block. So far we've seen kernel examples that don't require these facilities, but many workloads (and optimisations) need inter-thread coordination or communication.
 
@@ -699,7 +699,7 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 - The threadblock will sum the contents of its shared memory using a binary reduction (see diagram).
 - Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
-<img episodes/assets/binary-reduction.png" height=300 alt="Binary reduction">
+<img "episodes/diagrams/binary-reduction.png" height=300 alt="Binary reduction">
 
 **Caption:** An illustration of a binary reduction within thread block. On each step, only half the number of threads participate in the reduction as in the previous step. [[Source]](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
 
