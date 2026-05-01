@@ -71,6 +71,7 @@ episodes:
 - gpu-deepdive.md
 - CuPy.md
 - first-kernels.md
+- optimisation.md
 
 # Information for Learners
 learners:
