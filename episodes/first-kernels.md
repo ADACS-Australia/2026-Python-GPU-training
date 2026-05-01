@@ -99,6 +99,8 @@ There's a lot to unpack in this brief snippet of code:
 * **We've called `cuda.grid(1)` to determine the index of the kernel.** Unlike our previous example, the index is not passed in as an argument. We've also added a condition to check the index is within range.
 * **We've allocated our GPU kernels using `CuPy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.
 * **We've called the `add()` function by first providing grid dimensions: blocks and threads per block.** Grid dimensions configure _how many times_ the kernel is run and are directly related to the kernel's index. Each time you call a GPU kernel, you must configure its grid dimensions. We will discuss grid configuration in depth shortly.
+* **All array and memory allocations occur outside of the kernel.** The kernel cannot allocate global memory and so these arrays must be passed as arguments.
+* **The kernel does not return anything (or implicitly, returns None).** Kernels do not return values, and their "outputs" must be provided as a mutable input. In this case, the output is `zs` which must be allocated outside the kernel and passed as an argument to the kernel.
 
 ::: challenge
 
@@ -169,7 +171,7 @@ When a kernel is run, the work is distributed in the following manner:
 
 Pictorially, this looks something like this:
 
-![](assets/gpu-scheduling.png)
+![]episodes/assets/gpu-scheduling.png)
 
 You might wonder at this point: threads make sense as they're the fundamental unit of parallelisation, but why do I need to group them into blocks? And the answer is linked to the hardware design of the GPU. Inter-thread coordination, synchronisation and communication can only occur _within_ a SM, which in turn means only within a thread block. So far we've seen kernel examples that don't require these facilities, but many workloads (and optimisations) need inter-thread coordination or communication.
 
@@ -697,7 +699,7 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 - The threadblock will sum the contents of its shared memory using a binary reduction (see diagram).
 - Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
-<img src="assets/binary-reduction.png" height=300 alt="Binary reduction">
+<img episodes/assets/binary-reduction.png" height=300 alt="Binary reduction">
 
 **Caption:** An illustration of a binary reduction within thread block. On each step, only half the number of threads participate in the reduction as in the previous step. [[Source]](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
 
