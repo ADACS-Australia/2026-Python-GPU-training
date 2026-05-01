@@ -124,7 +124,7 @@ Even with only a fifthieth of the data we start to see something resembling the 
 
 :::
 
-::: exercise
+::: challenge
 
 Now that we have a working CPU version, the next step is to extract the inner loop as a standalone kernel and configure an associated grid to work on the GPU.
 
@@ -202,14 +202,14 @@ Things to look for:
 * Am I compute bound, memory bound, or neither?
 * What is the ratio of FMA to total floating point instructions?
 
-
-
 ## Optimisation 1: Minimise writing to global memory
 
 We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop. Always prefer local or shared memory over global memory.
 
 :::challenge
+
 Rewrite the kernel to use a local accumulator variable inside the innermost loop and write out to global memory just once.
+
 :::
 
 :::solution
@@ -298,6 +298,8 @@ def kernel3(us, vs, ws, data, ls, ms, ndashes, img):
         img[lpx, mpx] = pixel
 ```
 
+:::
+
 ## Use specialised mathematical functions
 
 CUDA provides a [wide range of mathematical functions](https://docs.nvidia.com/cuda/cuda-math-api/index.html) at different precisions. These functions are heavily optimised and will use hardware implementations where possible. Numba exposes a subset of these which are documented [here](https://nvidia.github.io/numba-cuda/reference/libdevice.html) and [here](https://nvidia.github.io/numba-cuda/reference/kernel.html#intrinsic-attributes-and-functions).
@@ -353,6 +355,8 @@ def kernel4(us, vs, ws, data, ls, ms, ndashes, img):
 
         img[lpx, mpx] = pixel
 ```
+
+:::
 
 ## Minimise reading from global memory
 
