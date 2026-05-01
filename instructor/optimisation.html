@@ -630,9 +630,29 @@ first transferring the profile data locally.</p>
 <hr class="half-width"><p>We’ve already touched on this optimisation strategy before, but it’s
 important enough to repeat here: reading and writing to <em>global</em>
 memory is expensive and currently our kernel currently writes to global
-memory on every single inner loop. Always prefer local or shared memory
-over global memory.</p>
-<div id="discussion3" class="callout discussion">
+memory on every single inner loop.</p>
+<p>Memory ordered from fastest to slowest is: local memory, then shared
+memory, and finally global memory. But by the same token, there is far
+less local and shared memory storage available; local arrays should
+typically be sized in the single digits, and shared arrays should
+typically be sized at most to a few hundred or so entries. (Large
+reservations of local and shared arrays cause a scaracity of memory and
+result in fewer simulatenous threadblocks being scheduled in a SM.)</p>
+<p>How do you identify which memory is which?</p>
+<ul><li>
+<strong>Global memory</strong> is any array that is created on the
+host side (e.g. via <code>cupy.array(...)</code>) and passed as an
+argument to the kernel</li>
+<li>
+<strong>Shared memory</strong> is memory that is created inside the
+kernel via <code>cuda.shared.array(...)</code>
+</li>
+<li>
+<strong>Local memory</strong> are any scalar variables created
+within the kernel as well as fixed-length arrays created using
+<code>cuda.local.array(...)</code>
+</li>
+</ul><div id="discussion3" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -640,9 +660,13 @@ over global memory.</p>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
-<p>Rewrite the kernel to use a local accumulator variable inside the
-innermost loop and write out to global memory just once.</p>
-</div>
+<p>Rewrite the kernel to use a local accumulator variable.</p>
+<ol style="list-style-type: decimal"><li>Initialise a summation variable prior to the loop.</li>
+<li>On each innerloop iteration, append to this variable (using
+<code>+=</code>).</li>
+<li>Finally, write the value of this variable to global memory at the
+culmination of the kernel.</li>
+</ol></div>
 </div>
 </div>
 <div id="accordionSolution3" class="accordion challenge-accordion accordion-flush">
@@ -976,8 +1000,14 @@ Other options for handling this remainder exist, such as:</p>
     x = xs_shared[i]
     # Compute...</code></pre>
 </li>
-</ul><div class="section level3 note">
-<h3 id="coalesced-memory-reads">Coalesced memory reads<a class="anchor" aria-label="anchor" href="#coalesced-memory-reads"></a></h3>
+</ul><div id="coalesced-memory-reads" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div id="coalesced-memory-reads" class="callout-inner">
+<h3 class="callout-title">Coalesced memory reads</h3>
+<div class="callout-content">
 <p>The GPU memory system performs well when a threadblock coordinates to
 read from a <em>contiguous</em> region of memory. In particular, if each
 thread in a threadblock reads the <em>next</em> entry in an array, the
@@ -993,6 +1023,8 @@ performance.</p>
 <p>In the above example, we read from memory using the indexing
 <code>offset + tid</code> which guaratees <em>memory
 coalescing</em>.</p>
+</div>
+</div>
 </div>
 <div id="discussion6" class="callout discussion">
 <div class="callout-square">
