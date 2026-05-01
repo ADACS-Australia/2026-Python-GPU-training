@@ -204,11 +204,23 @@ Things to look for:
 
 ## Optimisation 1: Minimise writing to global memory
 
-We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop. Always prefer local or shared memory over global memory.
+We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop.
+
+Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scaracity of memory and result in fewer simulatenous threadblocks being scheduled in a SM.)
+
+How do you identify which memory is which?
+
+* **Global memory** is any array that is created on the host side (e.g. via `cupy.array(...)`) and passed as an argument to the kernel
+* **Shared memory** is memory that is created inside the kernel via `cuda.shared.array(...)`
+* **Local memory** are any scalar variables created within the kernel as well as fixed-length arrays created using `cuda.local.array(...)`
 
 ::: challenge
 
-Rewrite the kernel to use a local accumulator variable inside the innermost loop and write out to global memory just once.
+Rewrite the kernel to use a local accumulator variable.
+
+1. Initialise a summation variable prior to the loop.
+2. On each innerloop iteration, append to this variable (using `+=`).
+3. Finally, write the value of this variable to global memory at the culmination of the kernel.
 
 :::
 
@@ -420,7 +432,7 @@ Some important comments:
        # Compute...
     ```
 
-::: note
+::: callout
 
 ### Coalesced memory reads
 
