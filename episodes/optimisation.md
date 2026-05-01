@@ -206,13 +206,13 @@ Things to look for:
 
 We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop. Always prefer local or shared memory over global memory.
 
-:::challenge
+::: challenge
 
 Rewrite the kernel to use a local accumulator variable inside the innermost loop and write out to global memory just once.
 
 :::
 
-:::solution
+::: solution
 
 ```python
 @cuda.jit
@@ -263,7 +263,7 @@ To do this for our kernels, there are a few things we need to do:
 
    As a result, you must be careful of high precision types sneaking in and poisoning your computation to a higher precision than necessary.
 
-:: challenge
+::: challenge
 
 For our usecase, we deem 32 bit precision to be acceptable. Modify the input arrays and kernel to use 32 bit floats and 64 bit complex numbers (i.e. 32 bits for each of the real and imaginary components).
 
