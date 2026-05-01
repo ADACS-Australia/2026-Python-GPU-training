@@ -597,7 +597,7 @@ streaming multiprocessor (SM) as it has some availability.</li>
 block to run as a series of warps (32 or 64 threads that run in
 lockstep) as soon as it has idle cores.</li>
 </ol><p>Pictorially, this looks something like this:</p>
-<p>![]episodes/diagrams/gpu-scheduling.png)</p>
+<p>![]episodes/fig/gpu-scheduling.png)</p>
 <p>You might wonder at this point: threads make sense as they’re the
 fundamental unit of parallelisation, but why do I need to group them
 into blocks? And the answer is linked to the hardware design of the GPU.
@@ -1356,8 +1356,8 @@ shared array to its partial sum.</li>
 binary reduction (see diagram).</li>
 <li>Finally, thread ID=0 of the thread block will perform an atomic add
 to global memory.</li>
-</ul><p>&lt;img “episodes/diagrams/binary-reduction.png” height=300
-alt=“Binary reduction”&gt;</p>
+</ul><p>&lt;img “episodes/fig/binary-reduction.png” height=300 alt=“Binary
+reduction”&gt;</p>
 <p><strong>Caption:</strong> An illustration of a binary reduction
 within thread block. On each step, only half the number of threads
 participate in the reduction as in the previous step. <a href="https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf" class="external-link">[Source]</a></p>

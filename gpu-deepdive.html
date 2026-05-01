@@ -400,7 +400,7 @@ its own computing cores, its own memory, its own floating point units,
 its own controllers, and a host of other units. The CPU and the GPU
 communicate with each other across some kind serialisation link such as
 PCIe.</p>
-<figure><img src="diagrams/gpu-diagram.png" alt="GPU diagram" class="figure mx-auto d-block"><div class="figcaption">GPU diagram</div>
+<figure><img src="fig/gpu-diagram.png" alt="GPU diagram" class="figure mx-auto d-block"><div class="figcaption">GPU diagram</div>
 </figure><p>In the simplest terms, a GPU is two things:</p>
 <ul><li>Compute, provided by streaming multiprocessors (SM)</li>
 <li>Memory (including DRAM (“global”), SRAM (“shared”), and numerous
@@ -511,7 +511,7 @@ vectors.</p>
 <p>CUDA adds a complication: threads are grouped together into
 <em>thread blocks</em>, and all thread blocks must have the same number
 of threads.</p>
-<figure><img src="diagrams/threadblocks.png" alt="Grids, composed of thread blocks, composed of threads" class="figure mx-auto d-block"><div class="figcaption">Grids, composed of thread blocks, composed of
+<figure><img src="fig/threadblocks.png" alt="Grids, composed of thread blocks, composed of threads" class="figure mx-auto d-block"><div class="figcaption">Grids, composed of thread blocks, composed of
 threads</div>
 </figure><p>It can be easy to conflate this software hierarchy (thread blocks)
 with the hardware hierarchy (SMs, cores). They are separate. programming

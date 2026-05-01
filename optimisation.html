@@ -400,7 +400,7 @@ factors: u, v, w are not even sampled; and the so-called <span class="math inlin
 whilst visibility data is similarly millions of rows in length.</p>
 <p>By the end, we hope to be able to image the large radio lobes of
 Fornax A from the raw visibility data.</p>
-<figure><img src="diagrams/fornaxA.png" class="figure mx-auto d-block"></figure></section><section><h2 class="section-heading" id="a-first-implementation">A first implementation<a class="anchor" aria-label="anchor" href="#a-first-implementation"></a></h2>
+<figure><img src="fig/fornaxA.png" class="figure mx-auto d-block"></figure></section><section><h2 class="section-heading" id="a-first-implementation">A first implementation<a class="anchor" aria-label="anchor" href="#a-first-implementation"></a></h2>
 <hr class="half-width"><p>As always, we will approach this first on the CPU where we can ensure
 we first make things right before attemping a first pass at a
 kernel.</p>
@@ -481,7 +481,7 @@ take too long for you, try reducing the data even more aggressively.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <p>We parallelise over each pixel which, for a 700 x 700 pixel image,
 gives us just shy of 500,000 threads. And since each pixel is its own
@@ -506,7 +506,7 @@ independent sum, we don’t have to worry about race conditions.</p>
 </div>
 <p>Even with only a fifthieth of the data we start to see something
 resembling the radio lobes:</p>
-<figure><img src="diagrams/fornaxA-fiftieth.png" class="figure mx-auto d-block"></figure></div>
+<figure><img src="fig/fornaxA-fiftieth.png" class="figure mx-auto d-block"></figure></div>
 </div>
 </div>
 </div>
@@ -535,7 +535,7 @@ identity <span class="math inline">\(e^{i \phi} = \cos{\phi} + i
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>The implementation is very similar to that used in Numba’s prange
 loop. Some points of note:</p>
@@ -565,7 +565,7 @@ threads that “overflow”.</li>
 </div>
 <p>On my machine, this is fast enough to allow us to image the full set
 of data giving a lovely image of Fornax A:</p>
-<figure><img src="diagrams/fornaxA-fulldata.png" class="figure mx-auto d-block"></figure></div>
+<figure><img src="fig/fornaxA-fulldata.png" class="figure mx-auto d-block"></figure></div>
 </div>
 </div>
 </div>
@@ -648,7 +648,7 @@ innermost loop and write out to global memory just once.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb8">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -762,7 +762,7 @@ now. (Open bug report: <a href="https://github.com/NVIDIA/numba-cuda/issues/865"
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -832,7 +832,7 @@ efficient operations.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
 <div class="accordion-body">
 <p>There are a number of candiates which stand out as options here:</p>
 <ul><li>
@@ -1069,7 +1069,7 @@ memory.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb15">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
