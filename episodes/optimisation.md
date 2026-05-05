@@ -202,11 +202,24 @@ Things to look for:
 * Am I compute bound, memory bound, or neither?
 * What is the ratio of FMA to total floating point instructions?
 
+## Optimisation pitfalls
+
+As with making the choice to rewrite an algorithm from a straightforward sequential implementation to a parallel implementation, the choice to optimise comes with some downsides that must be kept in mind.
+
+From the outset you should understand the kind of performance that is necessary to make your original problem computationally tractable and optimise with this concrete goal in mind. _Don't optimise for the sake of optimisation._
+
+As you will see as we progress here, optimisation comes with important downsides:
+
+- It's not always possible! Sometimes the "obvious" optimisations do very little at all, and despite the advertised computational performance of your hardware, these optimisation strategies fail to meaningfully close this gap. This may be because of hardware limits such as memory pressure, intractable aspects of your algorithm, or the unfortunate consequence of the black box that is an optimising compiler. Know when to raise the white flag.
+- Optimisation almost invariably results in code bloat. Your code will become substantially longer and substantially more complex.
+- Your code will become harder to reason about.
+- And as a consequence, you may introduce bugs.
+
 ## Optimisation 1: Minimise writing to global memory
 
 We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop.
 
-Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scaracity of memory and result in fewer simulatenous threadblocks being scheduled in a SM.)
+Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scaracity of memory and result in fewer simulatenous thread blocks being scheduled in a SM.)
 
 How do you identify which memory is which?
 
@@ -312,7 +325,7 @@ def kernel3(us, vs, ws, data, ls, ms, ndashes, img):
 
 :::
 
-## Use specialised mathematical functions
+## Optimisation 3: Use specialised mathematical functions
 
 CUDA provides a [wide range of mathematical functions](https://docs.nvidia.com/cuda/cuda-math-api/index.html) at different precisions. These functions are heavily optimised and will use hardware implementations where possible. Numba exposes a subset of these which are documented [here](https://nvidia.github.io/numba-cuda/reference/libdevice.html) and [here](https://nvidia.github.io/numba-cuda/reference/kernel.html#intrinsic-attributes-and-functions).
 
@@ -334,7 +347,7 @@ Scan through the list of available mathematical functions that are part of [libd
 
 ::: solution
 
-There are a number of candiates which stand out as options here:
+There are a number of candidates which stand out as options here:
 
 * `sinpi()` and `cospi()` compute the phase by multiplying it by $\pi$. That's one less multiplication operation that can have a small effect on the speed of our kernel.
 * `fast_sin()` and `fast_cos()` are two among a number of similar `fast_` prefixed functions that use their respective fastmath implmentation.
@@ -370,18 +383,18 @@ def kernel4(us, vs, ws, data, ls, ms, ndashes, img):
 
 :::
 
-## Minimise reading from global memory
+## Optimisation 4: Minimise reading from global memory
 
 We've previously used a local accumulation variable to minimise _writes_ to global memory. In this section, however, we're going to use shared memory to minimise _reads_ from global memory.
 
 **Our problem is that each kernel needs to read through the entirety of each of the `us`, `vs`, `ws` and `data` arrays.** There's a lot of redundancy here: since each thread is fully independent, they are each reading the same data, from start to end. But what if we could somehow share the burden of these global memory reads amongst the threads?
 
-A standard pattern in kernel design is for each thread in a threadblock to cooperate by using shared memory as an intermediate cache. Remember that shared memory is much faster than global memory, and is visible from each thread within a thread block. In doing so, global reads reduce by a factor equal to threads per block. For a threadblock with 256 threads, this will reduce global memory reads by a factor of 256.
+A standard pattern in kernel design is for each thread in a thread block to cooperate by using shared memory as an intermediate cache. Remember that shared memory is much faster than global memory, and is visible from each thread within a thread block. In doing so, global reads reduce by a factor equal to threads per block. For a thread block with 256 threads, this will reduce global memory reads by a factor of 256.
 
 Suppose there are 256 threads per block. Then the pattern proceeds as follows:
 
-1. The threadblock allocates a shared memory array with size 256. Each thread can read and write to this array, and can see the writes of each sibling thread within the threadblock.
-2. The threadblock reads in the first 256 index values of the global memory, with each thread reading a _single, unique_ value based on its thread ID. For example, thread 45 within the thread block reads the 45th value of the global array.
+1. The thread block allocates a shared memory array with size 256. Each thread can read and write to this array, and can see the writes of each sibling thread within the thread block.
+2. The thread block reads in the first 256 index values of the global memory, with each thread reading a _single, unique_ value based on its thread ID. For example, thread 45 within the thread block reads the 45th value of the global array.
 3. Each thread caches its retrieved datum into a unique location in shared memory, using its thread ID as the array index. For example, thread 45 writes to the 45th index of the shared array.
 4. Finally, the threads cycle through each value in shared memory and performs its associated computation.
 
@@ -393,14 +406,14 @@ In pseduo-code:
 # Create shared memory array
 xs_shared = cuda.shared.array(256, dtype=np.float32)
 
-tid = cuda.threadIdx.x. # threadId _within_ the threadblock
+tid = cuda.threadIdx.x. # threadId _within_ the thread block
 N = len(xs_global)
 
 # Step through the array in blocks of 256
 for offset in range(0, N, 256):
     # Write all 256 values from global memory into
     if offset + tid < N:
-        # Each thread in the threadblock is responsible for reading a unique global memory address
+        # Each thread in the thread block is responsible for reading a unique global memory address
         # and writing to a unique shared memory address based on its thread ID.
         xs_shared[tid] = xs_global[offset + tid]
     else:
@@ -420,10 +433,10 @@ for offset in range(0, N, 256):
 
 Some important comments:
 
-* We create shared memory by calling `cuda.shared.array(...)` in each thread. But this syntax is deceptive: it _looks_ like each thread creates its own shared array, but this allocation is actually just performed just once at the threadblock level. Each thread shares the same shared memory array.
+* We create shared memory by calling `cuda.shared.array(...)` in each thread. But this syntax is deceptive: it _looks_ like each thread creates its own shared array, but this allocation is actually performed just once at the thread block level. Each thread shares the same shared memory array.
 * The `cuda.threadIdx.x` is the thread ID _within_ the thread block, ranging in this case from 0 to 255. This is not the global thread ID which we get from `cuda.grid(1)`.
-* The thread ID gurantees that each thread reads from and writes to a unique address in global and shared memory.
-* Since threads within are threadblock are not guarateed to operate in lockstep (only at the warp level is this true), we need to call the synchronisation function `cuda.synchthreads()`. This function acts a gate that stops threads within a given threadblock from progressing until all threads have reached this point. This guarantees two things: that the cache is fully populated before we attempt to read from it; and later, that the cache is not updated until all threads have completed reading from it.
+* The thread ID guarantees that each thread reads from, and writes to, a unique address in global and shared memory.
+* Since threads within are thread block are not guaranteed to operate in lockstep (only at the warp level is this true), we need to call the synchronisation function `cuda.synchthreads()`. This function acts a gate that stops threads within a given thread block from progressing until all threads have reached this point. This guarantees two things: that the cache is fully populated before we attempt to read from it; and later, that the cache is not updated until all threads have completed reading from it.
 * We have to handle the case where `N` is not a multiple of 256. In the example above, on the final batch we pad the shared array with zeros on the assumption that zero is idempotent under our kernel. Other options for handling this remainder exist, such as:
 
    ```
@@ -434,13 +447,13 @@ Some important comments:
 
 ::: callout
 
-### Coalesced memory reads
+## Optimisation 5: Coalesced memory reads
 
-The GPU memory system performs well when a threadblock coordinates to read from a _contiguous_ region of memory. In particular, if each thread in a threadblock reads the _next_ entry in an array, the GPU can turn all these little reads into a single, unified read instruction. When this happens, it is called _memory coalescing._
+The GPU memory system performs best when a thread block coordinates to read from a _contiguous_ region of memory. In particular, if each thread in a thread block reads the _next_ entry in an array, the GPU can turn all these little reads into a single, unified read instruction. For example, instead of asking the memory system to get me index 0, and then get me index 1, ... and then finally index 1024, the memory system can unify these into a single instruction asking for indices 0-1024. When this happens, it is called _memory coalescing._
 
-On the other hand, if each thread reads from somewhere seemingly random, or if each thread's memory read is strided (i.e. there are gaps between each read), then the GPU can't combine these into a single, unified read instruction. Those hundreds of reads will be queued and processed one by one. Obviously, this is not good for memory performance.
+On the other hand, if each thread reads from somewhere seemingly random, is non-sequential, or if each thread's memory read is strided (i.e. there are gaps between each read), then the GPU can't combine these into a single, unified read instruction. Those hundreds of reads will be queued and processed one by one. Obviously, this is not good for memory performance.
 
-In the above example, we read from memory using the indexing `offset + tid` which guaratees _memory coalescing_.
+In the above example, we read from memory using the indexing `offset + tid` which guarantees _memory coalescing_.
 
 :::
 
@@ -457,7 +470,7 @@ data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
 ```
 Then proceed to complete the remaining TODOs.
 
-**Beware:** We must ensure that each thread in a threadblock participates in cache generation. For example, the condition `if lmpx < img.size` must no longer result in some threads prematurely terminating. Instead, these "remainder" threads must still continue to play their role in populating and refreshing their associated index in the caches (to be used by the other threads in its threadblock) even though they ultimately do not write out to global memory.
+**Beware:** We must ensure that each thread in a thread block participates in cache generation. For example, the condition `if lmpx < img.size` must no longer result in some threads prematurely terminating. Instead, these "remainder" threads must still continue to play their role in populating and refreshing their associated index in the caches (to be used by the other threads in its thread block) even though they ultimately do not write out to global memory.
 
 ```python
 ```python
@@ -552,10 +565,320 @@ def kernel6(us, vs, ws, data, ls, ms, ndashes, img):
 
 :::
 
-## Thread coarsening
+## Optimistion 6: Thread coarsening
 
-## The compiler blackbox: experiment with the hot loop
+Sometimes too much of a good thing can be a bad thing. When it comes to GPU threads, we want enough threads that all SMs have a number of thread blocks queued at any one time. This ensures all CUDA cores are doing work at any one time, and when a thread block needs to pause to wait for something (e.g. to access global memory) there is another thread block reading and waiting to advance its own work.
 
-## Force FMA instructions
+But only up to a point. Kernels have start up and initialisation costs. And in some kernels, there may be work that is repeated by every kernel that might actually be better if it were shared.
 
-In my experience, and especially in the context of complex numbers, it is worth experimenting with explicit FMA instructions. In my opinion, this is a failing of the CUDA compiler.
+**Thread coarsening** is the process whereby we "dial back" the degree of parallelisation, and instead increase the _computational intensity_ of each kernel.
+
+Consider the following two version of the DFT kernel, where the first is based on the kernel we developed earlier:
+
+```python
+@cuda.jit
+def dft(xs, Xs):
+    k = cuda.grid(1)
+    N = len(xs)
+
+    if k < N:
+        xs_k = np.complex64(0)
+        for n in range(N):
+            phase = -2 * np.float32(np.pi) * k * n / N
+            sin, cos = cuda.libdevice.fast_sincosf(phase)
+            Xs_k += xs[n] * complex(cos, sin)
+
+        Xs[k] = Xs_k
+
+@cuda.jit
+def dft_coarsened(xs, Xs):
+    THREAD_COARSEN = 4
+    N = len(xs)
+
+    # Allocate local arrays to store:
+    # 1. The k index
+    # 2. The respective accumulator variable
+    ks = cuda.local.array(THREAD_COARSEN, dtype=np.int64)
+    Xs_ks = cuda.local.array(THREAD_COARSEN, dtype=np.complex64)
+
+    # Initialise the local arrays
+    for i in range(THREAD_COARSEN):
+        ks[i] = cuda.grid(1) + i * cuda.gridsize(1)
+        Xs_ks[i] = 0  # zero each element of the array
+
+    for n in range(N):
+        # Prefetch global memory item
+        x = xs[n]
+        # Precompute part of the phase term
+        partial_phase = -2 * np.float32(np.pi) * n / N
+
+        for i in range(THREAD_COARSEN):
+            phase = ks[i] * partial_phase
+            sin, cos = cuda.libdevice.fast_sincosf(phase)
+            Xs_ks[i] += x * complex(cos, sin)
+
+    for i in range(THREAD_COARSEN):
+        k = ks[i]
+        if k < N:
+            Xs[k] = Xs_ks[i]
+
+```
+
+In the original DFT kernel, each thread is responsible for computing just the `k`'th index of `Xs`. Compare this to the coarsened version, which each thread computes four distinct indices of `Xs`: `k`, `k + gridsize`, ...`k + 3 * gridsize`.
+
+How does it do this?
+
+* We set the the thread coarsening factor, `THREAD_COARSEN` as a constant value within the kernel.
+* We create two locally-allocated arrays, one for the k values and one for accumulator variables.
+* On each iteration of `n`, we compute for the partial sum of each of the k values.
+* By doing so, we amortise the cost of accessing `xs[n]` and computing (part of) the phase value.
+
+::: challenge
+
+In this simple example, does this
+
+:::
+
+
+## Optimisation 7: Hot loop experimentation
+
+Our kernel's hot loop is located in the innermost for loop. Each kernel runs this code repeatedly, and variations of even a single instruction can have outsized effects on the overall performance of the kernel.
+
+Ideally, we would have a clear set of rules to optimize a hot loop. For example:
+
+* Pre-compute values as much as possible prior to the innermost loops
+* Minimise the number of operations: can an equation be reduced by a factored in some way to reduce the number of operations? is there bookkeeping in the loop that can be avoided?
+* Understand the relative costs of operations: for example, as division is more expensive than multiplication can the equation be refactored to remove this step?
+
+Unfortunately, it is not so simple. There are multiple layers between our code and what ultimately runs on the GPU: there is the Python to CUDA translation layer; there are compiler optimisations; the intermediate PTX language; and the finally compiled SASS kernel. These translation layers are, for the most part, opaque to us and so it is not always clear what the end code looks like nor what optimisations are being performed by the compiler (short of inspecting the PTX assembly instructions). Worse yet, the compiler might recognise certain patterns and do the right thing in some cases, but equally a slight change in the code or a mismatch in translation layers might altogether preclude an optimisation from occurring.
+
+Let's consider a few examples from our kernel.
+
+In our kernel we have the computation $2 \pi (u l + v m + w n')$. One simple optimisation might be to precompute $2 \pi$ in advance of the hot loop, thereby eliding one additional multiplication instruction. If you try this, however, you will (most likely) not observe any speed up at all! In fact, the compiler has already recognised this as optimisation step and has quietly computed the product at compile time.
+
+Next, consider these two looping constructs, with the first currently being used in our kernel:
+
+```python
+for (u, v, w), datum in zip(uvw_cache, data_cache):
+    # Do work...
+
+for j in range(NTHREADS):
+    u, v, w = uvw_cache[j]
+    datum = data_cache[j]
+    # Do work...
+```
+
+These are fully equivalent, however they produce a kernel that runs at considerably different speeds. The first version is more idomatic Python code, however it runs much slower. Clearly some artifact of the Python to CUDA translation layer precludes an optimisation by the compiler, or otherwise introduces additional bookkeeping that we are avoiding in the plain loop.
+
+Finally, consider these two—again fully equivalent—versions of the innermost loop:
+
+```python
+# VERSION 1
+for j in range(NTHREADS):
+    u, v, w = uvw_cache[j]
+    datum = data_cache[j]
+
+    for i in range(THREAD_COARSEN):
+        l, m, ndash = lmns[i]
+        phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
+        sin, cos = cuda.libdevice.fast_sincosf(phase)
+        pixels[i] += datum * np.complex64(complex(cos, sin))
+
+# VERSION 2
+for j in range(NTHREADS):
+    for i in range(THREAD_COARSEN):
+        phase = 2 * np.float32(np.pi) * (
+            uvw_cache[j, 0] * lmns[i, 0] +
+            uvw_cache[j, 1] * lmns[i, 1] +
+            uvw_cache[j, 2] * lmns[i, 2]
+        )
+        sin, cos = cuda.libdevice.fast_sincosf(phase)
+        pixels[i] += data_cache[j] * complex(cos, sin)
+```
+
+Even more so than the previous example, these versions feel identical. The only difference being that in the first we have extracted the values of $u, v, w, l, m$ and $n'$ into temporary placeholder variables; whilst in the second we have directly indexed into the arrays. The second, however, is marginally faster than the first. You might ask: why should it matter that we prefetch the values into registers first before applying the multiplication? Or you might ask: if one version is faster than the other, why isn't the compiler clever enough to see that both are lexically and functionally identical and therefore apply similar optimisations?
+
+These cases stress the "black box" nature of working with optimising compilers and translation layers. You will either need to experiment with different formulations and benchmark; or else resort to writing PTX assembly to manually enforce the kernel to behave as you desire (which is beyond this author's expertise).
+
+After tweaking the internal hot loop, the kernel now looks like this:
+
+```python
+@cuda.jit
+def kernel8(us, vs, ws, data, ls, ms, ndashes, img):
+    NTHREADS = 256
+    uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
+    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+
+    THREAD_COARSEN = 3
+    lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
+    pixels = cuda.local.array(THREAD_COARSEN, np.complex64)
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+
+            # Retrieve l, m and ndash coordinates associated with this pixel
+            lmns[i, :] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+
+            # Perform sum over all of the visibility data for just one pixel
+            pixels[i] = np.complex64(0)
+
+    # Extract input data in batches of NTHREADS items
+    N = data.size
+    for offset in range(0, N, NTHREADS):
+        # Fetch data and populate cache
+        i = offset + cuda.threadIdx.x
+        if i < N:
+            uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
+            data_cache[cuda.threadIdx.x] = data[i]
+        else:
+            uvw_cache[cuda.threadIdx.x] = 0, 0, 0
+            data_cache[cuda.threadIdx.x] = 0
+
+        # Wait for cache to be populated
+        cuda.syncthreads()
+
+        # Iterate over cache
+        for j in range(NTHREADS):
+            for i in range(THREAD_COARSEN):
+                phase = 2 * np.float32(np.pi) * (
+                    uvw_cache[j, 0] * lmns[i, 0] +
+                    uvw_cache[j, 1] * lmns[i, 1] +
+                    uvw_cache[j, 2] * lmns[i, 2]
+                )
+                sin, cos = cuda.libdevice.fast_sincosf(phase)
+                pixels[i] += data_cache[j] * complex(cos, sin)
+
+        # Don't start updating cache until all threads are done
+        cuda.syncthreads()
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+            img[lpx, mpx] = pixels[i]
+```
+
+## Optimisation 8: Force FMA instructions
+
+Fused multiply add (FMA) instructions are a special hardware instruction that combines both a muliplication and addition as a single operation. In pseudo-code:
+
+```python
+cuda.fma(a, b, c) = a * b + c
+```
+
+If we can rewrite a pair multiplication and addition operations as a single FMA operation, we can straightforwardly double our performance. (In fact, the numbers for GPU floating point performance that you'll see NVIDIA or AMD advertising _assume_ that 100% of your code is pure FMA instructions – which almost no non-trivial kernel is possible of achieving.)
+
+The CUDA compiler _should_ make an effort to automatically attempt to insert FMA instructions into your code, but it has been my experience that it is less than perfect.
+
+Let's consider the expression from our inner loop:
+
+```python
+pixels[i] += data_cache[j] * complex(cos, sin)
+```
+
+How would we write this as an FMA instruction? The first and most immediate problem we encounter here is that `cuda.fma` is defined strictly for `np.float32` and `np.float64` types, whereas here we are dealing with complex numbers. Let's expand this a little into real and imaginary components:
+
+```python
+pixels[i] += complex(
+    datum.real * cos - datum.imag * sin,  # real component
+    datum.real * sin + datum.imag * cos   # imaginary component
+)
+```
+
+If we consider just the real component for a moment, then we can write this as two FMA instructions:
+
+```python
+pixels_real[i] = cuda.fma(datum.real, cos, pixels_real[i])
+pixels_real[i] = cuda.fma(datum.imag, -sin, pixels_real[i])
+```
+
+Check that this makes sense to you!
+
+::: challenge
+
+We are going to rewrite `pixels[i] += data_cache[j] * complex(cos, sin)` as a sequence of 4 FMA instructions.
+
+To do this, however, we are first going to split the real and imaginary components of the `pixel` and `data_cache`. Modify the defitions of these arrays to have a second dimension that will allow us to index into the real or imaginary components:
+
+```python
+data_cache = cuda.shared.array((NTHREADS, 2), dtype=np.float32)
+# [...]
+pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
+```
+
+Next: initialise each of the real and imaginary components. For example, when reading into the shared cache you can use: `data_cache[cuda.threadIdx.x] = data[i].real, data[i].imag`.
+
+Finally: write out the inplace complex addition as a sequence of 4 FMA instructions.
+
+:::
+
+::: solution
+
+Finally, we arrive at a kernel that looks like that shown below.
+
+You might wonder: did the compiler fail to use FMA instructions because we were using complex numbers? After all, complex numbers 'wrap' a 2-tuple of floats and this indirection might obscure the underlying operations. Try experimenting with this: if we retain the real and imaginary parts stored seperately as we have below, and write out the real and imaginary components separately using normal multiplication and addition operators, do you see the same speedup?
+
+```python
+@cuda.jit(fastmath=True)
+def kernel9(us, vs, ws, data, ls, ms, ndashes, img):
+    NTHREADS = 256
+    uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
+    data_cache = cuda.shared.array((NTHREADS, 2), dtype=np.float32)
+
+    THREAD_COARSEN = 3
+    lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
+    pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+
+            # Retrieve l, m and ndash coordinates associated with this pixel
+            lmns[i, :] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+
+            # Perform sum over all of the visibility data for just one pixel
+            pixels[i, :] = 0, 0
+
+    # Extract input data in batches of NTHREADS items
+    N = data.size
+    for offset in range(0, N, NTHREADS):
+        # Fetch data and populate cache
+        i = offset + cuda.threadIdx.x
+        if i < N:
+            uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
+            data_cache[cuda.threadIdx.x] = data[i].real, data[i].imag
+        else:
+            uvw_cache[cuda.threadIdx.x] = 0, 0, 0
+            data_cache[cuda.threadIdx.x] = 0, 0
+
+        # Wait for cache to be populated
+        cuda.syncthreads()
+
+        # Iterate over cache
+        for j in range(NTHREADS):
+            for i in range(THREAD_COARSEN):
+                phase = 2 * np.float32(np.pi) * (
+                    uvw_cache[j, 0] * lmns[i, 0] +
+                    uvw_cache[j, 1] * lmns[i, 1] +
+                    uvw_cache[j, 2] * lmns[i, 2]
+                )
+                sin, cos = cuda.libdevice.fast_sincosf(phase)
+                pixels[i, 0] = cuda.fma(data_cache[j, 0], cos, pixels[i, 0])
+                pixels[i, 0] = cuda.fma(data_cache[j, 1], -sin, pixels[i, 0])
+                pixels[i, 1] = cuda.fma(data_cache[j, 0], sin, pixels[i, 1])
+                pixels[i, 1] = cuda.fma(data_cache[j, 1], cos, pixels[i, 1])
+
+        # Don't start updating cache until all threads are done
+        cuda.syncthreads()
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+            img[lpx, mpx] = complex(pixels[i, 0], pixels[i, 1])
+```
+
+:::
