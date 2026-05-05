@@ -41,8 +41,8 @@ In the simplest terms, a GPU is two things:
 * The GPU scheduler assigns each thread block to an SM when it has capacity
 * The SM scheduler assigns a warp to a set of 8 cores when those cores become free
 * Cores become free when: a warp has completed; or a warp "stalls", meaning it is waiting for another unit within the SM such as the memory controller, the FPU, or the tensor core
-* Each threadblock typically has more threads than there are in one warp: this means it will execute as multiple warps
-* Each SM typically has multiple threadblocks assigned to it at one time. Limits include: register space and shared memory space. If a kernel uses a large number of registers or shared memory, this can limit the number of thread blocks assigned at any one time to an SM; in turn this can mean the SM doesn't have threads waiting to mask stalls.
+* Each thread block typically has more threads than there are in one warp: this means it will execute as multiple warps
+* Each SM typically has multiple thread blocks assigned to it at one time. Limits include: register space and shared memory space. If a kernel uses a large number of registers or shared memory, this can limit the number of thread blocks assigned at any one time to an SM; in turn this can mean the SM doesn't have threads waiting to mask stalls.
 
 ### Streaming multiprocessor
 
@@ -79,6 +79,8 @@ In addition, each SM has its own "shared" memory. This shared memory can be manu
 Finally, there is also the register space.
 
 All three of the registers, the shared memory and the L1 cache compete for space on a single physical piece of SRAM memory.
+
+Multiple axes: total space; latency; lifetime; visibility. Global memroy is large, slow, outlives the kernel, and is visible by all threads. Shared memory is faster, much smaller, and exists only for as long as each thread block is alive; and is visible only from its respective thread block. Local memory is smaller again, exists for only the lifetime of a single thread, and is visible only by that thread.
 
 # Some confusing terms
 

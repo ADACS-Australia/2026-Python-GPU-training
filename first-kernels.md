@@ -695,8 +695,8 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 
 - Each thread will perform a local, partial sum.
 - We will construct a shared memory array that has a size that exactly matches the threads per block.
-- Each thread in a threadblock will set its associated entry in the shared array to its partial sum.
-- The threadblock will sum the contents of its shared memory using a binary reduction (see diagram).
+- Each thread in a thread block will set its associated entry in the shared array to its partial sum.
+- The thread block will sum the contents of its shared memory using a binary reduction (see diagram).
 - Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
 <img "episodes/fig/binary-reduction.png" height=300 alt="Binary reduction">
@@ -727,7 +727,7 @@ def sum(xs, acc):
             shared[tid] += shared[tid + offset]
             cuda.syncthreads()
 
-    # Thread ID=0 adds the entire threadblock sum to global memory
+    # Thread ID=0 adds the entire thread block sum to global memory
     if tid == 0:
         cuda.atomic.add(acc, 0, shared[0] + shared[1])
 ```
