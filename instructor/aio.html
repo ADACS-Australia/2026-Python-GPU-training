@@ -871,7 +871,7 @@ any links that you are not going to use.
 </div>
 </section></section><section id="aio-gpu-deepdive"><p>Content from <a href="gpu-deepdive.html">A GPU Deep Dive</a></p>
 <hr>
-<p>Last updated on 2026-05-01 |
+<p>Last updated on 2026-05-05 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -957,9 +957,9 @@ become free</li>
 <li>Cores become free when: a warp has completed; or a warp “stalls”,
 meaning it is waiting for another unit within the SM such as the memory
 controller, the FPU, or the tensor core</li>
-<li>Each threadblock typically has more threads than there are in one
+<li>Each thread block typically has more threads than there are in one
 warp: this means it will execute as multiple warps</li>
-<li>Each SM typically has multiple threadblocks assigned to it at one
+<li>Each SM typically has multiple thread blocks assigned to it at one
 time. Limits include: register space and shared memory space. If a
 kernel uses a large number of registers or shared memory, this can limit
 the number of thread blocks assigned at any one time to an SM; in turn
@@ -1046,6 +1046,12 @@ automatic caching is not sufficient.</p>
 <p>Finally, there is also the register space.</p>
 <p>All three of the registers, the shared memory and the L1 cache
 compete for space on a single physical piece of SRAM memory.</p>
+<p>Multiple axes: total space; latency; lifetime; visibility. Global
+memroy is large, slow, outlives the kernel, and is visible by all
+threads. Shared memory is faster, much smaller, and exists only for as
+long as each thread block is alive; and is visible only from its
+respective thread block. Local memory is smaller again, exists for only
+the lifetime of a single thread, and is visible only by that thread.</p>
 </div>
 </section><div class="section level1">
 <h1 id="some-confusing-terms">Some confusing terms<a class="anchor" aria-label="anchor" href="#some-confusing-terms"></a>
@@ -1773,7 +1779,7 @@ any links that you are not going to use.
  -->
 </section></section><section id="aio-first-kernels"><p>Content from <a href="first-kernels.html">Writing your first GPU kernels</a></p>
 <hr>
-<p>Last updated on 2026-05-01 |
+<p>Last updated on 2026-05-05 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/first-kernels.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -1960,7 +1966,7 @@ their respective speeds swaps?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2148,7 +2154,7 @@ and threads per block to 256? Why?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>Your kernel should look something like this:</p>
 <div class="codewrapper sourceCode" id="cb6">
@@ -2193,7 +2199,7 @@ indices directly, instead of <code>grid()</code> and
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2284,7 +2290,7 @@ y_i\)</span>.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2397,7 +2403,7 @@ why?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
 <div class="accordion-body">
 <p>Two considerations stand out when comparing the kernel options:</p>
 <ul>
@@ -2471,7 +2477,7 @@ definition and grid configuration.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
 <div class="accordion-body">
 <p>One solution looks like this:</p>
 <div class="codewrapper sourceCode" id="cb13">
@@ -2536,7 +2542,7 @@ yourself with the Python function <code>divmod()</code>.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb16">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2607,7 +2613,7 @@ stage, set <code>N</code> to be small (~100).</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb18">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2646,7 +2652,7 @@ parallel? What is the unit of parallelisation?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
 <div class="accordion-body">
 <p>We parallelise over <span class="math inline">\(k\)</span> but not
 <span class="math inline">\(n\)</span>, since including <span class="math inline">\(n\)</span> would introduce race conditions.</p>
@@ -2708,7 +2714,7 @@ computation. That is:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb20">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2815,9 +2821,9 @@ idea is this:</p>
 <li>Each thread will perform a local, partial sum.</li>
 <li>We will construct a shared memory array that has a size that exactly
 matches the threads per block.</li>
-<li>Each thread in a threadblock will set its associated entry in the
+<li>Each thread in a thread block will set its associated entry in the
 shared array to its partial sum.</li>
-<li>The threadblock will sum the contents of its shared memory using a
+<li>The thread block will sum the contents of its shared memory using a
 binary reduction (see diagram).</li>
 <li>Finally, thread ID=0 of the thread block will perform an atomic add
 to global memory.</li>
@@ -2852,7 +2858,7 @@ participate in the reduction as in the previous step. <a href="https://developer
 <span id="cb23-19"><a href="#cb23-19" tabindex="-1" aria-label="code-block-23-19"></a>            shared[tid] <span class="op">+=</span> shared[tid <span class="op">+</span> offset]</span>
 <span id="cb23-20"><a href="#cb23-20" tabindex="-1" aria-label="code-block-23-20"></a>            cuda.syncthreads()</span>
 <span id="cb23-21"><a href="#cb23-21" tabindex="-1" aria-label="code-block-23-21"></a></span>
-<span id="cb23-22"><a href="#cb23-22" tabindex="-1" aria-label="code-block-23-22"></a>    <span class="co"># Thread ID=0 adds the entire threadblock sum to global memory</span></span>
+<span id="cb23-22"><a href="#cb23-22" tabindex="-1" aria-label="code-block-23-22"></a>    <span class="co"># Thread ID=0 adds the entire thread block sum to global memory</span></span>
 <span id="cb23-23"><a href="#cb23-23" tabindex="-1" aria-label="code-block-23-23"></a>    <span class="cf">if</span> tid <span class="op">==</span> <span class="dv">0</span>:</span>
 <span id="cb23-24"><a href="#cb23-24" tabindex="-1" aria-label="code-block-23-24"></a>        cuda.atomic.add(acc, <span class="dv">0</span>, shared[<span class="dv">0</span>] <span class="op">+</span> shared[<span class="dv">1</span>])</span></code></pre>
 </div>
@@ -2875,7 +2881,7 @@ any links that you are not going to use.
  -->
 </section></section><section id="aio-optimisation"><p>Content from <a href="optimisation.html">Optimisation</a></p>
 <hr>
-<p>Last updated on 2026-05-01 |
+<p>Last updated on 2026-05-05 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/optimisation.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -3169,6 +3175,31 @@ first transferring the profile data locally.</p>
 <li>Am I using float64 values by mistake?</li>
 <li>Am I compute bound, memory bound, or neither?</li>
 <li>What is the ratio of FMA to total floating point instructions?</li>
+</ul></section><section><h2 class="section-heading" id="optimisation-pitfalls">Optimisation pitfalls<a class="anchor" aria-label="anchor" href="#optimisation-pitfalls"></a>
+</h2>
+<hr class="half-width">
+<p>As with making the choice to rewrite an algorithm from a
+straightforward sequential implementation to a parallel implementation,
+the choice to optimise comes with some downsides that must be kept in
+mind.</p>
+<p>From the outset you should understand the kind of performance that is
+necessary to make your original problem computationally tractable and
+optimise with this concrete goal in mind. <em>Don’t optimise for the
+sake of optimisation.</em></p>
+<p>As you will see as we progress here, optimisation comes with
+important downsides:</p>
+<ul>
+<li>It’s not always possible! Sometimes the “obvious” optimisations do
+very little at all, and despite the advertised computational performance
+of your hardware, these optimisation strategies fail to meaningfully
+close this gap. This may be because of hardware limits such as memory
+pressure, intractable aspects of your algorithm, or the unfortunate
+consequence of the black box that is an optimising compiler. Know when
+to raise the white flag.</li>
+<li>Optimisation almost invariably results in code bloat. Your code will
+become substantially longer and substantially more complex.</li>
+<li>Your code will become harder to reason about.</li>
+<li>And as a consequence, you may introduce bugs.</li>
 </ul></section><section><h2 class="section-heading" id="optimisation-1-minimise-writing-to-global-memory">Optimisation 1: Minimise writing to global memory<a class="anchor" aria-label="anchor" href="#optimisation-1-minimise-writing-to-global-memory"></a>
 </h2>
 <hr class="half-width">
@@ -3182,7 +3213,7 @@ less local and shared memory storage available; local arrays should
 typically be sized in the single digits, and shared arrays should
 typically be sized at most to a few hundred or so entries. (Large
 reservations of local and shared arrays cause a scaracity of memory and
-result in fewer simulatenous threadblocks being scheduled in a SM.)</p>
+result in fewer simulatenous thread blocks being scheduled in a SM.)</p>
 <p>How do you identify which memory is which?</p>
 <ul>
 <li>
@@ -3376,7 +3407,7 @@ now. (Open bug report: <a href="https://github.com/NVIDIA/numba-cuda/issues/865"
 </div>
 </div>
 </div>
-</section><section><h2 class="section-heading" id="use-specialised-mathematical-functions">Use specialised mathematical functions<a class="anchor" aria-label="anchor" href="#use-specialised-mathematical-functions"></a>
+</section><section><h2 class="section-heading" id="optimisation-3-use-specialised-mathematical-functions">Optimisation 3: Use specialised mathematical functions<a class="anchor" aria-label="anchor" href="#optimisation-3-use-specialised-mathematical-functions"></a>
 </h2>
 <hr class="half-width">
 <p>CUDA provides a <a href="https://docs.nvidia.com/cuda/cuda-math-api/index.html" class="external-link">wide range
@@ -3423,7 +3454,7 @@ efficient operations.</p>
 </button>
 <div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
 <div class="accordion-body">
-<p>There are a number of candiates which stand out as options here:</p>
+<p>There are a number of candidates which stand out as options here:</p>
 <ul>
 <li>
 <code>sinpi()</code> and <code>cospi()</code> compute the phase by
@@ -3472,7 +3503,7 @@ fastest results and retains the accuracy needed for our use case:</p>
 </div>
 </div>
 </div>
-</section><section><h2 class="section-heading" id="minimise-reading-from-global-memory">Minimise reading from global memory<a class="anchor" aria-label="anchor" href="#minimise-reading-from-global-memory"></a>
+</section><section><h2 class="section-heading" id="optimisation-4-minimise-reading-from-global-memory">Optimisation 4: Minimise reading from global memory<a class="anchor" aria-label="anchor" href="#optimisation-4-minimise-reading-from-global-memory"></a>
 </h2>
 <hr class="half-width">
 <p>We’ve previously used a local accumulation variable to minimise
@@ -3484,20 +3515,20 @@ entirety of each of the <code>us</code>, <code>vs</code>,
 redundancy here: since each thread is fully independent, they are each
 reading the same data, from start to end. But what if we could somehow
 share the burden of these global memory reads amongst the threads?</p>
-<p>A standard pattern in kernel design is for each thread in a
-threadblock to cooperate by using shared memory as an intermediate
-cache. Remember that shared memory is much faster than global memory,
-and is visible from each thread within a thread block. In doing so,
-global reads reduce by a factor equal to threads per block. For a
-threadblock with 256 threads, this will reduce global memory reads by a
-factor of 256.</p>
+<p>A standard pattern in kernel design is for each thread in a thread
+block to cooperate by using shared memory as an intermediate cache.
+Remember that shared memory is much faster than global memory, and is
+visible from each thread within a thread block. In doing so, global
+reads reduce by a factor equal to threads per block. For a thread block
+with 256 threads, this will reduce global memory reads by a factor of
+256.</p>
 <p>Suppose there are 256 threads per block. Then the pattern proceeds as
 follows:</p>
 <ol style="list-style-type: decimal">
-<li>The threadblock allocates a shared memory array with size 256. Each
+<li>The thread block allocates a shared memory array with size 256. Each
 thread can read and write to this array, and can see the writes of each
-sibling thread within the threadblock.</li>
-<li>The threadblock reads in the first 256 index values of the global
+sibling thread within the thread block.</li>
+<li>The thread block reads in the first 256 index values of the global
 memory, with each thread reading a <em>single, unique</em> value based
 on its thread ID. For example, thread 45 within the thread block reads
 the 45th value of the global array.</li>
@@ -3517,14 +3548,14 @@ memory is exhausted.</p>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" tabindex="-1" aria-label="code-block-11-1"></a><span class="co"># Create shared memory array</span></span>
 <span id="cb11-2"><a href="#cb11-2" tabindex="-1" aria-label="code-block-11-2"></a>xs_shared <span class="op">=</span> cuda.shared.array(<span class="dv">256</span>, dtype<span class="op">=</span>np.float32)</span>
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1" aria-label="code-block-11-3"></a></span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a>tid <span class="op">=</span> cuda.threadIdx.x. <span class="co"># threadId _within_ the threadblock</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a>tid <span class="op">=</span> cuda.threadIdx.x. <span class="co"># threadId _within_ the thread block</span></span>
 <span id="cb11-5"><a href="#cb11-5" tabindex="-1" aria-label="code-block-11-5"></a>N <span class="op">=</span> <span class="bu">len</span>(xs_global)</span>
 <span id="cb11-6"><a href="#cb11-6" tabindex="-1" aria-label="code-block-11-6"></a></span>
 <span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a><span class="co"># Step through the array in blocks of 256</span></span>
 <span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a><span class="cf">for</span> offset <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, N, <span class="dv">256</span>):</span>
 <span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a>    <span class="co"># Write all 256 values from global memory into</span></span>
 <span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a>    <span class="cf">if</span> offset <span class="op">+</span> tid <span class="op">&lt;</span> N:</span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a>        <span class="co"># Each thread in the threadblock is responsible for reading a unique global memory address</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a>        <span class="co"># Each thread in the thread block is responsible for reading a unique global memory address</span></span>
 <span id="cb11-12"><a href="#cb11-12" tabindex="-1" aria-label="code-block-11-12"></a>        <span class="co"># and writing to a unique shared memory address based on its thread ID.</span></span>
 <span id="cb11-13"><a href="#cb11-13" tabindex="-1" aria-label="code-block-11-13"></a>        xs_shared[tid] <span class="op">=</span> xs_global[offset <span class="op">+</span> tid]</span>
 <span id="cb11-14"><a href="#cb11-14" tabindex="-1" aria-label="code-block-11-14"></a>    <span class="cf">else</span>:</span>
@@ -3546,19 +3577,18 @@ memory is exhausted.</p>
 <li><p>We create shared memory by calling
 <code>cuda.shared.array(...)</code> in each thread. But this syntax is
 deceptive: it <em>looks</em> like each thread creates its own shared
-array, but this allocation is actually just performed just once at the
-threadblock level. Each thread shares the same shared memory
-array.</p></li>
+array, but this allocation is actually performed just once at the thread
+block level. Each thread shares the same shared memory array.</p></li>
 <li><p>The <code>cuda.threadIdx.x</code> is the thread ID
 <em>within</em> the thread block, ranging in this case from 0 to 255.
 This is not the global thread ID which we get from
 <code>cuda.grid(1)</code>.</p></li>
-<li><p>The thread ID gurantees that each thread reads from and writes to
-a unique address in global and shared memory.</p></li>
-<li><p>Since threads within are threadblock are not guarateed to operate
-in lockstep (only at the warp level is this true), we need to call the
-synchronisation function <code>cuda.synchthreads()</code>. This function
-acts a gate that stops threads within a given threadblock from
+<li><p>The thread ID guarantees that each thread reads from, and writes
+to, a unique address in global and shared memory.</p></li>
+<li><p>Since threads within are thread block are not guaranteed to
+operate in lockstep (only at the warp level is this true), we need to
+call the synchronisation function <code>cuda.synchthreads()</code>. This
+function acts a gate that stops threads within a given thread block from
 progressing until all threads have reached this point. This guarantees
 two things: that the cache is fully populated before we attempt to read
 from it; and later, that the cache is not updated until all threads have
@@ -3573,28 +3603,31 @@ Other options for handling this remainder exist, such as:</p>
     # Compute...</code></pre>
 </li>
 </ul>
-<div id="coalesced-memory-reads" class="callout">
+<div id="optimisation-5-coalesced-memory-reads" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
 <span class="callout-header">Callout</span>
-<div id="coalesced-memory-reads" class="callout-inner">
-<h3 class="callout-title">Coalesced memory reads</h3>
+<div id="optimisation-5-coalesced-memory-reads" class="callout-inner">
+<h3 class="callout-title">Optimisation 5: Coalesced memory reads</h3>
 <div class="callout-content">
-<p>The GPU memory system performs well when a threadblock coordinates to
-read from a <em>contiguous</em> region of memory. In particular, if each
-thread in a threadblock reads the <em>next</em> entry in an array, the
-GPU can turn all these little reads into a single, unified read
-instruction. When this happens, it is called <em>memory
+<p>The GPU memory system performs best when a thread block coordinates
+to read from a <em>contiguous</em> region of memory. In particular, if
+each thread in a thread block reads the <em>next</em> entry in an array,
+the GPU can turn all these little reads into a single, unified read
+instruction. For example, instead of asking the memory system to get me
+index 0, and then get me index 1, … and then finally index 1024, the
+memory system can unify these into a single instruction asking for
+indices 0-1024. When this happens, it is called <em>memory
 coalescing.</em></p>
 <p>On the other hand, if each thread reads from somewhere seemingly
-random, or if each thread’s memory read is strided (i.e. there are gaps
-between each read), then the GPU can’t combine these into a single,
-unified read instruction. Those hundreds of reads will be queued and
-processed one by one. Obviously, this is not good for memory
-performance.</p>
+random, is non-sequential, or if each thread’s memory read is strided
+(i.e. there are gaps between each read), then the GPU can’t combine
+these into a single, unified read instruction. Those hundreds of reads
+will be queued and processed one by one. Obviously, this is not good for
+memory performance.</p>
 <p>In the above example, we read from memory using the indexing
-<code>offset + tid</code> which guaratees <em>memory
+<code>offset + tid</code> which guarantees <em>memory
 coalescing</em>.</p>
 </div>
 </div>
@@ -3619,13 +3652,13 @@ and <code>data</code>.</p>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a>data_cache <span class="op">=</span> cuda.shared.array(NTHREADS, dtype<span class="op">=</span>np.complex64)</span></code></pre>
 </div>
 <p>Then proceed to complete the remaining TODOs.</p>
-<p><strong>Beware:</strong> We must ensure that each thread in a
-threadblock participates in cache generation. For example, the condition
+<p><strong>Beware:</strong> We must ensure that each thread in a thread
+block participates in cache generation. For example, the condition
 <code>if lmpx &lt; img.size</code> must no longer result in some threads
 prematurely terminating. Instead, these “remainder” threads must still
 continue to play their role in populating and refreshing their
 associated index in the caches (to be used by the other threads in its
-threadblock) even though they ultimately do not write out to global
+thread block) even though they ultimately do not write out to global
 memory.</p>
 <div class="codewrapper sourceCode" id="cb14">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3730,19 +3763,426 @@ memory.</p>
 </div>
 </div>
 </div>
-</section><section><h2 class="section-heading" id="thread-coarsening">Thread coarsening<a class="anchor" aria-label="anchor" href="#thread-coarsening"></a>
-</h2>
-<hr class="half-width"></section><section><h2 class="section-heading" id="the-compiler-blackbox-experiment-with-the-hot-loop">The compiler blackbox: experiment with the hot loop<a class="anchor" aria-label="anchor" href="#the-compiler-blackbox-experiment-with-the-hot-loop"></a>
-</h2>
-<hr class="half-width"></section><section><h2 class="section-heading" id="force-fma-instructions">Force FMA instructions<a class="anchor" aria-label="anchor" href="#force-fma-instructions"></a>
+</section><section><h2 class="section-heading" id="optimistion-6-thread-coarsening">Optimistion 6: Thread coarsening<a class="anchor" aria-label="anchor" href="#optimistion-6-thread-coarsening"></a>
 </h2>
 <hr class="half-width">
-<p>In my experience, and especially in the context of complex numbers,
-it is worth experimenting with explicit FMA instructions. In my opinion,
-this is a failing of the CUDA compiler. <!--
+<p>Sometimes too much of a good thing can be a bad thing. When it comes
+to GPU threads, we want enough threads that all SMs have a number of
+thread blocks queued at any one time. This ensures all CUDA cores are
+doing work at any one time, and when a thread block needs to pause to
+wait for something (e.g. to access global memory) there is another
+thread block reading and waiting to advance its own work.</p>
+<p>But only up to a point. Kernels have start up and initialisation
+costs. And in some kernels, there may be work that is repeated by every
+kernel that might actually be better if it were shared.</p>
+<p><strong>Thread coarsening</strong> is the process whereby we “dial
+back” the degree of parallelisation, and instead increase the
+<em>computational intensity</em> of each kernel.</p>
+<p>Consider the following two version of the DFT kernel, where the first
+is based on the kernel we developed earlier:</p>
+<div class="codewrapper sourceCode" id="cb16">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" tabindex="-1" aria-label="code-block-16-1"></a><span class="at">@cuda.jit</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1" aria-label="code-block-16-2"></a><span class="kw">def</span> dft(xs, Xs):</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1" aria-label="code-block-16-3"></a>    k <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1" aria-label="code-block-16-4"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1" aria-label="code-block-16-5"></a></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1" aria-label="code-block-16-6"></a>    <span class="cf">if</span> k <span class="op">&lt;</span> N:</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1" aria-label="code-block-16-7"></a>        xs_k <span class="op">=</span> np.complex64(<span class="dv">0</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1" aria-label="code-block-16-8"></a>        <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1" aria-label="code-block-16-9"></a>            phase <span class="op">=</span> <span class="op">-</span><span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N</span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1" aria-label="code-block-16-10"></a>            sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1" aria-label="code-block-16-11"></a>            Xs_k <span class="op">+=</span> xs[n] <span class="op">*</span> <span class="bu">complex</span>(cos, sin)</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1" aria-label="code-block-16-12"></a></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1" aria-label="code-block-16-13"></a>        Xs[k] <span class="op">=</span> Xs_k</span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1" aria-label="code-block-16-14"></a></span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1" aria-label="code-block-16-15"></a><span class="at">@cuda.jit</span></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1" aria-label="code-block-16-16"></a><span class="kw">def</span> dft_coarsened(xs, Xs):</span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1" aria-label="code-block-16-17"></a>    THREAD_COARSEN <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1" aria-label="code-block-16-18"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1" aria-label="code-block-16-19"></a></span>
+<span id="cb16-20"><a href="#cb16-20" tabindex="-1" aria-label="code-block-16-20"></a>    <span class="co"># Allocate local arrays to store:</span></span>
+<span id="cb16-21"><a href="#cb16-21" tabindex="-1" aria-label="code-block-16-21"></a>    <span class="co"># 1. The k index</span></span>
+<span id="cb16-22"><a href="#cb16-22" tabindex="-1" aria-label="code-block-16-22"></a>    <span class="co"># 2. The respective accumulator variable</span></span>
+<span id="cb16-23"><a href="#cb16-23" tabindex="-1" aria-label="code-block-16-23"></a>    ks <span class="op">=</span> cuda.local.array(THREAD_COARSEN, dtype<span class="op">=</span>np.int64)</span>
+<span id="cb16-24"><a href="#cb16-24" tabindex="-1" aria-label="code-block-16-24"></a>    Xs_ks <span class="op">=</span> cuda.local.array(THREAD_COARSEN, dtype<span class="op">=</span>np.complex64)</span>
+<span id="cb16-25"><a href="#cb16-25" tabindex="-1" aria-label="code-block-16-25"></a></span>
+<span id="cb16-26"><a href="#cb16-26" tabindex="-1" aria-label="code-block-16-26"></a>    <span class="co"># Initialise the local arrays</span></span>
+<span id="cb16-27"><a href="#cb16-27" tabindex="-1" aria-label="code-block-16-27"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb16-28"><a href="#cb16-28" tabindex="-1" aria-label="code-block-16-28"></a>        ks[i] <span class="op">=</span> cuda.grid(<span class="dv">1</span>) <span class="op">+</span> i <span class="op">*</span> cuda.gridsize(<span class="dv">1</span>)</span>
+<span id="cb16-29"><a href="#cb16-29" tabindex="-1" aria-label="code-block-16-29"></a>        Xs_ks[i] <span class="op">=</span> <span class="dv">0</span>  <span class="co"># zero each element of the array</span></span>
+<span id="cb16-30"><a href="#cb16-30" tabindex="-1" aria-label="code-block-16-30"></a></span>
+<span id="cb16-31"><a href="#cb16-31" tabindex="-1" aria-label="code-block-16-31"></a>    <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb16-32"><a href="#cb16-32" tabindex="-1" aria-label="code-block-16-32"></a>        <span class="co"># Prefetch global memory item</span></span>
+<span id="cb16-33"><a href="#cb16-33" tabindex="-1" aria-label="code-block-16-33"></a>        x <span class="op">=</span> xs[n]</span>
+<span id="cb16-34"><a href="#cb16-34" tabindex="-1" aria-label="code-block-16-34"></a>        <span class="co"># Precompute part of the phase term</span></span>
+<span id="cb16-35"><a href="#cb16-35" tabindex="-1" aria-label="code-block-16-35"></a>        partial_phase <span class="op">=</span> <span class="op">-</span><span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> n <span class="op">/</span> N</span>
+<span id="cb16-36"><a href="#cb16-36" tabindex="-1" aria-label="code-block-16-36"></a></span>
+<span id="cb16-37"><a href="#cb16-37" tabindex="-1" aria-label="code-block-16-37"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb16-38"><a href="#cb16-38" tabindex="-1" aria-label="code-block-16-38"></a>            phase <span class="op">=</span> ks[i] <span class="op">*</span> partial_phase</span>
+<span id="cb16-39"><a href="#cb16-39" tabindex="-1" aria-label="code-block-16-39"></a>            sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
+<span id="cb16-40"><a href="#cb16-40" tabindex="-1" aria-label="code-block-16-40"></a>            Xs_ks[i] <span class="op">+=</span> x <span class="op">*</span> <span class="bu">complex</span>(cos, sin)</span>
+<span id="cb16-41"><a href="#cb16-41" tabindex="-1" aria-label="code-block-16-41"></a></span>
+<span id="cb16-42"><a href="#cb16-42" tabindex="-1" aria-label="code-block-16-42"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb16-43"><a href="#cb16-43" tabindex="-1" aria-label="code-block-16-43"></a>        k <span class="op">=</span> ks[i]</span>
+<span id="cb16-44"><a href="#cb16-44" tabindex="-1" aria-label="code-block-16-44"></a>        <span class="cf">if</span> k <span class="op">&lt;</span> N:</span>
+<span id="cb16-45"><a href="#cb16-45" tabindex="-1" aria-label="code-block-16-45"></a>            Xs[k] <span class="op">=</span> Xs_ks[i]</span></code></pre>
+</div>
+<p>In the original DFT kernel, each thread is responsible for computing
+just the <code>k</code>’th index of <code>Xs</code>. Compare this to the
+coarsened version, which each thread computes four distinct indices of
+<code>Xs</code>: <code>k</code>, <code>k + gridsize</code>,
+…<code>k + 3 * gridsize</code>.</p>
+<p>How does it do this?</p>
+<ul>
+<li>We set the the thread coarsening factor, <code>THREAD_COARSEN</code>
+as a constant value within the kernel.</li>
+<li>We create two locally-allocated arrays, one for the k values and one
+for accumulator variables.</li>
+<li>On each iteration of <code>n</code>, we compute for the partial sum
+of each of the k values.</li>
+<li>By doing so, we amortise the cost of accessing <code>xs[n]</code>
+and computing (part of) the phase value.</li>
+</ul>
+<div id="discussion7" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>In this simple example, does this</p>
+</div>
+</div>
+</div>
+</section><section><h2 class="section-heading" id="optimisation-7-hot-loop-experimentation">Optimisation 7: Hot loop experimentation<a class="anchor" aria-label="anchor" href="#optimisation-7-hot-loop-experimentation"></a>
+</h2>
+<hr class="half-width">
+<p>Our kernel’s hot loop is located in the innermost for loop. Each
+kernel runs this code repeatedly, and variations of even a single
+instruction can have outsized effects on the overall performance of the
+kernel.</p>
+<p>Ideally, we would have a clear set of rules to optimize a hot loop.
+For example:</p>
+<ul>
+<li>Pre-compute values as much as possible prior to the innermost
+loops</li>
+<li>Minimise the number of operations: can an equation be reduced by a
+factored in some way to reduce the number of operations? is there
+bookkeeping in the loop that can be avoided?</li>
+<li>Understand the relative costs of operations: for example, as
+division is more expensive than multiplication can the equation be
+refactored to remove this step?</li>
+</ul>
+<p>Unfortunately, it is not so simple. There are multiple layers between
+our code and what ultimately runs on the GPU: there is the Python to
+CUDA translation layer; there are compiler optimisations; the
+intermediate PTX language; and the finally compiled SASS kernel. These
+translation layers are, for the most part, opaque to us and so it is not
+always clear what the end code looks like nor what optimisations are
+being performed by the compiler (short of inspecting the PTX assembly
+instructions). Worse yet, the compiler might recognise certain patterns
+and do the right thing in some cases, but equally a slight change in the
+code or a mismatch in translation layers might altogether preclude an
+optimisation from occurring.</p>
+<p>Let’s consider a few examples from our kernel.</p>
+<p>In our kernel we have the computation <span class="math inline">\(2
+\pi (u l + v m + w n')\)</span>. One simple optimisation might be to
+precompute <span class="math inline">\(2 \pi\)</span> in advance of the
+hot loop, thereby eliding one additional multiplication instruction. If
+you try this, however, you will (most likely) not observe any speed up
+at all! In fact, the compiler has already recognised this as
+optimisation step and has quietly computed the product at compile
+time.</p>
+<p>Next, consider these two looping constructs, with the first currently
+being used in our kernel:</p>
+<div class="codewrapper sourceCode" id="cb17">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" tabindex="-1" aria-label="code-block-17-1"></a><span class="cf">for</span> (u, v, w), datum <span class="kw">in</span> <span class="bu">zip</span>(uvw_cache, data_cache):</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1" aria-label="code-block-17-2"></a>    <span class="co"># Do work...</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1" aria-label="code-block-17-3"></a></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1" aria-label="code-block-17-4"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(NTHREADS):</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1" aria-label="code-block-17-5"></a>    u, v, w <span class="op">=</span> uvw_cache[j]</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1" aria-label="code-block-17-6"></a>    datum <span class="op">=</span> data_cache[j]</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1" aria-label="code-block-17-7"></a>    <span class="co"># Do work...</span></span></code></pre>
+</div>
+<p>These are fully equivalent, however they produce a kernel that runs
+at considerably different speeds. The first version is more idomatic
+Python code, however it runs much slower. Clearly some artifact of the
+Python to CUDA translation layer precludes an optimisation by the
+compiler, or otherwise introduces additional bookkeeping that we are
+avoiding in the plain loop.</p>
+<p>Finally, consider these two—again fully equivalent—versions of the
+innermost loop:</p>
+<div class="codewrapper sourceCode" id="cb18">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" tabindex="-1" aria-label="code-block-18-1"></a><span class="co"># VERSION 1</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1" aria-label="code-block-18-2"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(NTHREADS):</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1" aria-label="code-block-18-3"></a>    u, v, w <span class="op">=</span> uvw_cache[j]</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1" aria-label="code-block-18-4"></a>    datum <span class="op">=</span> data_cache[j]</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1" aria-label="code-block-18-5"></a></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1" aria-label="code-block-18-6"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1" aria-label="code-block-18-7"></a>        l, m, ndash <span class="op">=</span> lmns[i]</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1" aria-label="code-block-18-8"></a>        phase <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> (u <span class="op">*</span> l <span class="op">+</span> v <span class="op">*</span> m <span class="op">+</span> w <span class="op">*</span> ndash)</span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1" aria-label="code-block-18-9"></a>        sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1" aria-label="code-block-18-10"></a>        pixels[i] <span class="op">+=</span> datum <span class="op">*</span> np.complex64(<span class="bu">complex</span>(cos, sin))</span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1" aria-label="code-block-18-11"></a></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1" aria-label="code-block-18-12"></a><span class="co"># VERSION 2</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1" aria-label="code-block-18-13"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(NTHREADS):</span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1" aria-label="code-block-18-14"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1" aria-label="code-block-18-15"></a>        phase <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> (</span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1" aria-label="code-block-18-16"></a>            uvw_cache[j, <span class="dv">0</span>] <span class="op">*</span> lmns[i, <span class="dv">0</span>] <span class="op">+</span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1" aria-label="code-block-18-17"></a>            uvw_cache[j, <span class="dv">1</span>] <span class="op">*</span> lmns[i, <span class="dv">1</span>] <span class="op">+</span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1" aria-label="code-block-18-18"></a>            uvw_cache[j, <span class="dv">2</span>] <span class="op">*</span> lmns[i, <span class="dv">2</span>]</span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1" aria-label="code-block-18-19"></a>        )</span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1" aria-label="code-block-18-20"></a>        sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1" aria-label="code-block-18-21"></a>        pixels[i] <span class="op">+=</span> data_cache[j] <span class="op">*</span> <span class="bu">complex</span>(cos, sin)</span></code></pre>
+</div>
+<p>Even more so than the previous example, these versions feel
+identical. The only difference being that in the first we have extracted
+the values of <span class="math inline">\(u, v, w, l, m\)</span> and
+<span class="math inline">\(n'\)</span> into temporary placeholder
+variables; whilst in the second we have directly indexed into the
+arrays. The second, however, is marginally faster than the first. You
+might ask: why should it matter that we prefetch the values into
+registers first before applying the multiplication? Or you might ask: if
+one version is faster than the other, why isn’t the compiler clever
+enough to see that both are lexically and functionally identical and
+therefore apply similar optimisations?</p>
+<p>These cases stress the “black box” nature of working with optimising
+compilers and translation layers. You will either need to experiment
+with different formulations and benchmark; or else resort to writing PTX
+assembly to manually enforce the kernel to behave as you desire (which
+is beyond this author’s expertise).</p>
+<p>After tweaking the internal hot loop, the kernel now looks like
+this:</p>
+<div class="codewrapper sourceCode" id="cb19">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" tabindex="-1" aria-label="code-block-19-1"></a><span class="at">@cuda.jit</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1" aria-label="code-block-19-2"></a><span class="kw">def</span> kernel8(us, vs, ws, data, ls, ms, ndashes, img):</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1" aria-label="code-block-19-3"></a>    NTHREADS <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1" aria-label="code-block-19-4"></a>    uvw_cache <span class="op">=</span> cuda.shared.array((NTHREADS, <span class="dv">3</span>), dtype<span class="op">=</span>np.float32)</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1" aria-label="code-block-19-5"></a>    data_cache <span class="op">=</span> cuda.shared.array(NTHREADS, dtype<span class="op">=</span>np.complex64)</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1" aria-label="code-block-19-6"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1" aria-label="code-block-19-7"></a>    THREAD_COARSEN <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1" aria-label="code-block-19-8"></a>    lmns <span class="op">=</span> cuda.local.array((THREAD_COARSEN, <span class="dv">3</span>), np.float32)</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1" aria-label="code-block-19-9"></a>    pixels <span class="op">=</span> cuda.local.array(THREAD_COARSEN, np.complex64)</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>        lmpx <span class="op">=</span> cuda.grid(<span class="dv">1</span>) <span class="op">+</span> i <span class="op">*</span> cuda.gridsize(<span class="dv">1</span>)</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a>        <span class="cf">if</span> lmpx <span class="op">&lt;</span> img.size:</span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a>            lpx, mpx <span class="op">=</span> <span class="bu">divmod</span>(lmpx, ls.shape[<span class="dv">1</span>])</span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1" aria-label="code-block-19-15"></a></span>
+<span id="cb19-16"><a href="#cb19-16" tabindex="-1" aria-label="code-block-19-16"></a>            <span class="co"># Retrieve l, m and ndash coordinates associated with this pixel</span></span>
+<span id="cb19-17"><a href="#cb19-17" tabindex="-1" aria-label="code-block-19-17"></a>            lmns[i, :] <span class="op">=</span> ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]</span>
+<span id="cb19-18"><a href="#cb19-18" tabindex="-1" aria-label="code-block-19-18"></a></span>
+<span id="cb19-19"><a href="#cb19-19" tabindex="-1" aria-label="code-block-19-19"></a>            <span class="co"># Perform sum over all of the visibility data for just one pixel</span></span>
+<span id="cb19-20"><a href="#cb19-20" tabindex="-1" aria-label="code-block-19-20"></a>            pixels[i] <span class="op">=</span> np.complex64(<span class="dv">0</span>)</span>
+<span id="cb19-21"><a href="#cb19-21" tabindex="-1" aria-label="code-block-19-21"></a></span>
+<span id="cb19-22"><a href="#cb19-22" tabindex="-1" aria-label="code-block-19-22"></a>    <span class="co"># Extract input data in batches of NTHREADS items</span></span>
+<span id="cb19-23"><a href="#cb19-23" tabindex="-1" aria-label="code-block-19-23"></a>    N <span class="op">=</span> data.size</span>
+<span id="cb19-24"><a href="#cb19-24" tabindex="-1" aria-label="code-block-19-24"></a>    <span class="cf">for</span> offset <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, N, NTHREADS):</span>
+<span id="cb19-25"><a href="#cb19-25" tabindex="-1" aria-label="code-block-19-25"></a>        <span class="co"># Fetch data and populate cache</span></span>
+<span id="cb19-26"><a href="#cb19-26" tabindex="-1" aria-label="code-block-19-26"></a>        i <span class="op">=</span> offset <span class="op">+</span> cuda.threadIdx.x</span>
+<span id="cb19-27"><a href="#cb19-27" tabindex="-1" aria-label="code-block-19-27"></a>        <span class="cf">if</span> i <span class="op">&lt;</span> N:</span>
+<span id="cb19-28"><a href="#cb19-28" tabindex="-1" aria-label="code-block-19-28"></a>            uvw_cache[cuda.threadIdx.x] <span class="op">=</span> us[i], vs[i], ws[i]</span>
+<span id="cb19-29"><a href="#cb19-29" tabindex="-1" aria-label="code-block-19-29"></a>            data_cache[cuda.threadIdx.x] <span class="op">=</span> data[i]</span>
+<span id="cb19-30"><a href="#cb19-30" tabindex="-1" aria-label="code-block-19-30"></a>        <span class="cf">else</span>:</span>
+<span id="cb19-31"><a href="#cb19-31" tabindex="-1" aria-label="code-block-19-31"></a>            uvw_cache[cuda.threadIdx.x] <span class="op">=</span> <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb19-32"><a href="#cb19-32" tabindex="-1" aria-label="code-block-19-32"></a>            data_cache[cuda.threadIdx.x] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb19-33"><a href="#cb19-33" tabindex="-1" aria-label="code-block-19-33"></a></span>
+<span id="cb19-34"><a href="#cb19-34" tabindex="-1" aria-label="code-block-19-34"></a>        <span class="co"># Wait for cache to be populated</span></span>
+<span id="cb19-35"><a href="#cb19-35" tabindex="-1" aria-label="code-block-19-35"></a>        cuda.syncthreads()</span>
+<span id="cb19-36"><a href="#cb19-36" tabindex="-1" aria-label="code-block-19-36"></a></span>
+<span id="cb19-37"><a href="#cb19-37" tabindex="-1" aria-label="code-block-19-37"></a>        <span class="co"># Iterate over cache</span></span>
+<span id="cb19-38"><a href="#cb19-38" tabindex="-1" aria-label="code-block-19-38"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(NTHREADS):</span>
+<span id="cb19-39"><a href="#cb19-39" tabindex="-1" aria-label="code-block-19-39"></a>            <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb19-40"><a href="#cb19-40" tabindex="-1" aria-label="code-block-19-40"></a>                phase <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> (</span>
+<span id="cb19-41"><a href="#cb19-41" tabindex="-1" aria-label="code-block-19-41"></a>                    uvw_cache[j, <span class="dv">0</span>] <span class="op">*</span> lmns[i, <span class="dv">0</span>] <span class="op">+</span></span>
+<span id="cb19-42"><a href="#cb19-42" tabindex="-1" aria-label="code-block-19-42"></a>                    uvw_cache[j, <span class="dv">1</span>] <span class="op">*</span> lmns[i, <span class="dv">1</span>] <span class="op">+</span></span>
+<span id="cb19-43"><a href="#cb19-43" tabindex="-1" aria-label="code-block-19-43"></a>                    uvw_cache[j, <span class="dv">2</span>] <span class="op">*</span> lmns[i, <span class="dv">2</span>]</span>
+<span id="cb19-44"><a href="#cb19-44" tabindex="-1" aria-label="code-block-19-44"></a>                )</span>
+<span id="cb19-45"><a href="#cb19-45" tabindex="-1" aria-label="code-block-19-45"></a>                sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
+<span id="cb19-46"><a href="#cb19-46" tabindex="-1" aria-label="code-block-19-46"></a>                pixels[i] <span class="op">+=</span> data_cache[j] <span class="op">*</span> <span class="bu">complex</span>(cos, sin)</span>
+<span id="cb19-47"><a href="#cb19-47" tabindex="-1" aria-label="code-block-19-47"></a></span>
+<span id="cb19-48"><a href="#cb19-48" tabindex="-1" aria-label="code-block-19-48"></a>        <span class="co"># Don't start updating cache until all threads are done</span></span>
+<span id="cb19-49"><a href="#cb19-49" tabindex="-1" aria-label="code-block-19-49"></a>        cuda.syncthreads()</span>
+<span id="cb19-50"><a href="#cb19-50" tabindex="-1" aria-label="code-block-19-50"></a></span>
+<span id="cb19-51"><a href="#cb19-51" tabindex="-1" aria-label="code-block-19-51"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb19-52"><a href="#cb19-52" tabindex="-1" aria-label="code-block-19-52"></a>        lmpx <span class="op">=</span> cuda.grid(<span class="dv">1</span>) <span class="op">+</span> i <span class="op">*</span> cuda.gridsize(<span class="dv">1</span>)</span>
+<span id="cb19-53"><a href="#cb19-53" tabindex="-1" aria-label="code-block-19-53"></a>        <span class="cf">if</span> lmpx <span class="op">&lt;</span> img.size:</span>
+<span id="cb19-54"><a href="#cb19-54" tabindex="-1" aria-label="code-block-19-54"></a>            lpx, mpx <span class="op">=</span> <span class="bu">divmod</span>(lmpx, ls.shape[<span class="dv">1</span>])</span>
+<span id="cb19-55"><a href="#cb19-55" tabindex="-1" aria-label="code-block-19-55"></a>            img[lpx, mpx] <span class="op">=</span> pixels[i]</span></code></pre>
+</div>
+</section><section><h2 class="section-heading" id="optimisation-8-force-fma-instructions">Optimisation 8: Force FMA instructions<a class="anchor" aria-label="anchor" href="#optimisation-8-force-fma-instructions"></a>
+</h2>
+<hr class="half-width">
+<p>Fused multiply add (FMA) instructions are a special hardware
+instruction that combines both a muliplication and addition as a single
+operation. In pseudo-code:</p>
+<div class="codewrapper sourceCode" id="cb20">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" tabindex="-1" aria-label="code-block-20-1"></a>cuda.fma(a, b, c) <span class="op">=</span> a <span class="op">*</span> b <span class="op">+</span> c</span></code></pre>
+</div>
+<p>If we can rewrite a pair multiplication and addition operations as a
+single FMA operation, we can straightforwardly double our performance.
+(In fact, the numbers for GPU floating point performance that you’ll see
+NVIDIA or AMD advertising <em>assume</em> that 100% of your code is pure
+FMA instructions – which almost no non-trivial kernel is possible of
+achieving.)</p>
+<p>The CUDA compiler <em>should</em> make an effort to automatically
+attempt to insert FMA instructions into your code, but it has been my
+experience that it is less than perfect.</p>
+<p>Let’s consider the expression from our inner loop:</p>
+<div class="codewrapper sourceCode" id="cb21">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" tabindex="-1" aria-label="code-block-21-1"></a>pixels[i] <span class="op">+=</span> data_cache[j] <span class="op">*</span> <span class="bu">complex</span>(cos, sin)</span></code></pre>
+</div>
+<p>How would we write this as an FMA instruction? The first and most
+immediate problem we encounter here is that <code>cuda.fma</code> is
+defined strictly for <code>np.float32</code> and <code>np.float64</code>
+types, whereas here we are dealing with complex numbers. Let’s expand
+this a little into real and imaginary components:</p>
+<div class="codewrapper sourceCode" id="cb22">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" tabindex="-1" aria-label="code-block-22-1"></a>pixels[i] <span class="op">+=</span> <span class="bu">complex</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1" aria-label="code-block-22-2"></a>    datum.real <span class="op">*</span> cos <span class="op">-</span> datum.imag <span class="op">*</span> sin,  <span class="co"># real component</span></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1" aria-label="code-block-22-3"></a>    datum.real <span class="op">*</span> sin <span class="op">+</span> datum.imag <span class="op">*</span> cos   <span class="co"># imaginary component</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1" aria-label="code-block-22-4"></a>)</span></code></pre>
+</div>
+<p>If we consider just the real component for a moment, then we can
+write this as two FMA instructions:</p>
+<div class="codewrapper sourceCode" id="cb23">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" tabindex="-1" aria-label="code-block-23-1"></a>pixels_real[i] <span class="op">=</span> cuda.fma(datum.real, cos, pixels_real[i])</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1" aria-label="code-block-23-2"></a>pixels_real[i] <span class="op">=</span> cuda.fma(datum.imag, <span class="op">-</span>sin, pixels_real[i])</span></code></pre>
+</div>
+<p>Check that this makes sense to you!</p>
+<div id="discussion8" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>We are going to rewrite
+<code>pixels[i] += data_cache[j] * complex(cos, sin)</code> as a
+sequence of 4 FMA instructions.</p>
+<p>To do this, however, we are first going to split the real and
+imaginary components of the <code>pixel</code> and
+<code>data_cache</code>. Modify the defitions of these arrays to have a
+second dimension that will allow us to index into the real or imaginary
+components:</p>
+<div class="codewrapper sourceCode" id="cb24">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" tabindex="-1" aria-label="code-block-24-1"></a>data_cache <span class="op">=</span> cuda.shared.array((NTHREADS, <span class="dv">2</span>), dtype<span class="op">=</span>np.float32)</span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1" aria-label="code-block-24-2"></a><span class="co"># [...]</span></span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1" aria-label="code-block-24-3"></a>pixels <span class="op">=</span> cuda.local.array((THREAD_COARSEN, <span class="dv">2</span>), np.float32)</span></code></pre>
+</div>
+<p>Next: initialise each of the real and imaginary components. For
+example, when reading into the shared cache you can use:
+<code>data_cache[cuda.threadIdx.x] = data[i].real, data[i].imag</code>.</p>
+<p>Finally: write out the inplace complex addition as a sequence of 4
+FMA instructions.</p>
+</div>
+</div>
+</div>
+<div id="accordionSolution7" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
+  <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
+</button>
+<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
+<div class="accordion-body">
+<p>Finally, we arrive at a kernel that looks like that shown below.</p>
+<p>You might wonder: did the compiler fail to use FMA instructions
+because we were using complex numbers? After all, complex numbers ‘wrap’
+a 2-tuple of floats and this indirection might obscure the underlying
+operations. Try experimenting with this: if we retain the real and
+imaginary parts stored seperately as we have below, and write out the
+real and imaginary components separately using normal multiplication and
+addition operators, do you see the same speedup?</p>
+<div class="codewrapper sourceCode" id="cb25">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" tabindex="-1" aria-label="code-block-25-1"></a><span class="at">@cuda.jit</span>(fastmath<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1" aria-label="code-block-25-2"></a><span class="kw">def</span> kernel9(us, vs, ws, data, ls, ms, ndashes, img):</span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1" aria-label="code-block-25-3"></a>    NTHREADS <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1" aria-label="code-block-25-4"></a>    uvw_cache <span class="op">=</span> cuda.shared.array((NTHREADS, <span class="dv">3</span>), dtype<span class="op">=</span>np.float32)</span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1" aria-label="code-block-25-5"></a>    data_cache <span class="op">=</span> cuda.shared.array((NTHREADS, <span class="dv">2</span>), dtype<span class="op">=</span>np.float32)</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1" aria-label="code-block-25-6"></a></span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1" aria-label="code-block-25-7"></a>    THREAD_COARSEN <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1" aria-label="code-block-25-8"></a>    lmns <span class="op">=</span> cuda.local.array((THREAD_COARSEN, <span class="dv">3</span>), np.float32)</span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1" aria-label="code-block-25-9"></a>    pixels <span class="op">=</span> cuda.local.array((THREAD_COARSEN, <span class="dv">2</span>), np.float32)</span>
+<span id="cb25-10"><a href="#cb25-10" tabindex="-1" aria-label="code-block-25-10"></a></span>
+<span id="cb25-11"><a href="#cb25-11" tabindex="-1" aria-label="code-block-25-11"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb25-12"><a href="#cb25-12" tabindex="-1" aria-label="code-block-25-12"></a>        lmpx <span class="op">=</span> cuda.grid(<span class="dv">1</span>) <span class="op">+</span> i <span class="op">*</span> cuda.gridsize(<span class="dv">1</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" tabindex="-1" aria-label="code-block-25-13"></a>        <span class="cf">if</span> lmpx <span class="op">&lt;</span> img.size:</span>
+<span id="cb25-14"><a href="#cb25-14" tabindex="-1" aria-label="code-block-25-14"></a>            lpx, mpx <span class="op">=</span> <span class="bu">divmod</span>(lmpx, ls.shape[<span class="dv">1</span>])</span>
+<span id="cb25-15"><a href="#cb25-15" tabindex="-1" aria-label="code-block-25-15"></a></span>
+<span id="cb25-16"><a href="#cb25-16" tabindex="-1" aria-label="code-block-25-16"></a>            <span class="co"># Retrieve l, m and ndash coordinates associated with this pixel</span></span>
+<span id="cb25-17"><a href="#cb25-17" tabindex="-1" aria-label="code-block-25-17"></a>            lmns[i, :] <span class="op">=</span> ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]</span>
+<span id="cb25-18"><a href="#cb25-18" tabindex="-1" aria-label="code-block-25-18"></a></span>
+<span id="cb25-19"><a href="#cb25-19" tabindex="-1" aria-label="code-block-25-19"></a>            <span class="co"># Perform sum over all of the visibility data for just one pixel</span></span>
+<span id="cb25-20"><a href="#cb25-20" tabindex="-1" aria-label="code-block-25-20"></a>            pixels[i, :] <span class="op">=</span> <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb25-21"><a href="#cb25-21" tabindex="-1" aria-label="code-block-25-21"></a></span>
+<span id="cb25-22"><a href="#cb25-22" tabindex="-1" aria-label="code-block-25-22"></a>    <span class="co"># Extract input data in batches of NTHREADS items</span></span>
+<span id="cb25-23"><a href="#cb25-23" tabindex="-1" aria-label="code-block-25-23"></a>    N <span class="op">=</span> data.size</span>
+<span id="cb25-24"><a href="#cb25-24" tabindex="-1" aria-label="code-block-25-24"></a>    <span class="cf">for</span> offset <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, N, NTHREADS):</span>
+<span id="cb25-25"><a href="#cb25-25" tabindex="-1" aria-label="code-block-25-25"></a>        <span class="co"># Fetch data and populate cache</span></span>
+<span id="cb25-26"><a href="#cb25-26" tabindex="-1" aria-label="code-block-25-26"></a>        i <span class="op">=</span> offset <span class="op">+</span> cuda.threadIdx.x</span>
+<span id="cb25-27"><a href="#cb25-27" tabindex="-1" aria-label="code-block-25-27"></a>        <span class="cf">if</span> i <span class="op">&lt;</span> N:</span>
+<span id="cb25-28"><a href="#cb25-28" tabindex="-1" aria-label="code-block-25-28"></a>            uvw_cache[cuda.threadIdx.x] <span class="op">=</span> us[i], vs[i], ws[i]</span>
+<span id="cb25-29"><a href="#cb25-29" tabindex="-1" aria-label="code-block-25-29"></a>            data_cache[cuda.threadIdx.x] <span class="op">=</span> data[i].real, data[i].imag</span>
+<span id="cb25-30"><a href="#cb25-30" tabindex="-1" aria-label="code-block-25-30"></a>        <span class="cf">else</span>:</span>
+<span id="cb25-31"><a href="#cb25-31" tabindex="-1" aria-label="code-block-25-31"></a>            uvw_cache[cuda.threadIdx.x] <span class="op">=</span> <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb25-32"><a href="#cb25-32" tabindex="-1" aria-label="code-block-25-32"></a>            data_cache[cuda.threadIdx.x] <span class="op">=</span> <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb25-33"><a href="#cb25-33" tabindex="-1" aria-label="code-block-25-33"></a></span>
+<span id="cb25-34"><a href="#cb25-34" tabindex="-1" aria-label="code-block-25-34"></a>        <span class="co"># Wait for cache to be populated</span></span>
+<span id="cb25-35"><a href="#cb25-35" tabindex="-1" aria-label="code-block-25-35"></a>        cuda.syncthreads()</span>
+<span id="cb25-36"><a href="#cb25-36" tabindex="-1" aria-label="code-block-25-36"></a></span>
+<span id="cb25-37"><a href="#cb25-37" tabindex="-1" aria-label="code-block-25-37"></a>        <span class="co"># Iterate over cache</span></span>
+<span id="cb25-38"><a href="#cb25-38" tabindex="-1" aria-label="code-block-25-38"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(NTHREADS):</span>
+<span id="cb25-39"><a href="#cb25-39" tabindex="-1" aria-label="code-block-25-39"></a>            <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb25-40"><a href="#cb25-40" tabindex="-1" aria-label="code-block-25-40"></a>                phase <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> (</span>
+<span id="cb25-41"><a href="#cb25-41" tabindex="-1" aria-label="code-block-25-41"></a>                    uvw_cache[j, <span class="dv">0</span>] <span class="op">*</span> lmns[i, <span class="dv">0</span>] <span class="op">+</span></span>
+<span id="cb25-42"><a href="#cb25-42" tabindex="-1" aria-label="code-block-25-42"></a>                    uvw_cache[j, <span class="dv">1</span>] <span class="op">*</span> lmns[i, <span class="dv">1</span>] <span class="op">+</span></span>
+<span id="cb25-43"><a href="#cb25-43" tabindex="-1" aria-label="code-block-25-43"></a>                    uvw_cache[j, <span class="dv">2</span>] <span class="op">*</span> lmns[i, <span class="dv">2</span>]</span>
+<span id="cb25-44"><a href="#cb25-44" tabindex="-1" aria-label="code-block-25-44"></a>                )</span>
+<span id="cb25-45"><a href="#cb25-45" tabindex="-1" aria-label="code-block-25-45"></a>                sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
+<span id="cb25-46"><a href="#cb25-46" tabindex="-1" aria-label="code-block-25-46"></a>                pixels[i, <span class="dv">0</span>] <span class="op">=</span> cuda.fma(data_cache[j, <span class="dv">0</span>], cos, pixels[i, <span class="dv">0</span>])</span>
+<span id="cb25-47"><a href="#cb25-47" tabindex="-1" aria-label="code-block-25-47"></a>                pixels[i, <span class="dv">0</span>] <span class="op">=</span> cuda.fma(data_cache[j, <span class="dv">1</span>], <span class="op">-</span>sin, pixels[i, <span class="dv">0</span>])</span>
+<span id="cb25-48"><a href="#cb25-48" tabindex="-1" aria-label="code-block-25-48"></a>                pixels[i, <span class="dv">1</span>] <span class="op">=</span> cuda.fma(data_cache[j, <span class="dv">0</span>], sin, pixels[i, <span class="dv">1</span>])</span>
+<span id="cb25-49"><a href="#cb25-49" tabindex="-1" aria-label="code-block-25-49"></a>                pixels[i, <span class="dv">1</span>] <span class="op">=</span> cuda.fma(data_cache[j, <span class="dv">1</span>], cos, pixels[i, <span class="dv">1</span>])</span>
+<span id="cb25-50"><a href="#cb25-50" tabindex="-1" aria-label="code-block-25-50"></a></span>
+<span id="cb25-51"><a href="#cb25-51" tabindex="-1" aria-label="code-block-25-51"></a>        <span class="co"># Don't start updating cache until all threads are done</span></span>
+<span id="cb25-52"><a href="#cb25-52" tabindex="-1" aria-label="code-block-25-52"></a>        cuda.syncthreads()</span>
+<span id="cb25-53"><a href="#cb25-53" tabindex="-1" aria-label="code-block-25-53"></a></span>
+<span id="cb25-54"><a href="#cb25-54" tabindex="-1" aria-label="code-block-25-54"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
+<span id="cb25-55"><a href="#cb25-55" tabindex="-1" aria-label="code-block-25-55"></a>        lmpx <span class="op">=</span> cuda.grid(<span class="dv">1</span>) <span class="op">+</span> i <span class="op">*</span> cuda.gridsize(<span class="dv">1</span>)</span>
+<span id="cb25-56"><a href="#cb25-56" tabindex="-1" aria-label="code-block-25-56"></a>        <span class="cf">if</span> lmpx <span class="op">&lt;</span> img.size:</span>
+<span id="cb25-57"><a href="#cb25-57" tabindex="-1" aria-label="code-block-25-57"></a>            lpx, mpx <span class="op">=</span> <span class="bu">divmod</span>(lmpx, ls.shape[<span class="dv">1</span>])</span>
+<span id="cb25-58"><a href="#cb25-58" tabindex="-1" aria-label="code-block-25-58"></a>            img[lpx, mpx] <span class="op">=</span> <span class="bu">complex</span>(pixels[i, <span class="dv">0</span>], pixels[i, <span class="dv">1</span>])</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!--
 Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
- --></p>
+ -->
 </section></section>
 </div>
     </main>
@@ -3796,7 +4236,7 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/instructor/aio.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/aio.html",
-  "dateCreated": "2026-05-01",
+  "dateCreated": "2026-05-05",
   "dateModified": "2026-05-05",
   "datePublished": "2026-05-05"
 }

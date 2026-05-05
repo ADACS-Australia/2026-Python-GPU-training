@@ -335,7 +335,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>A GPU Deep Dive</h1>
-        <p>Last updated on 2026-05-01 |
+        <p>Last updated on 2026-05-05 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -417,9 +417,9 @@ become free</li>
 <li>Cores become free when: a warp has completed; or a warp “stalls”,
 meaning it is waiting for another unit within the SM such as the memory
 controller, the FPU, or the tensor core</li>
-<li>Each threadblock typically has more threads than there are in one
+<li>Each thread block typically has more threads than there are in one
 warp: this means it will execute as multiple warps</li>
-<li>Each SM typically has multiple threadblocks assigned to it at one
+<li>Each SM typically has multiple thread blocks assigned to it at one
 time. Limits include: register space and shared memory space. If a
 kernel uses a large number of registers or shared memory, this can limit
 the number of thread blocks assigned at any one time to an SM; in turn
@@ -501,6 +501,12 @@ automatic caching is not sufficient.</p>
 <p>Finally, there is also the register space.</p>
 <p>All three of the registers, the shared memory and the L1 cache
 compete for space on a single physical piece of SRAM memory.</p>
+<p>Multiple axes: total space; latency; lifetime; visibility. Global
+memroy is large, slow, outlives the kernel, and is visible by all
+threads. Shared memory is faster, much smaller, and exists only for as
+long as each thread block is alive; and is visible only from its
+respective thread block. Local memory is smaller again, exists for only
+the lifetime of a single thread, and is visible only by that thread.</p>
 </div>
 </section><div class="section level1">
 <h1 id="some-confusing-terms">Some confusing terms<a class="anchor" aria-label="anchor" href="#some-confusing-terms"></a></h1>
@@ -598,8 +604,8 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/instructor/gpu-deepdive.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/gpu-deepdive.html",
-  "dateCreated": "2026-05-01",
-  "dateModified": "2026-05-01",
+  "dateCreated": "2026-05-05",
+  "dateModified": "2026-05-05",
   "datePublished": "2026-05-05"
 }
 
