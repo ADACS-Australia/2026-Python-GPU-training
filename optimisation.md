@@ -158,11 +158,11 @@ def kernel1(us, vs, ws, data, ls, ms, ndashes, img):
             img[lpx, mpx] += datum * complex(math.cos(phase), math.sin(phase))
 ```
 
-On my machine, this is fast enough to allow us to image the full set of data giving a lovely image of Fornax A:
+:::
+
+On my machine, this first kernel is fast enough to allow us to image the full set of data giving a lovely image of Fornax A:
 
 ![](episodes/fig/fornaxA-fulldata.png)
-
-:::
 
 ## Profiling with NSIGHT Compute
 
@@ -267,7 +267,7 @@ You may be aware that floats come in different sizes, which correlate to differe
 
 Unfortunately, Python hides the types of values and you may not be used to thinking about the precision of your calculations.
 
-On the CPU, floating point performance usualy doesn't depend on the precision. That is, the performance ratio of 32 and 64 bit floats is 1:1 (with the important previso that 32 bit floats benefit from their smaller memory footprint). On the GPU, however, the performance ratio can vary enormously, and differs from one GPU to the next. For example, some AMD GPUs have a 1:1 performance ratio which is great for high precision numerical calculations; NVIDIA GPUs, on the other hand, strongly prefer lower precision floats, and this imbalance has increased considerably as their GPUs have been optimised towards AI workloads. Their recent B200 GPU, for example has a performance ratio of 1:2:32 for 64/32/16 bit computations.
+On the CPU, floating point performance usually doesn't depend on the precision. That is, the performance ratio of 32 and 64 bit floats is 1:1 (with the important previso that 32 bit floats benefit from their smaller memory footprint). On the GPU, however, the performance ratio can vary enormously, and differs from one GPU to the next. For example, some AMD GPUs have a 1:1 performance ratio which is great for high precision numerical calculations; NVIDIA GPUs, on the other hand, strongly prefer lower precision floats, and this imbalance has increased considerably as their GPUs have been optimised towards AI workloads. A desktop NVIDIA 5080 card, for example, has a performance ratio of 1:64, and their recent datacenter B200 GPU has a performance ratio of 1:2:32 for 64/32/16 bit computations.
 
 **The upshot is: always compute at the minimal precision required.**
 
@@ -383,6 +383,16 @@ def kernel4(us, vs, ws, data, ls, ms, ndashes, img):
 
 :::
 
+## Intermission
+
+Let's take stock for a momnent. So far, our optimisation steps have been relatively minor. The code is not substantially more complex and is still easy to understand and reason about.
+
+Our relative performance has increased by more than double:
+
+![](fig/benchmark-kernel5.png)
+
+Let me remind you to always optimise with a concreate goal in mind. If this performance improvement is already enough to make your computation tractable, then I would advise stopping and counting that as a win. Otherwise, steel yourself for what comes next!
+
 ## Optimisation 4: Minimise reading from global memory
 
 We've previously used a local accumulation variable to minimise _writes_ to global memory. In this section, however, we're going to use shared memory to minimise _reads_ from global memory.
@@ -447,7 +457,7 @@ Some important comments:
 
 ::: callout
 
-## Optimisation 5: Coalesced memory reads
+### Coalesced memory reads
 
 The GPU memory system performs best when a thread block coordinates to read from a _contiguous_ region of memory. In particular, if each thread in a thread block reads the _next_ entry in an array, the GPU can turn all these little reads into a single, unified read instruction. For example, instead of asking the memory system to get me index 0, and then get me index 1, ... and then finally index 1024, the memory system can unify these into a single instruction asking for indices 0-1024. When this happens, it is called _memory coalescing._
 
@@ -565,7 +575,7 @@ def kernel6(us, vs, ws, data, ls, ms, ndashes, img):
 
 :::
 
-## Optimistion 6: Thread coarsening
+## Optimistion 5: Thread coarsening
 
 Sometimes too much of a good thing can be a bad thing. When it comes to GPU threads, we want enough threads that all SMs have a number of thread blocks queued at any one time. This ensures all CUDA cores are doing work at any one time, and when a thread block needs to pause to wait for something (e.g. to access global memory) there is another thread block reading and waiting to advance its own work.
 
@@ -787,15 +797,15 @@ def kernel7(us, vs, ws, data, ls, ms, ndashes, img):
 :::
 
 
-## Optimisation 7: Hot loop experimentation
+## Optimisation 6: Hot loop experimentation
 
 Our kernel's hot loop is located in the innermost for loop. Each kernel runs this code repeatedly, and variations of even a single instruction can have outsized effects on the overall performance of the kernel.
 
 Ideally, we would have a clear set of rules to optimize a hot loop. For example:
 
-* Pre-compute values as much as possible prior to the innermost loops
-* Minimise the number of operations: can an equation be reduced by a factored in some way to reduce the number of operations? is there bookkeeping in the loop that can be avoided?
-* Understand the relative costs of operations: for example, as division is more expensive than multiplication can the equation be refactored to remove this step?
+* **Pre-compute values** as much as possible prior to the innermost loops
+* **Minimise the number of operations:** can an equation be reduced by a factored in some way to reduce the number of operations? is there bookkeeping in the loop that can be avoided?
+* **Understand the relative costs of operations:** for example, as division is more expensive than multiplication, can the equation be refactored to remove this step (or pre-compute a reciprocal)?
 
 Unfortunately, it is not so simple. There are multiple layers between our code and what ultimately runs on the GPU: there is the Python to CUDA translation layer; there are compiler optimisations; the intermediate PTX language; and the finally compiled SASS kernel. These translation layers are, for the most part, opaque to us and so it is not always clear what the end code looks like nor what optimisations are being performed by the compiler (short of inspecting the PTX assembly instructions). Worse yet, the compiler might recognise certain patterns and do the right thing in some cases, but equally a slight change in the code or a mismatch in translation layers might altogether preclude an optimisation from occurring.
 
@@ -803,7 +813,7 @@ Let's consider a few examples from our kernel.
 
 In our kernel we have the computation $2 \pi (u l + v m + w n')$. One simple optimisation might be to precompute $2 \pi$ in advance of the hot loop, thereby eliding one additional multiplication instruction. If you try this, however, you will (most likely) not observe any speed up at all! In fact, the compiler has already recognised this as optimisation step and has quietly computed the product at compile time.
 
-Next, consider these two looping constructs, with the first currently being used in our kernel:
+Next, consider these two looping constructs, with the first version currently being used in our kernel:
 
 ```python
 for (u, v, w), datum in zip(uvw_cache, data_cache):
@@ -845,13 +855,13 @@ for j in range(NTHREADS):
 
 Even more so than the previous example, these versions feel identical. The only difference being that in the first we have extracted the values of $u, v, w, l, m$ and $n'$ into temporary placeholder variables; whilst in the second we have directly indexed into the arrays. The second, however, is marginally faster than the first. You might ask: why should it matter that we prefetch the values into registers first before applying the multiplication? Or you might ask: if one version is faster than the other, why isn't the compiler clever enough to see that both are lexically and functionally identical and therefore apply similar optimisations?
 
-These cases stress the "black box" nature of working with optimising compilers and translation layers. You will either need to experiment with different formulations and benchmark; or else resort to writing PTX assembly to manually enforce the kernel to behave as you desire (which is beyond this author's expertise).
+These cases stress the "black box" nature of working with optimising compilers and the obfuscation of intermediate translation layers. **You will need to experiment with different formulations and benchmark.** Or else resort to writing PTX assembly to manually enforce the kernel to behave as you desire (which is beyond this author's expertise).
 
-After tweaking the internal hot loop, the kernel now looks like this:
+We will save you the pain of this experimentation, which is not especially enlightening. After tweaking the internal hot loop, the kernel now looks like this:
 
 ```python
 @cuda.jit
-def kernel8(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, data, ls, ms, ndashes, img):
     NTHREADS = 256
     uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
     data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
@@ -907,7 +917,7 @@ def kernel8(us, vs, ws, data, ls, ms, ndashes, img):
             img[lpx, mpx] = pixels[i]
 ```
 
-## Optimisation 8: Force FMA instructions
+## Optimisation 7: Force FMA instructions
 
 Fused multiply add (FMA) instructions are a special hardware instruction that combines both a muliplication and addition as a single operation. In pseudo-code:
 
@@ -947,25 +957,25 @@ Check that this makes sense to you!
 
 We are going to rewrite `pixels[i] += data_cache[j] * complex(cos, sin)` as a sequence of 4 FMA instructions.
 
-To do this, however, we are first going to split the real and imaginary components of the `pixel` and `data_cache`. Modify the defitions of these arrays to have a second dimension that will allow us to index into the real or imaginary components:
+There's a small problem here. Whilst we can retrieve the real and imaginary components of a complex number with the `.real` and `.imag` attributes respectively, we aren't able to mofify these values. To simplify the presentation here, we will create the accumlation array `pixel` as 2D array, with the second dimension corrsponding to the real and imaginary components:
 
 ```python
-data_cache = cuda.shared.array((NTHREADS, 2), dtype=np.float32)
-# [...]
 pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
 ```
 
-Next: initialise each of the real and imaginary components. For example, when reading into the shared cache you can use: `data_cache[cuda.threadIdx.x] = data[i].real, data[i].imag`.
+(You will need to update the code that zeroes this array too.)
 
-Finally: write out the inplace complex addition as a sequence of 4 FMA instructions.
+Once you have done this, attept to write out the inplace complex addition as a sequence of 4 FMA instructions. As a hint, the first looks like this:
+
+```python
+pixels[i, 0] = cuda.fma(datum.real, cos, pixels[i, 0])
+```
 
 :::
 
 ::: solution
 
 Finally, we arrive at a kernel that looks like that shown below.
-
-You might wonder: did the compiler fail to use FMA instructions because we were using complex numbers? After all, complex numbers 'wrap' a 2-tuple of floats and this indirection might obscure the underlying operations. Try experimenting with this: if we retain the real and imaginary parts stored seperately as we have below, and write out the real and imaginary components separately using normal multiplication and addition operators, do you see the same speedup?
 
 ```python
 @cuda.jit(fastmath=True)
@@ -1028,4 +1038,126 @@ def kernel9(us, vs, ws, data, ls, ms, ndashes, img):
             img[lpx, mpx] = complex(pixels[i, 0], pixels[i, 1])
 ```
 
+You might wonder: did the compiler fail to use FMA instructions because we were using complex numbers? After all, complex numbers 'wrap' a 2-tuple of floats and this indirection might obscure the underlying operations. Try experimenting with this: if we retain the real and imaginary parts stored seperately as we have below, and write out the real and imaginary components separately using normal multiplication and addition operators, do you see the same speedup?
+
 :::
+
+## Optimisation 8: Warp shuffling (optional)
+
+I hesitated to include this final section as it in fact doens't improve the speed of our code, nor is it idiomatic. In fact, I would advise that the previous version of the kernel is the right place to stop and uses the most recognisable patterns.
+
+However, I do want you to be aware of a few more intrinsics that might come in handy in your use case. Namely, there is a set of warp level intrinsics that let you move data _directly between registers_ amongst members of a warp (being the set of 32 threads that execute in lockstep). Normally, these intrinsics might be used as part of a reduction operation, or they might be used to broadcast a single value to the other members of the warp. Warp communication should usually be slightly faster than communicating values via shared memory.
+
+We're going to use these intrinsics to replace our shared memory cache. Instead of using shared memory, each warp member will load a unique (and successive) value of each of $u, v, w$ and $data$. But then we will have each thread "pass the parcel" 32 times using `cuda.shfl_sync()`, effectively daisychaining the input data amongst the warp, before they continue by reading in the next chunk of input data.
+
+`cuda.shfl_sync()` accepts 3 parameters:
+
+- The first is a mask which indicates which of the warp threads are to participate in the swap. Since we want every thread to play its part, we set this to `0xFFFFFF`.
+- The second parameter is the source ID. Ranging from 0 to 31, this identifies the warp whose value we want to receive.
+- The payload value. This is the value that we offer up to the shuffle, and if another warp member set us as the origin, this is the value that they will receive.
+
+We can use `cuda.shfl_sync()` to act as a warp-wide cache as demonstrated by the following pseudo code:
+
+```python
+warpid = cuda.threadIdx.x % cuda.warpsize
+nextwarpid = (cuda.threadIdx.x + 1) % cuda.warpsize
+
+N = len(xs)
+for i in range(0, N, cuda.warpsize):
+    x = xs[i + warpid]
+    for _ in range(cuda.warpsize):
+        # Do some computation with x
+
+        # Then daisy chain x amongst the warp
+        x = cuda.shfl_sync(0xFFFFFF, nextwarpid, x)
+```
+
+There's no need to use synchronisation calls because the warp executes in lockstep (however, be careful to avoid divergence at any place where `shfl_sync` is called).
+
+::: challenge
+
+Remove the shared memory cache from our kernel and instead implement a warp-wide cache that follows the pattern set out above.
+
+Note that `cuda.shfl_sync()` is limited only to floats, doubles. For complex values we'll have to transmit the real and imaginary parts separately, e.g.: `x = complex(cuda.shfl(0xFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFF, nextwarpid, x.imag))`.
+
+:::
+
+::: solution
+
+Shared memory is the idiomatic way to cache data and avoid global memory operations: it is what you will see in most CUDA tutorials, and is most appropriate when the cache is large. For the sake of exposing you to warp level intrinsics, however, this code demonstrates how `cuda.shfl_sync` can act as a substitute cache that has equal performance.
+
+Note that the threadsize for this kernel can be set to any arbitrary multiple of 32. In my own benchmarking, using 512 threads had the best performance.
+
+```python
+@cuda.jit
+def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+    THREAD_COARSEN = 3
+    lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
+    pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+
+            # Retrieve l, m and ndash coordinates associated with this pixel
+            lmns[i, :] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+
+            # Perform sum over all of the visibility data for just one pixel
+            pixels[i, 0] = 0
+            pixels[i, 1] = 0
+
+    WARPSIZE = cuda.warpsize
+    warpid = cuda.threadIdx.x % WARPSIZE
+    nextwarpid = (cuda.threadIdx.x + 1) % WARPSIZE
+
+    # Extract input data in batches of WARPSIZE items
+    N = data.size
+    for offset in range(0, N, WARPSIZE):
+        # Each warp member loads its respective visibility data
+        i = offset + warpid
+        if i < N:
+            u, v, w = us[i], vs[i], ws[i]
+            datum = data[i]
+        else:
+            u, v, w, = np.float32(0), np.float32(0), np.float32(0)
+            datum = np.complex64(0)
+
+        # Iterate over warp cache
+        for _ in range(WARPSIZE):
+            for i in range(THREAD_COARSEN):
+                phase = 2 * np.float32(np.pi) * (
+                    u * lmns[i, 0] +
+                    v * lmns[i, 1] +
+                    w * lmns[i, 2]
+                )
+                sin, cos = cuda.libdevice.fast_sincosf(phase)
+                pixels[i, 0] = cuda.fma(datum.real, cos, pixels[i, 0])
+                pixels[i, 0] = cuda.fma(datum.imag, -sin, pixels[i, 0])
+                pixels[i, 1] = cuda.fma(datum.real, sin, pixels[i, 1])
+                pixels[i, 1] = cuda.fma(datum.imag, cos, pixels[i, 1])
+
+            # Daisychain the values around members of the warp
+            u = cuda.shfl_sync(0xffffff, u, nextwarpid)
+            v = cuda.shfl_sync(0xffffff, v, nextwarpid)
+            w = cuda.shfl_sync(0xffffff, w, nextwarpid)
+
+            datum = complex(
+                cuda.shfl_sync(0xffffff, datum.real, nextwarpid),
+                cuda.shfl_sync(0xffffff, datum.imag, nextwarpid)
+            )
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+            img[lpx, mpx] = complex(pixels[i, 0], pixels[i, 1])
+```
+
+:::
+
+## Final comparison
+
+We have made substantial performance gains, at about a factor of 12 times the performance of the initial kernel:
+
+![](fig/benchmark-kernel10.png)
