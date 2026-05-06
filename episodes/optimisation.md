@@ -652,6 +652,8 @@ nblocks = math.ceil(N / threads / THREAD_COARSEN)
 print(cupyx.profiler.benchmark(lambda: dft_coarsened[nblocks, threads](xs, Xs), n_repeat=1, n_warmup=1))
 ```
 
+:::
+
 ::: solution
 
 On my own machine, I saw best performance when `THREAD_COARSEN` was set to 4, but it will vary based on the kernel, the GPU, and the problem size. Even larger thread coarsening factors will result in at least two problems:
