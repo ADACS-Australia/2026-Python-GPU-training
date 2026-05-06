@@ -573,7 +573,7 @@ But only up to a point. Kernels have start up and initialisation costs. And in s
 
 **Thread coarsening** is the process whereby we "dial back" the degree of parallelisation, and instead increase the _computational intensity_ of each kernel.
 
-Consider the following two version of the DFT kernel, where the first is based on the kernel we developed earlier:
+Consider the following two version of the DFT kernel:
 
 ```python
 @cuda.jit
@@ -624,19 +624,166 @@ def dft_coarsened(xs, Xs):
 
 ```
 
-In the original DFT kernel, each thread is responsible for computing just the `k`'th index of `Xs`. Compare this to the coarsened version, which each thread computes four distinct indices of `Xs`: `k`, `k + gridsize`, ...`k + 3 * gridsize`.
+In the original DFT kernel, each thread is responsible for computing just the `k`'th index of `Xs`. Compare this to the coarsened version, where each thread computes four distinct indices of `Xs`: `k`, `k + gridsize`, ...`k + 3 * gridsize`.
 
 How does it do this?
 
-* We set the the thread coarsening factor, `THREAD_COARSEN` as a constant value within the kernel.
+* We set the thread coarsening factor, `THREAD_COARSEN`, as a constant value within the kernel.
 * We create two locally-allocated arrays, one for the k values and one for accumulator variables.
 * On each iteration of `n`, we compute for the partial sum of each of the k values.
-* By doing so, we amortise the cost of accessing `xs[n]` and computing (part of) the phase value.
+* By doing so, **we amortise the cost** of accessing `xs[n]` and computing (part of) the phase value across the four indices.
+
+In fact, if you do your own experimentation with this code, you'll see that almost all of the performance win is due to pre-computing the partial phase term.
+
+**Advanced note:** we define `THREAD_COARSEN` as a constant _within_ the kernel. You might be tempted to pass this as an argument so that you can modify the thread coarsening factor dynamically. Unfortunately, the kernel requires that local arrays are sized statically, which means that their size is _known at [compile time.](https://en.wikipedia.org/wiki/Compile_time)_ If it were sized by a function parameter, then this array size would only be known at the time the function is called, that is, at _runtime._ This actually has some flow-on benefits for us: since the compiler knows the size of `THREAD_COARSEN` at compile time, it also knows the size of the loops over `THREAD_COARSEN`, and at its discretion it may choose to [unroll these loops](https://en.wikipedia.org/wiki/Loop_unrolling) for performance gains.
 
 ::: challenge
 
-In this simple example, does this
+On your machine, experiment with benchmarking different thread coarsening factors for the `dft_coarsened` kernel. What is the ideal factor?
 
+```python
+N = 500_000
+xs = cupy.random.normal(size=N, dtype=np.float32) + 1j * cupy.random.normal(size=N, dtype=np.float32)
+Xs = cupy.zeros_like(xs)
+
+# Set THREAD_COARSEN both here and in the kernel definition. Try values for 1, 2, 3, 4, 6, 8
+threads = 128
+nblocks = math.ceil(N / threads / THREAD_COARSEN)
+print(cupyx.profiler.benchmark(lambda: dft_coarsened[nblocks, threads](xs, Xs), n_repeat=1, n_warmup=1))
+```
+
+:::
+
+::: solution
+
+On my own machine, I saw best performance when `THREAD_COARSEN` was set to 4, but it will vary based on the kernel, the GPU, and the problem size. Even larger thread coarsening factors will result in at least two problems:
+
+1. The number of thread blocks may descrease to the point where the GPU's SMs are not well utilised.
+2. The memory requirements of each thread will obstruct the number of simulaneous thread blocks that can be scheduled on a single SM.
+3. Eventually, the memory required for a single thread may become so large that the local register storage "spills" out into global memory. Whe this happens, some of our local variables end up being actually stored in global memory, which is disasterous for performance.
+
+:::
+
+::: challenge
+
+Modify the imaging kernel to use a thread coarsening factor of 3.
+
+Start by creating some local arrays:
+
+```python
+THREAD_COARSEN = 3
+lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
+pixels = cuda.local.array(THREAD_COARSEN, np.complex64)
+```
+
+And then complete the remainder of the TODOs:
+
+```python
+@cuda.jit
+def kernel7(us, vs, ws, data, ls, ms, ndashes, img):
+    NTHREADS = 256
+    uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
+    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+
+    # TODO:
+    # Allocate the local arrays here
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            # TODO:
+            # Initialise the values of both of the static arrays
+
+    # Extract input data in batches of NTHREADS items
+    N = data.size
+    for offset in range(0, N, NTHREADS):
+        # Fetch data and populate cache
+        i = offset + cuda.threadIdx.x
+        if i < N:
+            uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
+            data_cache[cuda.threadIdx.x] = data[i]
+        else:
+            uvw_cache[cuda.threadIdx.x] = 0, 0, 0
+            data_cache[cuda.threadIdx.x] = 0
+
+        # Wait for cache to be populated
+        cuda.syncthreads()
+
+        # # Iterate over cache
+        for (u, v, w), datum in zip(uvw_cache, data_cache):
+            for i in range(THREAD_COARSEN):
+                l, m, ndash = lmns[i]
+                phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
+                sin, cos = cuda.libdevice.fast_sincosf(phase)
+                pixels[i] += datum * np.complex64(complex(cos, sin))
+
+        # Don't start updating cache until all threads are done
+        cuda.syncthreads()
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        # TODO:
+        # Write out each of the accumulated pixel values to global memory
+```
+
+:::
+
+::: solution
+
+```python
+@cuda.jit
+def kernel7(us, vs, ws, data, ls, ms, ndashes, img):
+    NTHREADS = 256
+    uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
+    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+
+    THREAD_COARSEN = 3
+    lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
+    pixels = cuda.local.array(THREAD_COARSEN, np.complex64)
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+
+            # Retrieve l, m and ndash coordinates associated with this pixel
+            lmns[i, :] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+
+            # Perform sum over all of the visibility data for just one pixel
+            pixels[i] = np.complex64(0)
+
+    # Extract input data in batches of NTHREADS items
+    N = data.size
+    for offset in range(0, N, NTHREADS):
+        # Fetch data and populate cache
+        i = offset + cuda.threadIdx.x
+        if i < N:
+            uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
+            data_cache[cuda.threadIdx.x] = data[i]
+        else:
+            uvw_cache[cuda.threadIdx.x] = 0, 0, 0
+            data_cache[cuda.threadIdx.x] = 0
+
+        # Wait for cache to be populated
+        cuda.syncthreads()
+
+        # # Iterate over cache
+        for (u, v, w), datum in zip(uvw_cache, data_cache):
+            for i in range(THREAD_COARSEN):
+                l, m, ndash = lmns[i]
+                phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
+                sin, cos = cuda.libdevice.fast_sincosf(phase)
+                pixels[i] += datum * np.complex64(complex(cos, sin))
+
+        # Don't start updating cache until all threads are done
+        cuda.syncthreads()
+
+    for i in range(THREAD_COARSEN):
+        lmpx = cuda.grid(1) + i * cuda.gridsize(1)
+        if lmpx < img.size:
+            lpx, mpx = divmod(lmpx, ls.shape[1])
+            img[lpx, mpx] = pixels[i]
+```
 :::
 
 
