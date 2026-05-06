@@ -656,10 +656,10 @@ print(cupyx.profiler.benchmark(lambda: dft_coarsened[nblocks, threads](xs, Xs), 
 
 ::: solution
 
-On my own machine, I saw best performance when `THREAD_COARSEN` was set to 4, but it will vary based on the kernel, the GPU, and the problem size. Even larger thread coarsening factors will result in at least two problems:
+On my own machine, I saw best performance when `THREAD_COARSEN` was set to 4, but it will vary based on the kernel, the GPU, and the problem size. Even larger thread coarsening factors risk a number of problems:
 
 1. The number of thread blocks may descrease to the point where the GPU's SMs are not well utilised.
-2. The memory requirements of each thread will obstruct the number of simulaneous thread blocks that can be scheduled on a single SM.
+2. The memory requirements of each thread will obstruct the number of simultaneous thread blocks that can be scheduled on a single SM.
 3. Eventually, the memory required for a single thread may become so large that the local register storage "spills" out into global memory. Whe this happens, some of our local variables end up being actually stored in global memory, which is disasterous for performance.
 
 :::
