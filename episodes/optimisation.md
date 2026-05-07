@@ -158,6 +158,36 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             img[lpx, mpx] += datum * complex(math.cos(phase), math.sin(phase))
 ```
 
+We can benchmark this code using the following harness:
+
+```python
+# Load the visibility data
+data = np.load("visibilities.npz")
+us, vs, ws, data = data["u"], data["v"], data["w"], data["data"]
+
+# Initialise the image grid and the corresponding l, m and ndash coordinates
+lpx, mpx = np.mgrid[-350:350, -350:350]
+ls, ms = lpx * 0.0005, mpx * 0.0005
+ndashes = np.sqrt(1 - ls**2 - ms**2) - 1
+
+# Transfer data to the GPU
+img_d = cupy.zeros(ls.shape, dtype=complex)
+us_d, vs_d, ws_d, data_d, ls_d, ms_d, ndashes_d = map(
+    cupy.array, [us, vs, ws, data, ls, ms, ndashes]
+)
+
+nthreads = 256
+nblocks = math.ceil(img_d.size / nthreads)
+
+result = cupyx.profiler.benchmark(
+    lambda: kernel[nblocks, nthreads](
+        us_d, vs_d, ws_d, data_d, ls_d, ms_d, ndashes_d, img_d
+    ),
+    n_repeat=3,
+    n_warmup=1,
+)
+```
+
 :::
 
 On my machine, this first kernel is fast enough to allow us to image the full set of data giving a lovely image of Fornax A:
@@ -881,7 +911,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             img[lpx, mpx] = pixels[i]
 ```
 
-**An aside:** You might think that it might be more efficient to prefetch the $u, v, w$ terms _prior to_ the loop over the thread coarsening factor. That is, something like this:
+**An aside:** You might think that it might be more efficient to prefetch the $u, v, w$ terms _prior_ to the loop over the thread coarsening factor. That is, something like this:
 
 ```python
 # Iterate over cache
@@ -1146,6 +1176,6 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
 ## Final comparison
 
-We have made substantial performance gains, at about a factor of 12 times the performance of the initial kernel:
+We have made substantial performance gains, at just over 13 times the performance of the initial kernel:
 
 ![](fig/benchmark-kernel9.png)
