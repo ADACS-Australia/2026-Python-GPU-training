@@ -34,7 +34,7 @@ Image sizes are typically thousands of pixels by thousands of pixels; whilst vis
 
 By the end, we hope to be able to image the large radio lobes of Fornax A from the raw visibility data.
 
-![](episodes/fig/fornaxA.png)
+![](fig/fornaxA.png)
 
 ## A first implementation
 
@@ -120,7 +120,7 @@ def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
 
 Even with only a fifthieth of the data we start to see something resembling the radio lobes:
 
-![](episodes/fig/fornaxA-fiftieth.png)
+![](fig/fornaxA-fiftieth.png)
 
 :::
 
@@ -192,45 +192,26 @@ result = cupyx.profiler.benchmark(
 
 On my machine, this first kernel is fast enough to allow us to image the full set of data giving a lovely image of Fornax A:
 
-![](episodes/fig/fornaxA-fulldata.png)
+![](fig/fornaxA-fulldata.png)
 
-## Profiling with NSIGHT Compute
+## An aside: Profiling with NSIGHT
 
-Up till now we have used simple timers to measure performance. NVIDIA provides us with an alternative, extremely detailed set of benchmarking tools:
+Up till now we have used simple timers to measure performance. NVIDIA provides an alternative, extremely detailed set of benchmarking tools:
 
 * **NSIGHT Compute:** Provides detailed analysis of a kernel, including its register usage, FMA instruction counts, memory accesses, and so on. This is most useful when optimising a specific kernel.
 * **NSIGHT Systems:** A higher-level profiler that can show a timeline of memory transfers, kernel runtimes, streams, and the interleaved dependencies between these different GPU processes. This is most useful to understand the full lifecycle of a program and to help prioritise optimisation work.
 
-In this section, we will focus our work on NSIGHT Compute since we are discussing kernel optimisation. However, in a real-world project always begin with NSIGHT Compute: don't start optimising any specific component until you understand both its contribution to the overall runtime and can estimate the overall effect of its improvement.
+In my personal experience, NSIGHT Systems can be very useful to understand how your program runs, how kernels might be delayed by dependencies such as memory transfers, and how this might be mitigated by using multiple CUDA streams.
 
-NSIGHT Compute is run as a two part process:
+Our task here, however, is purely in optimising the kernel itself, and this is specifically the role for NSIGHT Compute. Unfortunately, I have rarely found this to be useful tool. NSIGHT Compute tabulates all sorts of hardware counters (FMA instructions, cache hits, memory accesses, etc.) which by itself is overwhelming and rarely useful to the non-expert. Along with this raw data, it also tries to forumulate suggestions as to how to improve your kernel; I've found these suggestions to be usually hit and miss.
 
-1. First, the the kernels of interest are run on the machine wrapped by the `ncu` profiler and save the output data to a file. This can be performed either directly on the command line or via the NSIGHT Compute GUI.
-2. You run NSIGHT Compute locally, import the profile file, and use the GUI to explore different metrics of your kernel.
+Some things that NSIGHT Compute can be useful for are:
 
-The profiler `ncu` should be included as part of the NVIDIA toolkit installation. However, you will need to NSIGHT Compute locally, which you can [download here.](https://developer.nvidia.com/tools-overview/nsight-compute/get-started)
+* Checking for precision: are there some accidental 64 bit precision operations in your kernel that is otherwise meant to be purely 32 bit precision?
+* Understanding what is limiting you: are you compute bound or memory bound? Learn to interpet roofline plots.
+* What is the ratio of fused multiply add (FMA) to total floating point instructions? Are you poorly using the more efficient FMA instruction?
 
-To run the profiler directly on the command line, enter something like the following:
-
-```
-/usr/local/cuda/bin/ncu -o profile -f --kernel-name 'regex:^kernel6' --set detailed -- uv run python timeit-demo.py
-```
-
-Here, we output (`-o`) to a file called `profile` (`-f` overwrites if it already exists), we profile the kernel(s) whose names match the regex `^kernel6` (kernel names will always start with the python function nane), and we collect the metrics that are part of the `detailed` set.
-
-Other metric sets are available and can be listed with `ncu --list-sets`. Another helpful set is `roofline`.
-
-The profiling can take some time: it will run our kernel with the full data multiple times, collecting a subset of the metrics each time. The larger the number of metrics you measure, the slower the whole process will take.
-
-Once complete, we load the `profile.mcu-rep` file into the NSIGHT Compute GUI, either by using its remote file functionality or by first transferring the profile data locally.
-
-[ TODO: ]
-
-Things to look for:
-
-* Am I using float64 values by mistake?
-* Am I compute bound, memory bound, or neither?
-* What is the ratio of FMA to total floating point instructions?
+Nonetheless, we will be proceeding without these tools and instead we will be presenting the standard set of optimisation techniques that apply to almost all kernel work. If you do use NSIGHT Compute in your work and it warns of poor occupancy, or non-coalescend memory accesses, after this section you will know what these warnings mean. Hopefully, you will also develop an intuition about whether its recommendations are worth pursuing or not.
 
 ## Optimisation pitfalls
 
@@ -325,7 +306,8 @@ For our usecase, we deem 32 bit precision to be acceptable. Modify the input arr
 Some helpful hints:
 
 * The functions `math.cos()` and `math.sin()` promote inputs to 64 bit floats and output the result as 64 bit floats. To force 32 bit computation, you can use `numba.cuda.libdevice.cosf()` and `numba.cuda.libdevice.sinf()`.
-* The functions `np.complex64` and `np.complex128` return an error when passed two arguments inside a kernel. Use `np.complex64(complex(real, imag))` for now. (Open bug report: [https://github.com/NVIDIA/numba-cuda/issues/865](https://github.com/NVIDIA/numba-cuda/issues/865).)
+* The functions `np.complex64` and `np.complex128` return an error when passed two arguments inside a kernel. The current `complex(real, image)` will return a complex `np.complex64` so long as both imnputs are `np.float32`.
+* Transfer the arrays to the GPU using `cupy.array()` with the keyword argument `dtype`. For example: `arr_d = cupy.array(arr_cpu, dtype=np.float32)`
 
 :::
 
