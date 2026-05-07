@@ -20,7 +20,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
         pixel = np.complex64(0)
         for u, v, w, datum in zip(us, vs, ws, data):
             phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
-            sin, cos = cuda.libdevice.sincosf(phase)
+            sin, cos = cuda.libdevice.fast_sincosf(phase)
             pixel += datum * complex(cos, sin)
 
         img[lpx, mpx] = pixel
@@ -54,4 +54,4 @@ def benchmark():
         n_warmup=1,
     )
 
-    return "Sincosf", cupy.asnumpy(img_d), result
+    return "Fast math", cupy.asnumpy(img_d), result

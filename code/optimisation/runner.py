@@ -10,7 +10,6 @@ import kernel6
 import kernel7
 import kernel8
 import kernel9
-import kernel10
 
 names = []
 times = []
@@ -26,7 +25,6 @@ for i, kernel in enumerate([
     kernel7,
     kernel8,
     kernel9,
-    kernel10,
 ]):
     name, _img, result = kernel.benchmark()
 

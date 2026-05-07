@@ -14,7 +14,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
     THREAD_COARSEN = 3
     lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
-    pixels = cuda.local.array(THREAD_COARSEN, np.complex64)
+    pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
 
     for i in range(THREAD_COARSEN):
         lmpx = cuda.grid(1) + i * cuda.gridsize(1)
@@ -22,10 +22,12 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             lpx, mpx = divmod(lmpx, ls.shape[1])
 
             # Retrieve l, m and ndash coordinates associated with this pixel
-            lmns[i] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+            lmns[i, 0] = 2 * np.float32(np.pi) * ls[lpx, mpx]
+            lmns[i, 1] = 2 * np.float32(np.pi) * ms[lpx, mpx]
+            lmns[i, 2] = 2 * np.float32(np.pi) * ndashes[lpx, mpx]
 
             # Perform sum over all of the visibility data for just one pixel
-            pixels[i] = np.complex64(0)
+            pixels[i] = 0, 0
 
     # Extract input data in batches of NTHREADS items
     N = data.size
@@ -45,13 +47,16 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
         # Iterate over cache
         for j in range(NTHREADS):
             for i in range(THREAD_COARSEN):
-                phase = 2 * np.float32(np.pi) * (
-                    uvw_cache[j, 0] * lmns[i, 0] +
-                    uvw_cache[j, 1] * lmns[i, 1] +
-                    uvw_cache[j, 2] * lmns[i, 2]
+                phase = cuda.fma(
+                    uvw_cache[j, 0],
+                    lmns[i, 0],
+                    cuda.fma(uvw_cache[j, 1], lmns[i, 1], uvw_cache[j, 2] * lmns[i, 2]),
                 )
                 sin, cos = cuda.libdevice.fast_sincosf(phase)
-                pixels[i] += data_cache[j] * complex(cos, sin)
+                pixels[i, 0] = cuda.fma(data_cache[j].real, cos, pixels[i, 0])
+                pixels[i, 0] = cuda.fma(data_cache[j].imag, -sin, pixels[i, 0])
+                pixels[i, 1] = cuda.fma(data_cache[j].real, sin, pixels[i, 1])
+                pixels[i, 1] = cuda.fma(data_cache[j].imag, cos, pixels[i, 1])
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()
@@ -60,7 +65,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
         lmpx = cuda.grid(1) + i * cuda.gridsize(1)
         if lmpx < img.size:
             lpx, mpx = divmod(lmpx, ls.shape[1])
-            img[lpx, mpx] = pixels[i]
+            img[lpx, mpx] = complex(pixels[i, 0], pixels[i, 1])
 
 
 def benchmark():
@@ -87,8 +92,8 @@ def benchmark():
         lambda: kernel[nblocks, nthreads](
             us_d, vs_d, ws_d, data_d, ls_d, ms_d, ndashes_d, img_d
         ),
-        n_repeat=1,
+        n_repeat=6,
         n_warmup=1,
     )
 
-    return "Hot loop fix", cupy.asnumpy(img_d), result
+    return "Explicit FMA", cupy.asnumpy(img_d), result

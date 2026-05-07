@@ -22,7 +22,9 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             lpx, mpx = divmod(lmpx, ls.shape[1])
 
             # Retrieve l, m and ndash coordinates associated with this pixel
-            lmns[i] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+            lmns[i, 0] = 2 * np.float32(np.pi) * ls[lpx, mpx]
+            lmns[i, 1] = 2 * np.float32(np.pi) * ms[lpx, mpx]
+            lmns[i, 2] = 2 * np.float32(np.pi) * ndashes[lpx, mpx]
 
             # Perform sum over all of the visibility data for just one pixel
             pixels[i] = np.complex64(0)
@@ -43,12 +45,15 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
         cuda.syncthreads()
 
         # Iterate over cache
-        for (u, v, w), datum in zip(uvw_cache, data_cache):
+        for j in range(NTHREADS):
             for i in range(THREAD_COARSEN):
-                l, m, ndash = lmns[i]
-                phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
+                phase = (
+                    uvw_cache[j, 0] * lmns[i, 0] +
+                    uvw_cache[j, 1] * lmns[i, 1] +
+                    uvw_cache[j, 2] * lmns[i, 2]
+                )
                 sin, cos = cuda.libdevice.fast_sincosf(phase)
-                pixels[i] += datum * complex(cos, sin)
+                pixels[i] += data_cache[j] * complex(cos, sin)
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()

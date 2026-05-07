@@ -14,12 +14,14 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
         lpx, mpx = divmod(lmpx, ls.shape[1])
 
         # Retrieve l, m and ndash coordinates associated with this pixel
-        l, m, ndash = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+        l = 2 * np.float32(np.pi) * ls[lpx, mpx]
+        m = 2 * np.float32(np.pi) * ms[lpx, mpx]
+        ndash = 2 * np.float32(np.pi) * ndashes[lpx, mpx]
 
         # Perform sum over all of the visibility data for just one pixel
         pixel = np.complex64(0)
         for u, v, w, datum in zip(us, vs, ws, data):
-            phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
+            phase = u * l + v * m + w * ndash
             sin, cos = cuda.libdevice.fast_sincosf(phase)
             pixel += datum * complex(cos, sin)
 
@@ -54,4 +56,4 @@ def benchmark():
         n_warmup=1,
     )
 
-    return "Fast math", cupy.asnumpy(img_d), result
+    return "Hot loop fix", cupy.asnumpy(img_d), result

@@ -8,10 +8,6 @@ import numpy as np
 
 @cuda.jit
 def kernel(us, vs, ws, data, ls, ms, ndashes, img):
-    NTHREADS = 256
-    uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
-    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
-
     THREAD_COARSEN = 3
     lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
     pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
@@ -22,42 +18,53 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             lpx, mpx = divmod(lmpx, ls.shape[1])
 
             # Retrieve l, m and ndash coordinates associated with this pixel
-            lmns[i] = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
+            lmns[i, 0] = 2 * np.float32(np.pi) * ls[lpx, mpx]
+            lmns[i, 1] = 2 * np.float32(np.pi) * ms[lpx, mpx]
+            lmns[i, 2] = 2 * np.float32(np.pi) * ndashes[lpx, mpx]
 
             # Perform sum over all of the visibility data for just one pixel
-            pixels[i] = 0, 0
+            pixels[i, 0] = 0
+            pixels[i, 1] = 0
 
-    # Extract input data in batches of NTHREADS items
+    WARPSIZE = cuda.warpsize
+    warpid = cuda.threadIdx.x % WARPSIZE
+    nextwarpid = (cuda.threadIdx.x + 1) % WARPSIZE
+
+    # Extract input data in batches of WARPSIZE items
     N = data.size
-    for offset in range(0, N, NTHREADS):
-        # Fetch data and populate cache
-        i = offset + cuda.threadIdx.x
-        if i < data.size:
-            uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
-            data_cache[cuda.threadIdx.x] = data[i]
+    for offset in range(0, N, WARPSIZE):
+        # Each warp member loads its respective visibility data
+        i = offset + warpid
+        if i < N:
+            u, v, w = us[i], vs[i], ws[i]
+            datum = data[i]
         else:
-            uvw_cache[cuda.threadIdx.x] = 0, 0, 0
-            data_cache[cuda.threadIdx.x] = 0
+            u, v, w, = np.float32(0), np.float32(0), np.float32(0)
+            datum = np.complex64(0)
 
-        # Wait for cache to be populated
-        cuda.syncthreads()
-
-        # Iterate over cache
-        for j in range(NTHREADS):
+        # Iterate over warp cache
+        for _ in range(WARPSIZE):
             for i in range(THREAD_COARSEN):
-                phase = 2 * np.float32(np.pi) * (
-                    uvw_cache[j, 0] * lmns[i, 0] +
-                    uvw_cache[j, 1] * lmns[i, 1] +
-                    uvw_cache[j, 2] * lmns[i, 2]
+                phase = cuda.fma(
+                    u,
+                    lmns[i, 0],
+                    cuda.fma(v, lmns[i, 1], w * lmns[i, 2]),
                 )
                 sin, cos = cuda.libdevice.fast_sincosf(phase)
-                pixels[i, 0] = cuda.fma(data_cache[j].real, cos, pixels[i, 0])
-                pixels[i, 0] = cuda.fma(data_cache[j].imag, -sin, pixels[i, 0])
-                pixels[i, 1] = cuda.fma(data_cache[j].real, sin, pixels[i, 1])
-                pixels[i, 1] = cuda.fma(data_cache[j].imag, cos, pixels[i, 1])
+                pixels[i, 0] = cuda.fma(datum.real, cos, pixels[i, 0])
+                pixels[i, 0] = cuda.fma(datum.imag, -sin, pixels[i, 0])
+                pixels[i, 1] = cuda.fma(datum.real, sin, pixels[i, 1])
+                pixels[i, 1] = cuda.fma(datum.imag, cos, pixels[i, 1])
 
-        # Don't start updating cache until all threads are done
-        cuda.syncthreads()
+            # Daisychain the values around members of the warp
+            u = cuda.shfl_sync(0xffffff, u, nextwarpid)
+            v = cuda.shfl_sync(0xffffff, v, nextwarpid)
+            w = cuda.shfl_sync(0xffffff, w, nextwarpid)
+
+            datum = complex(
+                cuda.shfl_sync(0xffffff, datum.real, nextwarpid),
+                cuda.shfl_sync(0xffffff, datum.imag, nextwarpid)
+            )
 
     for i in range(THREAD_COARSEN):
         lmpx = cuda.grid(1) + i * cuda.gridsize(1)
@@ -83,7 +90,7 @@ def benchmark():
         lambda x: cupy.array(x, dtype=np.float32), [us, vs, ws, ls, ms, ndashes]
     )
 
-    nthreads = 256
+    nthreads = 512
     nblocks = math.ceil(img_d.size / nthreads / 3)
 
     result = cupyx.profiler.benchmark(
@@ -94,4 +101,4 @@ def benchmark():
         n_warmup=1,
     )
 
-    return "Explicit FMA", cupy.asnumpy(img_d), result
+    return "Warp shuffle", cupy.asnumpy(img_d), result
