@@ -497,6 +497,8 @@ This pattern is illustrated in following animation. This animation depicts the p
    <source src="fig/shared-memory.webm" type="video/webm">
 </video>
 
+<iframe src="fig/shared-memory.html" height=500 width=100%></iframe>
+
 In pseduo-code:
 
 ```python
