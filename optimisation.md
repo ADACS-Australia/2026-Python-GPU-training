@@ -494,7 +494,7 @@ The cycle is then repeated: the _next_ 256 values from global memory are written
 This pattern is illustrated in following animation. This animation depicts the pattern using a thread block size of 8, which in turn means the shared memory cache is sized to 8 elements:
 
 <video width="100%" autoplay loop muted>
-   <source src="fig/shared-memory.mkv" type="video/webm">
+   <source src="fig/shared-memory.webm" type="video/webm">
 </video>
 
 In pseduo-code:
