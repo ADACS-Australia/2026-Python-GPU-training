@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUDA Shared Memory - Synchronized Parallel Loop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #0b0e14; color: white; font-family: sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #canvas { width: 95vw; height: 80vh; background: #0b0e14; }
+        .label { font-size: 12px; font-weight: bold; fill: #fff; text-anchor: middle; pointer-events: none; }
+        .mem-box { stroke-width: 1; }
+        .global-mem { fill: #2c3e50; stroke: #34495e; }
+        .shared-mem { fill: #1b5e20; stroke: #2e7d32; }
+        .thread { fill: #1565c0; stroke: #1976d2; }
+        .line { fill: none; stroke-width: 2; stroke-linecap: round; }
+        .line-fast { stroke: #4CAF50; stroke-opacity: 0.9; }
+        .line-slow { stroke: #ff4444; stroke-opacity: 1; }
+        .title-text { font-size: 18px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<svg id="canvas" viewBox="0 0 1000 500">
+    <text x="250" y="40" text-anchor="middle" class="label title-text" style="fill: #f44336;">BEFORE: No Cache</text>
+    <text x="750" y="40" text-anchor="middle" class="label title-text" style="fill: #4CAF50;">AFTER: Shared Memory Cache</text>
+    <line x1="500" y1="20" x2="500" y2="480" stroke="#333" stroke-dasharray="5,5" />
+
+    <g id="gmem-left"></g>
+    <g id="threads-left"></g>
+    <g id="gmem-right"></g>
+    <g id="smem-right"></g>
+    <g id="threads-right"></g>
+</svg>
+
+<script>
+    const svg = document.getElementById('canvas');
+    const G_SIZE = 24, T_SIZE = 8, BOX_S = 18, BOX_G = 50;
+
+    function spawnMovement(x1, y1, x2, y2, className, speed) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+        line.setAttribute("x2", x1); line.setAttribute("y2", y1);
+        line.setAttribute("class", "line " + className);
+        svg.appendChild(line);
+
+        gsap.to(line, { duration: speed, attr: { x2: x2, y2: y2 }, ease: "none" });
+        gsap.to(line, { duration: speed * 0.4, opacity: 0, delay: speed * 0.8, onComplete: () => line.remove() });
+    }
+
+    // Setup Components
+    for (let i = 0; i < G_SIZE; i++) {
+        [35, 535].forEach((xBase, idx) => {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", xBase + (i * BOX_S)); rect.setAttribute("y", 80);
+            rect.setAttribute("width", BOX_S - 2); rect.setAttribute("height", BOX_S);
+            rect.setAttribute("class", "mem-box global-mem");
+            document.getElementById(idx === 0 ? 'gmem-left' : 'gmem-right').appendChild(rect);
+        });
+    }
+
+    for (let i = 0; i < T_SIZE; i++) {
+        [70, 570].forEach((xBase, idx) => {
+            const x = xBase + (i * BOX_G);
+            const g = document.getElementById(idx === 0 ? 'threads-left' : 'threads-right');
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", x - 20); rect.setAttribute("y", 350);
+            rect.setAttribute("width", 40); rect.setAttribute("height", 40);
+            rect.setAttribute("class", "mem-box thread");
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", x); text.setAttribute("y", 375);
+            text.setAttribute("class", "label"); text.textContent = `T${i}`;
+            g.appendChild(rect); g.appendChild(text);
+        });
+        const sx = 570 + (i * BOX_G);
+        const srect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        srect.setAttribute("x", sx - 20); srect.setAttribute("y", 200);
+        srect.setAttribute("width", 40); srect.setAttribute("height", 30);
+        srect.setAttribute("class", "mem-box shared-mem");
+        const stext = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        stext.setAttribute("x", sx); stext.setAttribute("y", 220);
+        stext.setAttribute("class", "label"); stext.textContent = `S${i}`;
+        const sg = document.getElementById('smem-right');
+        sg.appendChild(srect); sg.appendChild(stext);
+    }
+
+    const mainTl = gsap.timeline({ repeat: -1 });
+
+    function buildTimeline() {
+        // We use a constant '0' position parameter to ensure both tracks start simultaneously
+
+        // --- TRACK 1: BEFORE (Sequential Global Reads) ---
+        let beforeTime = 0;
+        for(let j=0; j < G_SIZE; j++) {
+            const sourceX = 44 + (j * BOX_S);
+            mainTl.call(() => {
+                for(let i=0; i < T_SIZE; i++) {
+                    spawnMovement(sourceX, 98, 70 + (i * BOX_G), 350, "line-slow", 0.6);
+                }
+            }, null, beforeTime);
+            beforeTime += 0.7; // Sequential spacing
+        }
+
+        // --- TRACK 2: AFTER (Chunked Shared Memory) ---
+        let afterTime = 0;
+        [0, 1, 2].forEach(step => {
+            const gOffset = step * 8;
+
+            // 1. Simultaneous Global -> Cache
+            mainTl.call(() => {
+                for(let i=0; i < T_SIZE; i++) {
+                    spawnMovement(544 + ((gOffset + i) * BOX_S), 98, 570 + (i * BOX_G), 200, "line-slow", 0.8);
+                }
+            }, null, afterTime);
+            afterTime += 1.0;
+
+            // 2. Sequential Shared -> Threads
+            for(let j=0; j < T_SIZE; j++) {
+                mainTl.call(() => {
+                    for(let i=0; i < T_SIZE; i++) {
+                        spawnMovement(570 + (j * BOX_G), 230, 570 + (i * BOX_G), 350, "line-fast", 0.3);
+                    }
+                }, null, afterTime);
+                afterTime += 0.4;
+            }
+        });
+
+        // Determine the longest track to ensure the loop restarts correctly
+        const maxDuration = Math.max(beforeTime, afterTime);
+
+        // Add a final delay at the end of the longest path before looping
+        mainTl.to({}, { duration: 2 }, maxDuration);
+    }
+
+    buildTimeline();
+</script>
+</body>
+</html>
