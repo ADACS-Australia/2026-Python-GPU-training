@@ -7,24 +7,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         body { margin: 0; background-color: #0b0e14; color: white; font-family: sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        #canvas { width: 95vw; height: 80vh; background: #0b0e14; }
+        #canvas { width: 100%; height: 500px; background: #0b0e14; }
         .label { font-size: 12px; font-weight: bold; fill: #fff; text-anchor: middle; pointer-events: none; }
         .mem-box { stroke-width: 1; }
         .global-mem { fill: #2c3e50; stroke: #34495e; }
         .shared-mem { fill: #1b5e20; stroke: #2e7d32; }
         .thread { fill: #1565c0; stroke: #1976d2; }
         .line { fill: none; stroke-width: 2; stroke-linecap: round; }
-        .line-fast { stroke: #4CAF50; stroke-opacity: 0.9; }
+        .line-fast { stroke: #4CAF50; stroke-opacity: 1; }
         .line-slow { stroke: #ff4444; stroke-opacity: 1; }
         .title-text { font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<svg id="canvas" viewBox="0 0 1000 500">
-    <text x="250" y="40" text-anchor="middle" class="label title-text" style="fill: #f44336;">BEFORE: No Cache</text>
-    <text x="750" y="40" text-anchor="middle" class="label title-text" style="fill: #4CAF50;">AFTER: Shared Memory Cache</text>
-    <line x1="500" y1="20" x2="500" y2="480" stroke="#333" stroke-dasharray="5,5" />
+<svg id="canvas" viewBox="0 0 1000 440">
+    <text x="250" y="40" text-anchor="middle" class="label title-text" style="fill: #f44336;">Direct global memory reads</text>
+    <text x="750" y="40" text-anchor="middle" class="label title-text" style="fill: #4CAF50;">Intermediate shared memory cache</text>
+    <line x1="500" y1="20" x2="500" y2="420" stroke="#333" stroke-dasharray="5,5" />
 
     <g id="gmem-left"></g>
     <g id="threads-left"></g>
@@ -95,7 +95,7 @@
             const sourceX = 44 + (j * BOX_S);
             mainTl.call(() => {
                 for(let i=0; i < T_SIZE; i++) {
-                    spawnMovement(sourceX, 98, 70 + (i * BOX_G), 350, "line-slow", 0.6);
+                    spawnMovement(sourceX, 98, 70 + (i * BOX_G), 350, "line-slow", 0.8);
                 }
             }, null, beforeTime);
             beforeTime += 0.7; // Sequential spacing
@@ -118,7 +118,7 @@
             for(let j=0; j < T_SIZE; j++) {
                 mainTl.call(() => {
                     for(let i=0; i < T_SIZE; i++) {
-                        spawnMovement(570 + (j * BOX_G), 230, 570 + (i * BOX_G), 350, "line-fast", 0.3);
+                        spawnMovement(570 + (j * BOX_G), 230, 570 + (i * BOX_G), 350, "line-fast", 0.2);
                     }
                 }, null, afterTime);
                 afterTime += 0.4;
