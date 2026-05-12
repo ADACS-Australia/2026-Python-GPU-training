@@ -89,7 +89,7 @@ ndashes = np.sqrt(1 - ls**2 - ms**2) - 1
 us, vs, ws, data = us[::50], vs[::50], ws[::50], data[::50]
 
 img = np.zeros(ls.shape, dtype=complex)
-image(us, vs, ws, data, ls, ms, ndashes, img)
+image_numba(us, vs, ws, data, ls, ms, ndashes, img)
 
 plt.imshow(img.real, origin="lower")
 plt.savefig("output.png")
@@ -208,7 +208,7 @@ Our task here, however, is purely in optimising the kernel itself, and this is s
 Some things that NSIGHT Compute can be useful for are:
 
 * Checking for precision: are there some accidental 64 bit precision operations in your kernel that is otherwise meant to be purely 32 bit precision?
-* Understanding what is limiting you: are you compute bound or memory bound? Learn to interpet roofline plots.
+* Understanding what is limiting you: are you compute bound or memory bound? Learn to interpret roofline plots.
 * What is the ratio of fused multiply add (FMA) to total floating point instructions? Are you poorly using the more efficient FMA instruction?
 
 Nonetheless, we will be proceeding without these tools and instead we will be presenting the standard set of optimisation techniques that apply to almost all kernel work. If you do use NSIGHT Compute in your work and it warns of poor occupancy, or non-coalescend memory accesses, after this section you will know what these warnings mean. Hopefully, you will also develop an intuition about whether its recommendations are worth pursuing or not.
@@ -490,6 +490,10 @@ Suppose there are 256 threads per block. Then the pattern proceeds as follows:
 4. Finally, the threads cycle through each value in shared memory and performs its associated computation.
 
 The cycle is then repeated: the _next_ 256 values from global memory are written into shared memory, and so on, until the global memory is exhausted.
+
+This pattern is illustrated in following animation. This animation depicts the pattern using a thread block size of 8, which in turn means the shared memory cache is sized to 8 elements:
+
+<iframe src="fig/shared-memory.html" width=600 height=600></iframe>
 
 In pseduo-code:
 
