@@ -353,7 +353,9 @@
 <div class="card-body">
 <div class="inner">
 <h3 class="card-title">Questions</h3>
-<ul><li>What is a GPU?</li>
+<ul><li>How does a kernel map a single function to thousands of
+threads?</li>
+<li>How can threads safely combine results (Reductions)?</li>
 </ul></div>
 </div>
 </div>
@@ -361,9 +363,11 @@
 <div class="card-body">
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
-<ul><li>Understand a warp why multiples of 32 (or 64) threads is
-important</li>
-<li>Understand the hierarchy of GPU memory</li>
+<ul><li>Write a basic <span class="citation">@cuda.jit</span> function using
+1D and 2D indexing.</li>
+<li>Implement a Grid-Stride Loop to handle any array size.</li>
+<li>Use cuda.atomic.add and cuda.shared.array to perform a block-level
+reduction.</li>
 </ul></div>
 </div>
 </div>
@@ -706,10 +710,11 @@ and threads per block to 256? Why?</li>
 </div>
 </div>
 </div>
-<p>Using a for loop like this is a very common idiom in kernel design.
-As before, it ensures we stay within the bounds of the array, but it
-doesn’t rely on the grid being properly sized. Later, you’ll see it
-lends itself to other common optimisations.</p>
+<p>Using a for loop like this is a very common idiom in kernel design,
+known as a <em>grid stride loop</em>. As before, it ensures we stay
+within the bounds of the array, but it doesn’t rely on the grid being
+properly sized. Later, you’ll see it lends itself to other common
+optimisations.</p>
 <p>When the block size it set to 1, the GPU is able to utilise only one
 of its SMs. The rest will sit idle, resulting in very poor utilisation
 of the GPU, also known as <em>occupancy</em>.</p>

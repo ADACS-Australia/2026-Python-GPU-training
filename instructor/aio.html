@@ -378,8 +378,9 @@
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What is parallelism?</li>
-<li>What factors should I consider before parallelising my code?</li>
+<li>What is the difference between task and data parallelism?</li>
+<li>What are the fundamental risks of moving from serial to parallel
+code?</li>
 </ul>
 </div>
 </div>
@@ -389,8 +390,10 @@
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Understand the difference between task and data parallelism</li>
-<li>Know the dangers of parallelism</li>
+<li>Identify “embarrassingly parallel” problems.</li>
+<li>Define and identify a race condition.</li>
+<li>Understand why serial code is the baseline for testing parallel
+correctness.</li>
 </ul>
 </div>
 </div>
@@ -593,7 +596,7 @@ guaranteeing that these are invisible within the thread.</p>
 <ul>
 <li>Each thread is doing only part of the overall computation</li>
 <li>You can no longer guarantee the ordering of operations: threads may
-start, suspened, and stop at different times</li>
+start, suspended, and stop at different times</li>
 <li>Compiler optimisations become visible between threads</li>
 <li>Significant programmer work is required to reason about and handle
 synchronisation</li>
@@ -641,7 +644,7 @@ serial form first, and use this to test your parallel code later.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -687,7 +690,10 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What is a GPU?</li>
+<li>How does a GPU SM (Streaming Multiprocessor) differ from a CPU
+core?</li>
+<li>What is a “Warp” and why is it the fundamental unit of
+execution?</li>
 </ul>
 </div>
 </div>
@@ -697,9 +703,10 @@ any links that you are not going to use.
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Understand a warp why multiples of 32 (or 64) threads is
-important</li>
-<li>Understand the hierarchy of GPU memory</li>
+<li>Explain Latency Hiding and why it requires high occupancy.</li>
+<li>Describe the GPU memory hierarchy (Registers → Shared →
+Global).</li>
+<li>Explain why thread counts should be multiples of 32.</li>
 </ul>
 </div>
 </div>
@@ -1051,7 +1058,7 @@ Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
  --></section></section><section id="aio-CuPy"><p>Content from <a href="CuPy.html">CuPy: A Numpy-like GPU experience</a></p>
 <hr>
-<p>Last updated on 2026-04-21 |
+<p>Last updated on 2026-05-13 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/CuPy.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -1065,7 +1072,10 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What is a GPU?</li>
+<li>When is a high-level library like CuPy preferred over custom
+kernels?</li>
+<li>How do we manage data movement between the Host (CPU) and Device
+(GPU)?</li>
 </ul>
 </div>
 </div>
@@ -1075,9 +1085,9 @@ any links that you are not going to use.
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Understand a warp why multiples of 32 (or 64) threads is
-important</li>
-<li>Understand the hierarchy of GPU memory</li>
+<li>Use CuPy as a drop-in replacement for NumPy.</li>
+<li>Profile the cost of PCIe data transfers.</li>
+<li>Implement GPU-accelerated FFTs and linear algebra.</li>
 </ul>
 </div>
 </div>
@@ -1122,7 +1132,7 @@ iterables:</p>
 </h3>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1" aria-label="code-block-1-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1" aria-label="code-block-1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>arr1 <span class="op">=</span> np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]). <span class="co"># from a list</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>arr1 <span class="op">=</span> np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])  <span class="co"># from a list</span></span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>arr2 <span class="op">=</span> np.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, step<span class="op">=</span><span class="dv">2</span>))  <span class="co"># from a range</span></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1" aria-label="code-block-1-5"></a>arr3 <span class="op">=</span> np.array([x<span class="op">**</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">100</span>)])  <span class="co"># from a list comprehension</span></span></code></pre>
 </div>
@@ -1756,7 +1766,9 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What is a GPU?</li>
+<li>How does a kernel map a single function to thousands of
+threads?</li>
+<li>How can threads safely combine results (Reductions)?</li>
 </ul>
 </div>
 </div>
@@ -1766,9 +1778,11 @@ any links that you are not going to use.
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Understand a warp why multiples of 32 (or 64) threads is
-important</li>
-<li>Understand the hierarchy of GPU memory</li>
+<li>Write a basic <span class="citation">@cuda.jit</span> function using
+1D and 2D indexing.</li>
+<li>Implement a Grid-Stride Loop to handle any array size.</li>
+<li>Use cuda.atomic.add and cuda.shared.array to perform a block-level
+reduction.</li>
 </ul>
 </div>
 </div>
@@ -2130,10 +2144,11 @@ and threads per block to 256? Why?</li>
 </div>
 </div>
 </div>
-<p>Using a for loop like this is a very common idiom in kernel design.
-As before, it ensures we stay within the bounds of the array, but it
-doesn’t rely on the grid being properly sized. Later, you’ll see it
-lends itself to other common optimisations.</p>
+<p>Using a for loop like this is a very common idiom in kernel design,
+known as a <em>grid stride loop</em>. As before, it ensures we stay
+within the bounds of the array, but it doesn’t rely on the grid being
+properly sized. Later, you’ll see it lends itself to other common
+optimisations.</p>
 <p>When the block size it set to 1, the GPU is able to utilise only one
 of its SMs. The rest will sit idle, resulting in very poor utilisation
 of the GPU, also known as <em>occupancy</em>.</p>
@@ -2856,7 +2871,8 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What is a GPU?</li>
+<li>What are the main bottlenecks in GPU performance?</li>
+<li>How do Warp Shuffles improve on Shared Memory?</li>
 </ul>
 </div>
 </div>
@@ -2866,9 +2882,10 @@ any links that you are not going to use.
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Understand a warp why multiples of 32 (or 64) threads is
-important</li>
-<li>Understand the hierarchy of GPU memory</li>
+<li>Identify and fix Memory Coalescing issues.</li>
+<li>Use Fused Multiply-Add (FMA) for performance and precision.</li>
+<li>Implement a complex kernel using shfl_sync for warp-level
+communication.</li>
 </ul>
 </div>
 </div>
@@ -2982,7 +2999,7 @@ take too long for you, try reducing the data even more aggressively.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <p>We parallelise over each pixel which, for a 700 x 700 pixel image,
 gives us just shy of 500,000 threads. And since each pixel is its own
@@ -3037,7 +3054,7 @@ identity <span class="math inline">\(e^{i \phi} = \cos{\phi} + i
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>The implementation is very similar to that used in Numba’s prange
 loop. Some points of note:</p>
@@ -3121,7 +3138,7 @@ might you encounter and how could they be mitigated?</p>
 <button class="accordion-button instructor-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructor1" aria-expanded="false" aria-controls="collapseInstructor1">
   <h3 class="accordion-header" id="headingInstructor1">  <div class="note-square"><i aria-hidden="true" class="callout-icon" data-feather="edit-2"></i></div> Instructor Note </h3>
 </button>
-<div id="collapseInstructor1" class="accordion-collapse collapse" aria-labelledby="headingInstructor1" data-bs-parent="#accordionInstructor1">
+<div id="collapseInstructor1" class="accordion-collapse collapse" data-bs-parent="#accordionInstructor1" aria-labelledby="headingInstructor1">
 <div class="accordion-body">
 <p>Like with the DFT, this would be two-fold operation: a broadcasting
 operation that would produce a 3-dimensional array, following by a
@@ -3266,7 +3283,7 @@ culmination of the kernel.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb8">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3396,7 +3413,7 @@ the keyword argument <code>dtype</code>. For example:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3479,7 +3496,7 @@ efficient operations.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
 <div class="accordion-body">
 <p>There are a number of candidates which stand out as options here:</p>
 <ul>
@@ -3742,6 +3759,22 @@ Other options for handling this remainder exist, such as:</p>
     # Compute...</code></pre>
 </li>
 </ul>
+<div id="warning" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div id="warning" class="callout-inner">
+<h3 class="callout-title">Warning</h3>
+<div class="callout-content">
+<p><code>cuda.syncthreads()</code> acts as a gate that stops threads
+from progressing until all threads within a thread block have reached
+that point. But beware: <code>cuda.syncthreads()</code> should not be
+put inside a conditional branch since not all threads may reach a
+conditional synchronisation point. The result of doing so is undefined
+and may hang. Likewise, this advice applies to threads that
+conditionally return early and therefore bypass future synchronisation
+points.</p>
 <div id="coalesced-memory-reads" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
@@ -3768,6 +3801,14 @@ memory performance.</p>
 <p>In the above example, we read from memory using the indexing
 <code>offset + tid</code> which guarantees <em>memory
 coalescing</em>.</p>
+</div>
+</div>
+</div>
+<p>:: callout</p>
+<div class="section level3">
+<h3 id="bank-conflicts">Bank conflicts<a class="anchor" aria-label="anchor" href="#bank-conflicts"></a>
+</h3>
+</div>
 </div>
 </div>
 </div>
@@ -3852,7 +3893,7 @@ memory.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb17">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -4040,7 +4081,7 @@ the ideal factor?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
 <div class="accordion-body">
 <p>On my own machine, I saw best performance when
 <code>THREAD_COARSEN</code> was set to 4, but it will vary based on the
@@ -4137,7 +4178,7 @@ stored in global memory, which is disasterous for performance.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb22">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -4318,7 +4359,7 @@ like this:</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
 <div class="accordion-body">
 <p>Finally, we arrive at a kernel that looks like that shown below.</p>
 <div class="codewrapper sourceCode" id="cb30">
@@ -4473,7 +4514,7 @@ imaginary parts separately, e.g.:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
 <div class="accordion-body">
 <p>Shared memory is the idiomatic way to cache data and avoid global
 memory operations: it is what you will see in most CUDA tutorials, and

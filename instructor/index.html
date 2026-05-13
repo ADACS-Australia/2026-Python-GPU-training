@@ -435,8 +435,8 @@ any links that you are not going to use.
  1. <a href="parallelism.html">An introduction to parallelism</a>
 </td>
 <td>
-What is parallelism?<br>What factors should I consider before
-parallelising my code?
+What is the difference between task and data parallelism?<br>What are
+the fundamental risks of moving from serial to parallel code?
 </td>
 </tr><tr><td>
 <span class="visually-hidden">Duration: </span>00h 10m
@@ -445,7 +445,9 @@ parallelising my code?
  2. <a href="gpu-deepdive.html">A GPU Deep Dive</a>
 </td>
 <td>
-What is a GPU?
+How does a GPU SM (Streaming Multiprocessor) differ from a CPU
+core?<br>What is a “Warp” and why is it the fundamental unit of
+execution?
 </td>
 </tr><tr><td>
 <span class="visually-hidden">Duration: </span>00h 20m
@@ -454,7 +456,9 @@ What is a GPU?
  3. <a href="CuPy.html">CuPy: A Numpy-like GPU experience</a>
 </td>
 <td>
-What is a GPU?
+When is a high-level library like CuPy preferred over custom
+kernels?<br>How do we manage data movement between the Host (CPU) and
+Device (GPU)?
 </td>
 </tr><tr><td>
 <span class="visually-hidden">Duration: </span>00h 30m
@@ -463,7 +467,8 @@ What is a GPU?
  4. <a href="first-kernels.html">Writing your first GPU kernels</a>
 </td>
 <td>
-What is a GPU?
+How does a kernel map a single function to thousands of threads?<br>How
+can threads safely combine results (Reductions)?
 </td>
 </tr><tr><td>
 <span class="visually-hidden">Duration: </span>00h 40m
@@ -472,7 +477,8 @@ What is a GPU?
  5. <a href="optimisation.html">Optimisation</a>
 </td>
 <td>
-What is a GPU?
+What are the main bottlenecks in GPU performance?<br>How do Warp
+Shuffles improve on Shared Memory?
 </td>
 </tr><tr><td>
 <span class="visually-hidden">Duration: </span>00h 50m
