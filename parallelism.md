@@ -4,19 +4,18 @@ title: "An introduction to parallelism"
 
 ::: questions
 
-- What is parallelism?
-- What factors should I consider before parallelising my code?
+- What is the difference between task and data parallelism?
+- What are the fundamental risks of moving from serial to parallel code?
 
 :::
 
 ::: objectives
 
-- Understand the difference between task and data parallelism
-- Know the dangers of parallelism
+- Identify "embarrassingly parallel" problems.
+- Define and identify a race condition.
+- Understand why serial code is the baseline for testing parallel correctness.
 
 :::
-
-
 
 ## Serial programming
 
@@ -134,7 +133,7 @@ Serial code is very easy to reason about: first this happens, then this, and fin
 Parallel code tends to be much more complex:
 
 - Each thread is doing only part of the overall computation
-- You can no longer guarantee the ordering of operations: threads may start, suspened, and stop at different times
+- You can no longer guarantee the ordering of operations: threads may start, suspended, and stop at different times
 - Compiler optimisations become visible between threads
 - Significant programmer work is required to reason about and handle synchronisation
 

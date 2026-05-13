@@ -4,14 +4,16 @@ title: "Writing your first GPU kernels"
 
 ::: questions
 
-- What is a GPU?
+- How does a kernel map a single function to thousands of threads?
+- How can threads safely combine results (Reductions)?
 
 :::
 
 ::: objectives
 
-- Understand a warp why multiples of 32 (or 64) threads is important
-- Understand the hierarchy of GPU memory
+- Write a basic @cuda.jit function using 1D and 2D indexing.
+- Implement a Grid-Stride Loop to handle any array size.
+- Use cuda.atomic.add and cuda.shared.array to perform a block-level reduction.
 
 :::
 
@@ -240,7 +242,7 @@ def adder_gpu(xs, ys, zs):
 
 :::
 
-Using a for loop like this is a very common idiom in kernel design. As before, it ensures we stay within the bounds of the array, but it doesn't rely on the grid being properly sized. Later, you'll see it lends itself to other common optimisations.
+Using a for loop like this is a very common idiom in kernel design, known as a _grid stride loop_. As before, it ensures we stay within the bounds of the array, but it doesn't rely on the grid being properly sized. Later, you'll see it lends itself to other common optimisations.
 
 When the block size it set to 1, the GPU is able to utilise only one of its SMs. The rest will sit idle, resulting in very poor utilisation of the GPU, also known as _occupancy_.
 

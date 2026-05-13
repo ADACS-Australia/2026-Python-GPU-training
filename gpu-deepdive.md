@@ -4,14 +4,16 @@ title: "A GPU Deep Dive"
 
 ::: questions
 
-- What is a GPU?
+- How does a GPU SM (Streaming Multiprocessor) differ from a CPU core?
+- What is a "Warp" and why is it the fundamental unit of execution?
 
 :::
 
 ::: objectives
 
-- Understand a warp why multiples of 32 (or 64) threads is important
-- Understand the hierarchy of GPU memory
+- Explain Latency Hiding and why it requires high occupancy.
+- Describe the GPU memory hierarchy (Registers → Shared → Global).
+- Explain why thread counts should be multiples of 32.
 
 :::
 
