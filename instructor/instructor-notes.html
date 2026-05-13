@@ -250,7 +250,7 @@
 <div class="accordion accordion-flush" id="accordionFlush2">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading2">
-        <a href="introduction.html">1. Using Markdown</a>
+        <a href="parallelism.html">1. An introduction to parallelism</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -262,7 +262,7 @@
 <div class="accordion accordion-flush" id="accordionFlush3">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading3">
-        <a href="parallelism.html">2. An introduction to parallelism</a>
+        <a href="gpu-deepdive.html">2. A GPU Deep Dive</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -274,7 +274,7 @@
 <div class="accordion accordion-flush" id="accordionFlush4">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading4">
-        <a href="gpu-deepdive.html">3. A GPU Deep Dive</a>
+        <a href="CuPy.html">3. CuPy: A Numpy-like GPU experience</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -286,7 +286,7 @@
 <div class="accordion accordion-flush" id="accordionFlush5">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading5">
-        <a href="CuPy.html">4. CuPy: A Numpy-like GPU experience</a>
+        <a href="first-kernels.html">4. Writing your first GPU kernels</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -298,19 +298,7 @@
 <div class="accordion accordion-flush" id="accordionFlush6">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading6">
-        <a href="first-kernels.html">5. Writing your first GPU kernels</a>
-    </div>
-<!--/div.accordion-header-->
-
-  </div>
-<!--/div.accordion-item-->
-</div>
-<!--/div.accordion-flush-->
-
-<div class="accordion accordion-flush" id="accordionFlush7">
-  <div class="accordion-item">
-    <div class="accordion-header" id="flush-heading7">
-        <a href="optimisation.html">6. Optimisation</a>
+        <a href="optimisation.html">5. Optimisation</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -382,21 +370,28 @@ any links that you are not going to use.
  -->
 
 
-      <section id="aggregate-instructor-notes"><section id="introduction"><h2 class="section-heading"><a href="introduction.html">Using Markdown</a></h2>
-<hr class="half-width">
-<h3 id="introduction-headingInstructor1">
-<a href="introduction.html#headingInstructor1">Instructor Note</a><a class="anchor" aria-label="anchor" href="#introduction-headingInstructor1"></a>
-</h3>
-<p>Inline instructor notes can help inform instructors of timing
-challenges associated with the lessons. They appear in the “Instructor
-View”</p>
-<hr>
-<br></section><section id="parallelism"><h2 class="section-heading"><a href="parallelism.html">An introduction to parallelism</a></h2>
-<hr class="half-width"></section><section id="gpu-deepdive"><h2 class="section-heading"><a href="gpu-deepdive.html">A GPU Deep DiveSome confusing terms<a class="anchor" aria-label="anchor" href="#some-confusing-terms"></a></a></h2>
+      <section id="aggregate-instructor-notes"><section id="parallelism"><h2 class="section-heading"><a href="parallelism.html">An introduction to parallelism</a></h2>
+<hr class="half-width"></section><section id="gpu-deepdive"><h2 class="section-heading"><a href="gpu-deepdive.html">A GPU Deep Dive</a></h2>
 <hr class="half-width"></section><section id="CuPy"><h2 class="section-heading"><a href="CuPy.html">CuPy: A Numpy-like GPU experience</a></h2>
 <hr class="half-width"></section><section id="first-kernels"><h2 class="section-heading"><a href="first-kernels.html">Writing your first GPU kernels</a></h2>
 <hr class="half-width"></section><section id="optimisation"><h2 class="section-heading"><a href="optimisation.html">Optimisation</a></h2>
-<hr class="half-width"></section></section>
+<hr class="half-width">
+<h3 id="optimisation-headingInstructor1">
+<a href="optimisation.html#headingInstructor1">Instructor Note</a><a class="anchor" aria-label="anchor" href="#optimisation-headingInstructor1"></a>
+</h3>
+<p>Like with the DFT, this would be two-fold operation: a broadcasting
+operation that would produce a 3-dimensional array, following by a
+reduction along one axis. The sheer amount of data would mean this would
+not fit in memory. Some mitigations include:</p>
+<ul>
+<li>Batching the data by repeatedly processing bounded chunks of the
+input data that will fit in memory</li>
+<li>Or alternatively, processing all input data but for a limited number
+of pixels at a time, and iterating over the full image from in
+Python</li>
+</ul>
+<hr>
+<br></section></section>
 </div>
     </main>
 </div>
@@ -449,9 +444,9 @@ View”</p>
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/instructor/instructor-notes.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/instructor-notes.html",
-  "dateCreated": "2026-05-12",
-  "dateModified": "2026-05-12",
-  "datePublished": "2026-05-12"
+  "dateCreated": "2026-05-13",
+  "dateModified": "2026-05-13",
+  "datePublished": "2026-05-13"
 }
 
   </script><script>

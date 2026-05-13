@@ -226,7 +226,7 @@
 <div class="accordion accordion-flush" id="accordionFlush2">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading2">
-        <a href="introduction.html">1. Using Markdown</a>
+        <a href="parallelism.html">1. An introduction to parallelism</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -235,7 +235,7 @@
 <div class="accordion accordion-flush" id="accordionFlush3">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading3">
-        <a href="parallelism.html">2. An introduction to parallelism</a>
+        <a href="gpu-deepdive.html">2. A GPU Deep Dive</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -244,7 +244,7 @@
 <div class="accordion accordion-flush" id="accordionFlush4">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading4">
-        <a href="gpu-deepdive.html">3. A GPU Deep Dive</a>
+        <a href="CuPy.html">3. CuPy: A Numpy-like GPU experience</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -253,7 +253,7 @@
 <div class="accordion accordion-flush" id="accordionFlush5">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading5">
-        <a href="CuPy.html">4. CuPy: A Numpy-like GPU experience</a>
+        <a href="first-kernels.html">4. Writing your first GPU kernels</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -262,16 +262,7 @@
 <div class="accordion accordion-flush" id="accordionFlush6">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading6">
-        <a href="first-kernels.html">5. Writing your first GPU kernels</a>
-    </div><!--/div.accordion-header-->
-
-  </div><!--/div.accordion-item-->
-</div><!--/div.accordion-flush-->
-
-<div class="accordion accordion-flush" id="accordionFlush7">
-  <div class="accordion-item">
-    <div class="accordion-header" id="flush-heading7">
-        <a href="optimisation.html">6. Optimisation</a>
+        <a href="optimisation.html">5. Optimisation</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -319,24 +310,121 @@
         <!-- START: inst/pkgdown/templates/content-syllabus.html -->
   <div class="col-xl-8 col-lg-12 primary-content">
     <nav class="lesson-content mx-md-4" aria-label="Next Chapter"><!-- content for small screens --><div class="d-block d-sm-block d-md-none">
-        <a class="chapter-link float-end" href="introduction.html">Next<i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
+        <a class="chapter-link float-end" href="parallelism.html">Next<i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
       </div>
       <!-- content for large screens -->
       <div class="d-none d-sm-none d-md-block">
-        <a class="chapter-link float-end" href="introduction.html" rel="next">Next: Using Markdown... <i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
+        <a class="chapter-link float-end" href="parallelism.html" rel="next">Next: An introduction to... <i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
       </div>
       <hr></nav><main id="main-content" class="main-content"><h1 class="schedule-heading">Summary and Setup</h1>
       
 
-<p>This is a new lesson built with <a href="https://carpentries.github.io/sandpaper-docs" class="external-link">The Carpentries
-Workbench</a>.</p>
-<!--
+<section><h2 class="section-heading" id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a></h2>
+<hr class="half-width"><p>This is an advanced course in GPU programming using Python. You will
+learn about the types of problems that are suitable for parallelisation
+on the GPU and how to reformulate a problem using data parallelism. We
+will show you how to use the high-level GPU API provided by CuPy and
+then how to write your own, highly optimised kernels.</p>
+<p>This course can be separated into two days:</p>
+<ul><li>
+<p><strong>Day 1:</strong></p>
+<ul><li>GPU fundamentals</li>
+<li>High-level GPU programming with CuPy</li>
+<li>Writing your first kernel</li>
+</ul></li>
+<li>
+<p><strong>Day 2</strong></p>
+<ul><li>Kernel optimisation</li>
+</ul></li>
+</ul><div class="section level3">
+<h3 id="why-use-gpu-acceleration">Why use GPU acceleration?<a class="anchor" aria-label="anchor" href="#why-use-gpu-acceleration"></a></h3>
+<p>It is increasingly common for science to make use of massive
+datasets—such as high-resolution sky surveys, complex N-body
+simulations, or signal processing over terabytes of data. Processing
+these vast datasets can be computationally prohibitive on standard CPUs.
+However, it is our good fortune that many of these tasks are trivially
+parallelisable, meaning that the work can be progressed by many
+processing cores at once.</p>
+<p>GPU acceleration is the next step beyond CPU parallelisation, and
+allows you to leverage literally thousands of parallel cores to
+accelerate these tasks. GPUs are built specifically with high
+multi-threaded workloads in mind, and are efficient at these kinds of
+tasks in a way that CPUs are simply not. GPU programming is not easy,
+but with a little care (and experimentation) it is possible to achieve
+speedups of several orders of magnitude in processing time.</p>
+</div>
+<div class="section level3">
+<h3 id="why-python">Why Python?<a class="anchor" aria-label="anchor" href="#why-python"></a></h3>
+<p>This course is taught using Python and a number of libraries that
+allow writing CUDA kernels directly using Python. Python has been chosen
+to make this course as accessible as possible, which allows us to focus
+on the underlying concepts without getting snagged on unfamiliar syntax.
+Under the hood, the Python kernels are <a href="https://en.wikipedia.org/wiki/Just-in-time_compilation" class="external-link">compiled</a>
+to CUDA kernels and run just as fast as if we had written them in C.</p>
+<p>And rest assured: the concepts learned here can be applied wholesale
+to CUDA programming in C or C++ (or Julia, Rust, …).</p>
+<video height="480" width="270"><source src="https://github.com/ADACS-Australia/2026-Python-GPU-training/releases/download/mythbusters/gpu-mythbusters.mkv" type="video/webm" srcset="NA"></source></video><p>Source: <a href="https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI" class="external-link">Nvidia
+on Youtube</a></p>
+</div>
+</section><section><h2 class="section-heading" id="expected-background">Expected background<a class="anchor" aria-label="anchor" href="#expected-background"></a></h2>
+<hr class="half-width"><p>This course sets a reasonably high bar for what you are expected to
+already know, including:</p>
+<ul><li>Python</li>
+<li>Primitive data types: integers, floats, doubles, etc. and their
+machine representation</li>
+<li>numpy, including <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html" class="external-link">broadcasting
+rules</a>
+</li>
+<li>Some experience with <code>numba</code> and its <a href="https://numba.pydata.org/numba-doc/dev/user/parallel.html" class="external-link">parallelisation
+functions</a>
+</li>
+</ul><p>Additionally, the examples given here are aimed towards people coming
+from a physics, astronomy, or engineering background. It will help if
+you are familiar with:</p>
+<ul><li>Basic mathematical sum notation, e.g. for <a href="https://en.wikipedia.org/wiki/Discrete_Fourier_transform" class="external-link">discrete
+Fourier transform</a>
+</li>
+<li>Complex numbers (and, for example, <a href="https://en.wikipedia.org/wiki/Euler's_formula" class="external-link">Euler’s
+formula</a>)</li>
+</ul></section><section><h2 class="section-heading" id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a></h2>
+<hr class="half-width"><p>You will need a computer with an NVIDIA GPU and <a href="https://developer.nvidia.com/cuda/toolkit" class="external-link">CUDA toolkit</a>
+installed. (CuPy <em>does</em> have some support AMD GPUs, but
+<code>numba-cuda</code> does not.)</p>
+<p>We recommend installing the requisite packages using <a href="https://docs.astral.sh/uv/" class="external-link"><code>uv</code></a> (although
+<code>pip</code> should work too):</p>
+<pre class="shell"><code>$ uv init gpu-tutorial
+
+$ cd gpu-tutorial
+
+$ uv add numpy \
+       numba \
+       numba-cuda \
+       cupy \
+       matplotlib</code></pre>
+<p>We will frequently omit imports from the code snippets listed
+throughout this tutorial. The following imports should be assumed:</p>
+<div class="codewrapper sourceCode" id="cb2">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a><span class="co"># Python imports</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a><span class="im">import</span> math</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="co"># Package imports</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="im">import</span> cupy</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="im">from</span> numba <span class="im">import</span> cuda, njit, prange</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre>
+</div>
+</section><section><h2 class="section-heading" id="ai-declaration">AI Declaration<a class="anchor" aria-label="anchor" href="#ai-declaration"></a></h2>
+<hr class="half-width"><p>With the exception of the following, no AI or LLM tools were used to
+prepare these notes in any capacity (including planning, writing, or
+otherwise):</p>
+<ul><li>The shared memory optimisation animation (using Gemini 3). <!--
 Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
  -->
-
-
-      <section id="setup"><p>FIXME: Setup instructions live in this document. Please specify the
+</li>
+</ul></section><section id="setup"><p>FIXME: Setup instructions live in this document. Please specify the
 tools and the data sets the Learner needs to have installed.</p>
 <section><h2 class="section-heading" id="data-sets">Data Sets<a class="anchor" aria-label="anchor" href="#data-sets"></a></h2>
 <hr class="half-width"><!--
@@ -370,7 +458,7 @@ e.g. online setup) in the solutions blocks.</p>
   Windows
   </h3>
 </button>
-<div id="collapseSpoiler1" class="accordion-collapse collapse" aria-labelledby="headingSpoiler1" data-bs-parent="#accordionSpoiler1">
+<div id="collapseSpoiler1" class="accordion-collapse collapse" data-bs-parent="#accordionSpoiler1" aria-labelledby="headingSpoiler1">
 <div class="accordion-body">
 <p>Use PuTTY</p>
 </div>
@@ -385,7 +473,7 @@ e.g. online setup) in the solutions blocks.</p>
   MacOS
   </h3>
 </button>
-<div id="collapseSpoiler2" class="accordion-collapse collapse" aria-labelledby="headingSpoiler2" data-bs-parent="#accordionSpoiler2">
+<div id="collapseSpoiler2" class="accordion-collapse collapse" data-bs-parent="#accordionSpoiler2" aria-labelledby="headingSpoiler2">
 <div class="accordion-body">
 <p>Use Terminal.app</p>
 </div>
@@ -400,7 +488,7 @@ e.g. online setup) in the solutions blocks.</p>
   Linux
   </h3>
 </button>
-<div id="collapseSpoiler3" class="accordion-collapse collapse" aria-labelledby="headingSpoiler3" data-bs-parent="#accordionSpoiler3">
+<div id="collapseSpoiler3" class="accordion-collapse collapse" data-bs-parent="#accordionSpoiler3" aria-labelledby="headingSpoiler3">
 <div class="accordion-body">
 <p>Use Terminal</p>
 </div>
@@ -412,11 +500,11 @@ Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
  -->
 </section></section></main><nav class="bottom-pagination mx-md-4" aria-label="Next Chapter"><!-- content for small screens --><div class="d-block d-sm-block d-md-none">
-        <a class="chapter-link float-end" href="introduction.html">Next<i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
+        <a class="chapter-link float-end" href="parallelism.html">Next<i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
       </div>
       <!-- content for large screens -->
       <div class="d-none d-sm-none d-md-block">
-        <a class="chapter-link float-end" href="introduction.html" rel="next">Next: Using Markdown... <i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
+        <a class="chapter-link float-end" href="parallelism.html" rel="next">Next: An introduction to... <i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
       </div>
     </nav></div>
 <!-- END  : inst/pkgdown/templates/content-syllabus.html -->
@@ -464,9 +552,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/index.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/index.html",
-  "dateCreated": "2026-05-12",
-  "dateModified": "2026-05-12",
-  "datePublished": "2026-05-12"
+  "dateCreated": "2026-05-13",
+  "dateModified": "2026-05-13",
+  "datePublished": "2026-05-13"
 }
 
   </script><script>
