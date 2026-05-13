@@ -4,14 +4,16 @@ title: "CuPy: A Numpy-like GPU experience"
 
 ::: questions
 
-- What is a GPU?
+- When is a high-level library like CuPy preferred over custom kernels?
+- How do we manage data movement between the Host (CPU) and Device (GPU)?
 
 :::
 
 ::: objectives
 
-- Understand a warp why multiples of 32 (or 64) threads is important
-- Understand the hierarchy of GPU memory
+- Use CuPy as a drop-in replacement for NumPy.
+- Profile the cost of PCIe data transfers.
+- Implement GPU-accelerated FFTs and linear algebra.
 
 :::
 
@@ -36,7 +38,7 @@ In `Numpy` we can create a numerical array from a range of iterables:
 ```python
 import numpy as np
 
-arr1 = np.array([1, 2, 3, 4, 5]). # from a list
+arr1 = np.array([1, 2, 3, 4, 5])  # from a list
 arr2 = np.array(range(1, 1000, step=2))  # from a range
 arr3 = np.array([x**2 for x in range(1, 100)])  # from a list comprehension
 ```

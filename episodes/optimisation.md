@@ -4,14 +4,16 @@ title: Optimisation
 
 ::: questions
 
-- What is a GPU?
+- What are the main bottlenecks in GPU performance?
+- How do Warp Shuffles improve on Shared Memory?
 
 :::
 
 ::: objectives
 
-- Understand a warp why multiples of 32 (or 64) threads is important
-- Understand the hierarchy of GPU memory
+- Identify and fix Memory Coalescing issues.
+- Use Fused Multiply-Add (FMA) for performance and precision.
+- Implement a complex kernel using shfl_sync for warp-level communication.
 
 :::
 
@@ -557,6 +559,12 @@ Some important comments:
 
 ::: callout
 
+### Warning
+
+`cuda.syncthreads()` acts as a gate that stops threads from progressing until all threads within a thread block have reached that point. But beware: `cuda.syncthreads()` should not be put inside a conditional branch since not all threads may reach a conditional synchronisation point. The result of doing so is undefined and may hang. Likewise, this advice applies to threads that conditionally return early and therefore bypass future synchronisation points.
+
+::: callout
+
 ### Coalesced memory reads
 
 The GPU memory system performs best when a thread block coordinates to read from a _contiguous_ region of memory. In particular, if each thread in a thread block reads the _next_ entry in an array, the GPU can turn all these little reads into a single, unified read instruction. For example, instead of asking the memory system to get me index 0, and then get me index 1, ... and then finally index 1024, the memory system can unify these into a single instruction asking for indices 0-1024. When this happens, it is called _memory coalescing._
@@ -564,6 +572,12 @@ The GPU memory system performs best when a thread block coordinates to read from
 On the other hand, if each thread reads from somewhere seemingly random, is non-sequential, or if each thread's memory read is strided (i.e. there are gaps between each read), then the GPU can't combine these into a single, unified read instruction. Those hundreds of reads will be queued and processed one by one. Obviously, this is not good for memory performance.
 
 In the above example, we read from memory using the indexing `offset + tid` which guarantees _memory coalescing_.
+
+:::
+
+:: callout
+
+### Bank conflicts
 
 :::
 

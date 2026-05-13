@@ -1,5 +1,5 @@
 ---
-title: "Using Markdown"
+title: "Introduction"
 teaching: 10 # teaching time in minutes
 exercises: 2 # exercise time in minutes
 ---
@@ -19,102 +19,40 @@ exercises: 2 # exercise time in minutes
 
 ## Introduction
 
-This is a lesson created via The Carpentries Workbench. It is written in
-[Pandoc-flavored Markdown](https://pandoc.org/MANUAL.html) for static files and
-[R Markdown][r-markdown] for dynamic files that can render code into output.
-Please refer to the [Introduction to The Carpentries
-Workbench](https://carpentries.github.io/sandpaper-docs/) for full documentation.
+This is an advanced course in GPU programming using Python. You will learn about the types of problems that are suitable for parallelisation on the GPU and how to reformulate a problem using data parallelism. We will show you how to use the high-level GPU API provided by CuPy and then how to write your own, highly optimised kernels.
 
-What you need to know is that there are three sections required for a valid
-Carpentries lesson:
+This course can be separated into two days:
 
- 1. `questions` are displayed at the beginning of the episode to prime the
-    learner for the content.
- 2. `objectives` are the learning objectives for an episode displayed with
-    the questions.
- 3. `keypoints` are displayed at the end of the episode to reinforce the
-    objectives.
+* **Day 1:**
 
-<video height=960 width=540>
-   <source src="../assets/gpu-mythbusters.mkv" type="video/webm">
+   * GPU fundamentals
+   * High-level GPU programming with CuPy
+   * Writing your first kernel
+
+* **Day 2**
+
+   * Kernel optimisation
+
+### Why use GPU acceleration?
+
+It is increasingly common for science to make use of massive datasets—such as high-resolution sky surveys, complex N-body simulations, or signal processing over terabytes of data. Processing these vast datasets can be computationally prohibitive on standard CPUs. However, it is our good fortune that many of these tasks are trivially parallelisable, meaning that the work can be progressed by many processing cores at once.
+
+GPU acceleration is the next step beyond CPU parallelisation, and allows you to leverage literally thousands of parallel cores to accelerate these tasks. GPUs are built specifically with high multi-threaded workloads in mind, and are efficient at these kinds of tasks in a way that CPUs are simply not. GPU programming is not easy, but with a little care (and experimentation) it is possible to achieve speedups of several orders of magnitude in processing time.
+
+### Why Python?
+
+This course is taught using Python and a number of libraries that allow writing CUDA kernels directly using Python. Python has been chosen to make this course as accessible as possible, which allows us to focus on the underlying concepts without getting snagged on unfamiliar syntax. Under the hood, the Python kernels are [compiled](https://en.wikipedia.org/wiki/Just-in-time_compilation) to CUDA kernels and run just as fast as if we had written them in C.
+
+And rest assured: the concepts learned here can be applied wholesale to CUDA programming in C or C++ (or Julia, Rust, ...).
+
+<video height=480 width=270>
+   <source src="fig/gpu-mythbusters.mkv" type="video/webm">
 </video>
 
-Source: Nvidia on Youtube (https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI)
+Source: [Nvidia on Youtube](https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI)
 
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: instructor
+## AI Declaration
 
-Inline instructor notes can help inform instructors of timing challenges
-associated with the lessons. They appear in the "Instructor View"
+With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
 
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-::::::::::::::::::::::::::::::::::::: challenge
-
-## Challenge 1: Can you do it?
-
-What is the output of this command?
-
-```r
-paste("This", "new", "lesson", "looks", "good")
-```
-
-:::::::::::::::::::::::: solution
-
-## Output
-
-```output
-[1] "This new lesson looks good"
-```
-
-:::::::::::::::::::::::::::::::::
-
-
-## Challenge 2: how do you nest solutions within challenge blocks?
-
-:::::::::::::::::::::::: solution
-
-You can add a line with at least three colons and a `solution` tag.
-
-:::::::::::::::::::::::::::::::::
-::::::::::::::::::::::::::::::::::::::::::::::::
-
-## Figures
-
-You can use standard markdown for static figures with the following syntax:
-
-`![optional caption that appears below the figure](figure url){alt='alt text for
-accessibility purposes'}`
-
-![You belong in The Carpentries!](https://raw.githubusercontent.com/carpentries/logo/master/Badge_Carpentries.svg){alt='Blue Carpentries hex person logo with no text.'}
-
-::::::::::::::::::::::::::::::::::::: callout
-
-Callout sections can highlight information.
-
-They are sometimes used to emphasise particularly important points
-but are also used in some lessons to present "asides":
-content that is not central to the narrative of the lesson,
-e.g. by providing the answer to a commonly-asked question.
-
-::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-## Math
-
-One of our episodes contains $\LaTeX$ equations when describing how to create
-dynamic reports with {knitr}, so we now use mathjax to describe this:
-
-`$\alpha = \dfrac{1}{(1 - \beta)^2}$` becomes: $\alpha = \dfrac{1}{(1 - \beta)^2}$
-
-Cool, right?
-
-::::::::::::::::::::::::::::::::::::: keypoints
-
-- Use `.md` files for episodes when you want static content
-- Use `.Rmd` files for episodes when you need to generate output
-- Run `sandpaper::check_lesson()` to identify any issues with your lesson
-- Run `sandpaper::build_lesson()` to preview your lesson locally
-
-::::::::::::::::::::::::::::::::::::::::::::::::
-
-[r-markdown]: https://rmarkdown.rstudio.com/
+* The shared memory optimisation animation (using Gemini 3).
