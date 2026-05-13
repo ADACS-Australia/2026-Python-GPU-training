@@ -194,6 +194,21 @@ On my machine, this first kernel is fast enough to allow us to image the full se
 
 ![](fig/fornaxA-fulldata.png)
 
+::: callout
+
+Do you think it would be possible to write this kernel using CuPy's array-level operations and broadcasting rules? What kind of challenges might you encounter and how could they be mitigated?
+
+:::
+
+::: instructor
+
+Like with the DFT, this would be two-fold operation: a broadcasting operation that would produce a 3-dimensional array, following by a reduction along one axis. The sheer amount of data would mean this would not fit in memory. Some mitigations include:
+
+* Batching the data by repeatedly processing bounded chunks of the input data that will fit in memory
+* Or alternatively, processing all input data but for a limited number of pixels at a time, and iterating over the full image from in Python
+
+:::
+
 ## An aside: Profiling with NSIGHT
 
 Up till now we have used simple timers to measure performance. NVIDIA provides an alternative, extremely detailed set of benchmarking tools:

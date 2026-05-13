@@ -169,10 +169,6 @@ When a kernel is run, the work is distributed in the following manner:
 1. The GPU scheduler parcels off thread blocks, and enqueues it to each streaming multiprocessor (SM) as it has some availability.
 2. Each SM is then, in turn, responsible for scheduling the thread block to run as a series of warps (32 or 64 threads that run in lockstep) as soon as it has idle cores.
 
-Pictorially, this looks something like this:
-
-![]episodes/fig/gpu-scheduling.png)
-
 You might wonder at this point: threads make sense as they're the fundamental unit of parallelisation, but why do I need to group them into blocks? And the answer is linked to the hardware design of the GPU. Inter-thread coordination, synchronisation and communication can only occur _within_ a SM, which in turn means only within a thread block. So far we've seen kernel examples that don't require these facilities, but many workloads (and optimisations) need inter-thread coordination or communication.
 
 There's a few things to factor in when choosing a grid size:

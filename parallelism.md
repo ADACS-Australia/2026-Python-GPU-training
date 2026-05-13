@@ -62,7 +62,7 @@ In both cases, the programming model is quite restrictive:
 * Communication between threads is very limited and, for the most part, each kernel must proceed independently
 * Computation across each thread proceeds in lockstep: conditions or branches that result in divergence can be costly
 
-**Example:** To return to the bike example, data parallelism would take as inputs all the bike parts, and each worker would assemble a bike in identical fashion at an identical pace. There would be no possibility for customisation.
+**Example:** To return to the bike example, data parallelism would take as inputs all the bike parts, and each worker would assemble a bike in identical fashion at an identical pace. Customisation is only possible in this context based on providing unique inputs, for example, uniquely coloured bike parts. There would be no possibility for customising _how_ the bike is put together.
 
 GPUs are built around data parallelism and gain many of their speed advantages from the associated restrictive programming model.
 
