@@ -1249,18 +1249,16 @@ coalescing</em>.</p>
 <h3 class="callout-title">Bank conflicts</h3>
 <div class="callout-content">
 <p>Accessing shared memory comes with its own complications, one of
-which are <em>bank conflicts</em>. Shared memory is divided into memory
-banks and each bank can address only one thread at a time. When multiple
-threads within a warp request shared memory that is controlled by the
-same memory bank, a bank conflict occurs and the operations will be
-serialised. That is, they will be forced to occur one after the
-other.</p>
+which are <em>bank conflicts</em>. Shared memory operations must go via
+a limited number of memory banks, and if multiple threads make requests
+to the same memory bank the resulting conflict will force the operations
+to be serialised. That is, to be performed one after the other.</p>
 <p>Modern NVIDIA GPUs have 32 memory banks. Each bank is responsible for
-32 bits of memory, with bank 1 responsible for the first 32 bits, bank 2
-responsible for the next 32 bits, and so on and repeating. <strong>To
-avoid conflicts, the optimal pattern to access a shared memory is to
-ensure that each thread within the warp reads from a unique address,
-modulo 32 bits.</strong></p>
+a 32 bit chunk of memory, with bank 1 responsible for the first 32 bits,
+bank 2 responsible for the next 32 bits, and so on, looping around every
+32 chunks. <strong>To avoid conflicts, the optimal pattern to access
+shared memory is to ensure that each thread within the warp reads from a
+unique address, modulo 32 bits.</strong></p>
 <p>You might notice that the 32 bit bank width seems to make bank
 conflicts inevitable when using 64 bit data. Some texts recommend
 splitting your 64 bit type into two 32 bit floats and assembling the
