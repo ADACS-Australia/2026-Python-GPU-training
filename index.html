@@ -392,37 +392,7 @@ Fourier transform</a>
 </li>
 <li>Complex numbers (and, for example, <a href="https://en.wikipedia.org/wiki/Euler's_formula" class="external-link">Euler’s
 formula</a>)</li>
-</ul></section><section><h2 class="section-heading" id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a></h2>
-<hr class="half-width"><p>You will need a computer with an NVIDIA GPU and <a href="https://developer.nvidia.com/cuda/toolkit" class="external-link">CUDA toolkit</a>
-installed. (CuPy <em>does</em> have some support AMD GPUs, but
-<code>numba-cuda</code> does not.)</p>
-<p>We recommend installing the requisite packages using <a href="https://docs.astral.sh/uv/" class="external-link"><code>uv</code></a> (although
-<code>pip</code> should work too):</p>
-<pre class="shell"><code>$ uv init gpu-tutorial
-
-$ cd gpu-tutorial
-
-$ uv add numpy \
-       numba \
-       numba-cuda \
-       cupy \
-       matplotlib</code></pre>
-<p>We will frequently omit imports from the code snippets listed
-throughout this tutorial. The following imports should be assumed:</p>
-<div class="codewrapper sourceCode" id="cb2">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a><span class="co"># Python imports</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a><span class="im">import</span> math</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="co"># Package imports</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="im">import</span> cupy</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a><span class="im">import</span> cupyx</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="im">from</span> numba <span class="im">import</span> cuda, njit, prange</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre>
-</div>
-</section><section><h2 class="section-heading" id="ai-declaration">AI Declaration<a class="anchor" aria-label="anchor" href="#ai-declaration"></a></h2>
+</ul></section><section><h2 class="section-heading" id="ai-declaration">AI Declaration<a class="anchor" aria-label="anchor" href="#ai-declaration"></a></h2>
 <hr class="half-width"><p>With the exception of the following, no AI or LLM tools were used to
 prepare these notes in any capacity (including planning, writing, or
 otherwise):</p>
@@ -452,7 +422,7 @@ Fourier transform</a>
 </li>
 <li>Complex numbers (and, for example, <a href="https://en.wikipedia.org/wiki/Euler's_formula" class="external-link">Euler’s
 formula</a>)</li>
-</ul></section><section><h2 class="section-heading" id="setup-1">Setup<a class="anchor" aria-label="anchor" href="#setup-1"></a></h2>
+</ul></section><section><h2 class="section-heading" id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a></h2>
 <hr class="half-width"><p>You will need a computer with an NVIDIA GPU and <a href="https://developer.nvidia.com/cuda/toolkit" class="external-link">CUDA toolkit</a>
 installed. (CuPy <em>does</em> have some support AMD GPUs, but
 <code>numba-cuda</code> does not.)</p>
@@ -477,9 +447,10 @@ throughout this tutorial. The following imports should be assumed:</p>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="co"># Package imports</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="im">import</span> cupy</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="im">from</span> numba <span class="im">import</span> cuda, njit, prange</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a><span class="im">import</span> cupyx</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="im">from</span> numba <span class="im">import</span> cuda, njit, prange</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre>
 </div>
 <!--
 Place links that you need to refer to multiple times across pages here. Delete
