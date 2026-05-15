@@ -71,10 +71,6 @@ Using matplotlib's `imshow()`, save a figure of the real components of the image
 Note: below we reduce the data by 50x to speed things up. If things take too long for you, try reducing the data even more aggressively.
 
 ```python
-import matplotlib.pyplot as plt
-from numba import njit, prange
-import numpy as np
-
 @njit(parallel=True)
 def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
     pass
@@ -609,7 +605,6 @@ Then proceed to complete the remaining TODOs.
 
 **Beware:** We must ensure that each thread in a thread block participates in cache generation. For example, the condition `if lmpx < img.size` must no longer result in some threads prematurely terminating. Instead, these "remainder" threads must still continue to play their role in populating and refreshing their associated index in the caches (to be used by the other threads in its thread block) even though they ultimately do not write out to global memory.
 
-```python
 ```python
 @cuda.jit
 def kernel(us, vs, ws, data, ls, ms, ndashes, img):

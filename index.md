@@ -82,6 +82,7 @@ import math
 
 # Package imports
 import cupy
+import cupyx
 import matplotlib.pyplot as plt
 from numba import cuda, njit, prange
 import numpy as np
