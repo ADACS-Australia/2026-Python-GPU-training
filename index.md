@@ -16,7 +16,11 @@ This course can be separated into two days:
 
 * **Day 2**
 
-   * Kernel optimisation
+   * Kernel optimisation, including:
+      * Floating point precision
+      * Shared memory optimisations
+      * Thread coarsening
+      * Explicit FMA instructions
 
 ### Why use GPU acceleration?
 
@@ -88,3 +92,4 @@ import numpy as np
 With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
 
 * The shared memory optimisation animation (using Gemini 3).
+* Code proofing and final feedback (Claude 4.6)

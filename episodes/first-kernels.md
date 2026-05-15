@@ -30,17 +30,17 @@ Let's return to the example of adding two vectors elementwise. As a simple loop 
 ```python
 import numpy as np
 
-def adder(xs, ys):
-    zs = np.empty_like(xs)
+def adder(xs, ys, zs):
     for i in range(len(xs)):
         zs[i] = xs[i] + ys[i]
 
 xs = np.random.normal(size=1000)
 ys = np.random.normal(size=1000)
-adder(xs, ys)
+zs = np.empty_like(xs)
+adder(xs, ys, zs)
 ```
 
-This is an ideal candidate for data parallelism, since each iteration of the loop is indepedent.
+This is an ideal candidate for data parallelism, since each iteration of the loop is independent.
 
 In a parallel context, the interior of the loop is referred to as a _kernel._ The kernel is a function that is called repeatedly and identically for each parallel iteration. A kernel depends on one key bit of information: the index `i`. This index tells the kernel "where" it is, and in this case which part of the input and output vectors are its concern.
 
@@ -63,7 +63,7 @@ N = 1000
 xs = np.random.normal(size=N)
 ys = np.random.normal(size=N)
 zs = np.empty_like(xs)
-adder(xs, ys)
+adder(xs, ys, zs)
 ```
 
 In GPU programming, your work will be all about writing the kernel itself. The outer loop, on the other hand, is something that the GPU will manage for you. It is up to the GPU to decide how to parallelise that loop, when to run the kernels, and the order they execute in.
@@ -175,9 +175,9 @@ You might wonder at this point: threads make sense as they're the fundamental un
 
 There's a few things to factor in when choosing a grid size:
 
-- Ideally, choose the number of threads per block to be a multiple of your warp size. This means mulitples of 32 threads for NVIDIA hardware and 64 for AMD. Remember that theads are executed in lockstep as a warp; if its not a round multiple, any excess cores will nonetheless be enrolled in the warp with their result ignored.
+- Ideally, choose the number of threads per block to be a multiple of your warp size. This means multiples of 32 threads for NVIDIA hardware and 64 for AMD. Remember that theads are executed in lockstep as a warp; if its not a round multiple, any excess cores will nonetheless be enrolled in the warp with their result ignored.
 - Don't make the threads per block too large. You want to strike a balance where you have a lot of blocks so that each SM has a queue of work that it can cycle through as its cores become idle; at the same time you want to ensure the blocks are large enough to mitigate overheads from block scheduling.
-- Rarely will a grid size match the problem size. Whilst your threads per block must be a multiple of 32, we wouldn't expect your data to also also be an even multiple. When sizing your grid, you'll need to ensure your kernel includes a condition that checks that its index lies within the data.
+- Rarely will a grid size match the problem size. Whilst your threads per block must be a multiple of 32, we wouldn't expect your data to also be an even multiple. When sizing your grid, you'll need to ensure your kernel includes a condition that checks that its index lies within the data.
 
 A good rule of thumb for threads per block is somewhere between 128 to 1024 threads. As always benchmark your code.
 
@@ -185,8 +185,8 @@ You grid can 1, 2 or 3 dimensional. As an example, if we were adding two large m
 
 ```python
 @cuda.jit
-def add(xs, ys, zs):
-    i, j = cuda.grid(2)  # The argument to grid determimines the dimension of the grid
+def adder(xs, ys, zs):
+    i, j = cuda.grid(2)  # The argument to grid determines the dimension of the grid
 
     if i < xs.shape[0] and j < xs.shape[1]:
         zs[i, j] = xs[i, j] + ys[i, j]
@@ -195,7 +195,7 @@ xs = cupy.random.normal(size=(8192, 8192))
 ys = cupy.random.normal(size=(8192, 8192))
 zs = cupy.empty_like(xs)
 
-add[(256, 256), (32, 32)](xs, ys, zs)
+adder[(256, 256), (32, 32)](xs, ys, zs)
 ```
 
 In practice, it is more common to a one dimensional index.
@@ -218,7 +218,7 @@ You should be comfortable with both versions as you'll see them used interchanga
 
 ::: challenge
 
-Return to `add_gpu` and modify the code so that it ensures the full arrays are added irrespective of the grid size. That is, ensure the each element is added whether the grid is sized too small or too large.
+Return to `adder_gpu` (with1D grid) and modify the code so that it ensures the full arrays are added _irrespective_ of the grid size. That is, ensure the each element is added whether the grid is sized too small or too large.
 
 Hint: try replacing the `if` condition with a `for` loop having a step size given by `cuda.gridsize(1)`.
 
@@ -242,7 +242,7 @@ def adder_gpu(xs, ys, zs):
 
 :::
 
-Using a for loop like this is a very common idiom in kernel design, known as a _grid stride loop_. As before, it ensures we stay within the bounds of the array, but it doesn't rely on the grid being properly sized. Later, you'll see it lends itself to other common optimisations.
+Using a for loop like this is a very common idiom in kernel design, known as a _grid stride loop_. As before, it ensures we stay within the bounds of the array, but it doesn't rely on the grid being at least as large as the problem. Later, you'll see it lends itself to other common optimisations.
 
 When the block size it set to 1, the GPU is able to utilise only one of its SMs. The rest will sit idle, resulting in very poor utilisation of the GPU, also known as _occupancy_.
 
@@ -281,13 +281,13 @@ Warp divergence is expensive since it wastes processor cycles. You will want to 
 
 In the previous `adder` kernel, you will notice warp divergence occurs in exactly one warp: the warp whose index range breaches the length of the underlying arrays.
 
-## Mutliplier
+## Multiplier
 
 ::: challenge
 
-With just minor modifications, change the 1D `adder` kernel to a `mutliplier` kernel that computes elementwise multiplication. e.g. $z_i = x_i \times y_i$.
+With just minor modifications, change the 1D `adder_gpu` kernel to a `multiplier` kernel that computes elementwise multiplication. e.g. $z_i = x_i \times y_i$. Use the grid stride loop pattern.
 
-Add a test to ensure correctness.
+Also add a test to ensure correctness.
 
 ```python
 import math
@@ -322,8 +322,8 @@ from numba import cuda
 
 @cuda.jit
 def multiplier(xs, ys, zs):
-    i = cuda.grid(1)
-    zs[i] = xs[i] * ys[i]
+    for i in range(cuda.grid(1), len(xs), cuda.gridsize(1)):
+        zs[i] = xs[i] * ys[i]
 
 N = 12_000_000
 xs_d = cupy.random.normal(size=N)
@@ -697,7 +697,7 @@ To do this, we're going to introduce shared memory: shared memory is memory that
 - The thread block will sum the contents of its shared memory using a binary reduction (see diagram).
 - Finally, thread ID=0 of the thread block will perform an atomic add to global memory.
 
-<img "episodes/fig/binary-reduction.png" height=300 alt="Binary reduction">
+<img src="fig/binary-reduction.png" height=300 alt="Binary reduction">
 
 **Caption:** An illustration of a binary reduction within thread block. On each step, only half the number of threads participate in the reduction as in the previous step. [[Source]](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
 
@@ -717,21 +717,20 @@ def sum(xs, acc):
     # Every thread loads its partial sum into its associated shared memory address
     tid = cuda.threadIdx.x  # thread ID - not grid ID!
     shared[tid] = _acc
-    cuda.syncthreads()
 
     # Reduction of the shared memory across the thread block
-    for offset in (128, 64, 32, 16, 8, 4, 2):
+    for offset in (128, 64, 32, 16, 8, 4, 2, 1):
+        cuda.syncthreads()
         if tid < offset:
             shared[tid] += shared[tid + offset]
-            cuda.syncthreads()
 
     # Thread ID=0 adds the entire thread block sum to global memory
     if tid == 0:
-        cuda.atomic.add(acc, 0, shared[0] + shared[1])
+        cuda.atomic.add(acc, 0, shared[0])
 ```
 
 Notice the use of `cuda.syncthreads()`: this is a synchronisation method that ensures all threads in a thread block have reached this point. (Remember that only warps execute in lockstep.) This is necessary once we start interacting with shared memory, since we need to guarantee that the entirety of the thread block has fully written to its shared memory address before any thread tries to make a read.
 
 Benchmarking shows this function is now quite fast. The cost of the atomic add is now mitigated by the fact that it is called only once for every thread block. For large arrays, this function is almost as fast as the highly optimised `cupy.sum()`.
 
-For more information about advanced reduction optimisations, I recommend these [NVIDIA slides](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf).
+For more information about advanced reduction optimisations including use `warp` intrinsics, I recommend these [NVIDIA slides](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf).

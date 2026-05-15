@@ -21,7 +21,7 @@ title: "CuPy: A Numpy-like GPU experience"
 
 [Numpy's](https://numpy.org/) innovation has been to make high-performance [array programming](https://en.wikipedia.org/wiki/Array_programming) easily accessible from within Python. It has done this thanks to its multidimensional `ndarray` type which can be manipulated using scalar and elementwise operators, a range of mathematical functions, and very flexible broadcasting rules.
 
-CuPy is the GPU equivalent to Numpy, and likewise it is based on its own `ndarray` type that lives on the GPU. If you are comforable with numpy, CuPy should feel very familiar. Before attempting more advanced GPU programming techniques, CuPy should be your first port of call.
+CuPy is the GPU equivalent to Numpy, and likewise it is based on its own `ndarray` type that lives on the GPU. If you are comfortable with numpy, CuPy should feel very familiar. Before attempting more advanced GPU programming techniques, CuPy should be your first port of call.
 
 ## CPU arrays versus GPU arrays
 
@@ -29,7 +29,7 @@ Numpy's and CuPy's arrays are both multidimensional arrays, and they both expose
 
 They differ in _where_ they reside. The CPU (host) and the GPU (device) each have their own independent memory, which is something we will cover in much more detail later. Objects stored in host memory can't be "seen" by the GPU without first transferring the data across to the device, and vice versa.
 
-Numpy arrays exist in host memory and CuPy arrays exist on the GPU. To perform operations involving multiple arrays you must ensure that each array is within the same portion of memory: if all the arrays are on the host, the computation will be performed by the CPU; if they are all on the device, the computation will be peformed by the GPU.
+Numpy arrays exist in host memory and CuPy arrays exist on the GPU. To perform operations involving multiple arrays you must ensure that each array is within the same portion of memory: if all the arrays are on the host, the computation will be performed by the CPU; if they are all on the device, the computation will be performed by the GPU.
 
 It's up to you to handle transferring arrays back and forth between the host and device.
 
@@ -56,7 +56,7 @@ arr2_d = cupy.array(range(1, 1000, step=2))  # from a range
 arr3_d = cupy.array([x**2 for x in range(1, 100)])  # from a list comprehension
 
 # Or transfer across an existing numpy array:
-arr4 = np.random.normal(shape=1_000_000)
+arr4 = np.random.normal(size=1_000_000)
 arr4_d = cupy.array(arr4)  # this is a copy!
 
 # And to return back to the host:
@@ -188,16 +188,16 @@ print(results)
 
 The benchmark is significantly longer in this version due to the time taken for memory to be copied from host to device.
 
-This is an important consideration to make in all your work with GPUs: even if the computation itself is faster, you must be careful that setup costs like memory transfers don't eclipse you're savings.
+This is an important consideration to make in all your work with GPUs: even if the computation itself is faster, you must be careful that setup costs like memory transfers don't eclipse your savings.
 
 :::
 
 
 ## Numpy-style computation
 
-Addition, subtraction, trignometric functions and so: these all work just as they with Numpy.
+Addition, subtraction, trigonometric functions and so: these all work just as they with Numpy.
 
-Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{x!}$. In numpy would could compute this expansion as:
+Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy would could compute this expansion as:
 
 ```python
 import math
@@ -209,7 +209,8 @@ def exp(xs, ys, degree=12):
 
 xs = np.random.uniform(-1, 1, size=1_000_000)
 ys = np.zeros_like(xs)
-np.testing.assert_allclose(exp(xs, ys), np.exp(xs))
+exp(xs, ys)
+np.testing.assert_allclose(ys, np.exp(xs))
 ```
 
 We can ensure these computations occur on the GPU simply by swapping in GPU arrays:
@@ -224,7 +225,8 @@ def exp(xs, ys, degree=12):
 
 xs = cupy.random.uniform(-1, 1, size=1_000_000)
 ys = cupy.zeros_like(xs)
-cupy.testing.assert_allclose(exp(xs, ys), cupy.exp(xs))
+exp(xs, ys)
+cupy.testing.assert_allclose(ys, cupy.exp(xs))
 ```
 
 To have this compute on the GPU we did just two things:
@@ -236,11 +238,36 @@ The nitty gritty of _how_ CuPy compiles this to GPU code and the way in which it
 
 ### Fusing operations
 
-Just like numpy, a series of array operations are applied to CuPy arrays sequentially. This means that each operator (e.g. an addition, a scaler multiplication, perhaps a trigonometric function) is applied as a separate kernel, which must in turn read and write through the entirety of the arrays each time. This kernel dispatch overhead and the associated memory churn can be a considerable performance penalty.
+Just like numpy, a series of array operations are applied to CuPy arrays sequentially. This means that each operator (e.g. an addition, a scalar multiplication, perhaps a trigonometric function) is applied as a separate kernel, which must in turn read and write through the entirety of the arrays each time. This kernel dispatch overhead and the associated memory churn can be a considerable performance penalty.
 
-CuPy offers the (experimental) ability to fuse _simple_ operators into a single operation by using the function decorator `@cupy.fuse`. In practice this means the operators are applied as a single kernel and in a single pass of the array
+CuPy offers the (experimental) ability to fuse multiple operations into a single pass by using the function decorator `@cupy.fuse`. In practice this means the operators are applied as a single kernel and in a single pass of the array. Conceptually, it's like taking multiple loops of the same data and merging them into just one:
 
-Try running the following on your own machine and see how the speed compares to the non-fused example:
+```python
+# VERSION 1: Non fused
+for i in range(len(xs)):
+    xs[i] = xs[i] + 1
+
+for i in range(len(xs)):
+    xs[i] = 2 * xs[i]
+
+for i in range(len(xs)):
+    xs[i] = np.cos(xs[i])
+
+# VERSION 2: Fused into a single loop
+for i in range(len(xs)):
+    xs[i] = np.cos(2 * (xs[i] + 1))
+```
+
+This functionality is experimental, and it comes with some limitations:
+
+- Arrays must be fully allocated _outside_ the decorated function
+- Array shapes must be fixed: reductions (like sum) or certain broadcasting operations that expand singleton axes will perform poorly
+
+When fusing works, it works well. However, it can take some time to separate out the core computation that performs best with `@cupy.fuse`. As always, test and benchmark your code.
+
+::: challenge
+
+Try running the following on your own machine and compare the performance to the non-fused example:
 
 ```python
 import math
@@ -254,18 +281,19 @@ def exp_fused(xs, ys, degree=12):
 
 xs = cupy.random.uniform(-1, 1, size=1000)
 ys = cupy.zeros_like(xs)
-cupy.testing.assert_allclose(exp_fused(xs, ys), cupy.exp(xs))
+exp_fused(xs, ys)
+cupy.testing.assert_allclose(ys, cupy.exp(xs))
 
 print(cupyx.profiler.benchmark(lambda: exp_fused(xs, ys), n_repeat=100))
 ```
 
-On my machine I see an approximately 15x speed improvement. The fusing decorator is experiemental and works best when the contents of the function are purely elementwise. Operations like array allocations, certain types of broadcasting, or sums may break or not cause the speedup you'd expect and are best omitted from the fused function. As always, test and benchmark your code.
+:::
 
 ## Broadcasting
 
 Most complex computation will rely on Numpy's [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html). Broadcasting rules control how array dimensions are matched, with special rules that apply to dimensions having a length of 1. We are going to assume you are already familiar with these rules and work through a couple of examples that demonstrate the flexibility of CuPy.
 
-### Example: Matrix multuplication
+### Example: Matrix multiplication
 
 Consider the multiplication of two matrices: $A$ (sized $m \times n$) and $B$ (sized $n \times p$). Their product $C$ is a $m \times p$ matrix having elements $c_{ij} = \sum_{k=1}^n a_{ik} b_{kj}$.
 
@@ -420,8 +448,8 @@ Compute the [outer product](https://en.wikipedia.org/wiki/Outer_product) of two 
 ```python
 import cupy
 
-x = cupy.random.normal(shape=10_000)
-y = cupy.random.normal(shape=10_000)
+x = cupy.random.normal(size=10_000)
+y = cupy.random.normal(size=10_000)
 
 # To do...
 ```
@@ -481,10 +509,10 @@ Try benchmarking the results: is it faster?
 
 When you run a FFT the CUDA library actually does two things:
 
-* It creates a plan: depending on your input data, the axes you care about, etc. it needs to work out how best to do this. This will almost always involve reserving some memory to use as a working space.
+* It creates a plan: depending on your input data, the axes you care about, etc. it works out an optimal strategy to perform the FFT. This will almost always involve reserving some memory to use as a working space.
 * It then executes a plan.
 
-If you're executing the same FFT multiple times you might want to save on the overhead of creating the plan. CuPy lets you do this:
+Plan creation creates an overhead. By default, newer versions of CuPy automatically cache these plans and will reuse the plan for identically configured FFTs. However, it is also possible to manually create and manage plans yourself which you might like to do to ensure plan reuse. For example:
 
 ```python
 import cupy
@@ -501,5 +529,3 @@ plan = cupyx.scipy.fft.get_fft_plan(a, axes=(1, 2))
 with plan:
     A = cupy.fft.fftn(a, axes=(1, 2))
 ```
-
-(Although in my testing, this doesn't provide a speed-up, and possibly isn't working as expected in the current versions.)

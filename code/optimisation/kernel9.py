@@ -57,13 +57,13 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                 pixels[i, 1] = cuda.fma(datum.imag, cos, pixels[i, 1])
 
             # Daisychain the values around members of the warp
-            u = cuda.shfl_sync(0xffffff, u, nextwarpid)
-            v = cuda.shfl_sync(0xffffff, v, nextwarpid)
-            w = cuda.shfl_sync(0xffffff, w, nextwarpid)
+            u = cuda.shfl_sync(0xFFFFFFFF, u, nextwarpid)
+            v = cuda.shfl_sync(0xFFFFFFFF, v, nextwarpid)
+            w = cuda.shfl_sync(0xFFFFFFFF, w, nextwarpid)
 
             datum = complex(
-                cuda.shfl_sync(0xffffff, datum.real, nextwarpid),
-                cuda.shfl_sync(0xffffff, datum.imag, nextwarpid)
+                cuda.shfl_sync(0xFFFFFFFF, datum.real, nextwarpid),
+                cuda.shfl_sync(0xFFFFFFFF, datum.imag, nextwarpid)
             )
 
     for i in range(THREAD_COARSEN):
