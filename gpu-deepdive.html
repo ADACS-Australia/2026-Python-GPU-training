@@ -381,9 +381,9 @@ release of the CUDA library in 2006. Much later in 2016, AMD released
 ROCm which provided a similar GPGPU interface to its own hardware. There
 are also open source APIs including OpenCL and Sycl, Microsoft’s OneAPI
 which claims to bridge a range of accelerators, as well as AMD’s
-cross-platform compatility layer known as HIP. Despite these offerings,
-there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA
-API remains dominant.</p>
+cross-platform compatibility layer known as HIP. Despite these
+offerings, there remains strong vendor lock-in, and NVIDIA and its
+proprietary CUDA API remains dominant.</p>
 <p>Today, GPUs have diverged somewhat in their design depending on
 whether they are destined to function as a true <em>graphics</em>
 processing device or as more general purpose compute
@@ -485,7 +485,7 @@ offs:</p>
 </tr></tbody></table><p><strong>Global memory</strong> is where all input data must start and
 ultimately where the results of any computation must be written. When we
 transfer memory from host to device, or back again, we are using global
-memory. It is the largest store of memory on the GPU and is visibile by
+memory. It is the largest store of memory on the GPU and is visible by
 all threads on the GPU. It is fully controlled by the host: the host
 allocates the memory and chooses when to destroy it. It thus outlives
 any kernels that run in the interim.</p>
@@ -493,7 +493,7 @@ any kernels that run in the interim.</p>
 memory that can be utilised by a thread block, and which lives only as
 long as the thread block. Shared memory resides within the SM itself and
 is much faster than global memory. Shared memory is often used by thread
-block as a shared cache or as a means to communicate and coordinate
+blocks as a shared cache or as a means to communicate and coordinate
 work.</p>
 <p><strong>Registers</strong> are the collection of individual variables
 used by a single thread. For example, a register might be used by a loop
@@ -565,8 +565,8 @@ communicate and coordinate with each other quite efficiently, which is
 often essential for many types of problems.</p>
 <p>This <em>software</em> hierarchy of grid &gt; thread blocks &gt;
 threads has a corollary in the <em>hardware</em> hierachy of GPU &gt;
-SMs &gt; cores, but it’s important to keep in mind that are separate
-concepts:</p>
+SMs &gt; cores, but it’s important to keep in mind that they are
+separate concepts:</p>
 <ul><li>You can have vastly many more thread blocks than SMs: thread blocks
 are enqueued to SMs when they have capacity, and each SM usually has a
 number of thread blocks enqueued at any one time.</li>

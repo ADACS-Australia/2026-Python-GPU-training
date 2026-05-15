@@ -479,14 +479,14 @@ index of the kernel.</strong> Unlike our previous example, the index is
 not passed in as an argument. We’ve also added a condition to check the
 index is within range.</li>
 <li>
-<strong>We’ve allocated our GPU kernels using
+<strong>We’ve allocated our GPU arrays using
 <code>CuPy.array()</code>.</strong> CuPy GPU arrays are compatible with
 <code>numba.cuda</code> kernels. Numba provides its own methods too,
 such as <code>cuda.device_array()</code>, <code>cuda.to_device()</code>
 and <code>array_d.copy_to_host()</code>, and you might want to use these
 instead if you don’t want CuPy as a dependency in your project.</li>
 <li>
-<strong>We’ve called the <code>add()</code> function by first
+<strong>We’ve called the <code>adder_gpu()</code> function by first
 providing grid dimensions: blocks and threads per block.</strong> Grid
 dimensions configure <em>how many times</em> the kernel is run and are
 directly related to the kernel’s index. Each time you call a GPU kernel,
@@ -521,7 +521,7 @@ their respective speeds swaps?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -602,8 +602,8 @@ coordination or communication.</p>
 <p>There’s a few things to factor in when choosing a grid size:</p>
 <ul><li>Ideally, choose the number of threads per block to be a multiple of
 your warp size. This means multiples of 32 threads for NVIDIA hardware
-and 64 for AMD. Remember that theads are executed in lockstep as a warp;
-if its not a round multiple, any excess cores will nonetheless be
+and 64 for AMD. Remember that threads are executed in lockstep as a
+warp; if its not a round multiple, any excess cores will nonetheless be
 enrolled in the warp with their result ignored.</li>
 <li>Don’t make the threads per block too large. You want to strike a
 balance where you have a lot of blocks so that each SM has a queue of
@@ -636,7 +636,7 @@ case our code might look like:</p>
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a></span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a>adder[(<span class="dv">256</span>, <span class="dv">256</span>), (<span class="dv">32</span>, <span class="dv">32</span>)](xs, ys, zs)</span></code></pre>
 </div>
-<p>In practice, it is more common to a one dimensional index.</p>
+<p>In practice, it is more common to use a one dimensional index.</p>
 <p>In actual fact, <code>cuda.grid()</code> and its sibling
 <code>cuda.gridsize()</code> (which returns the total number of threads
 across the grid) are helper functions. They wraps the more primitive
@@ -695,7 +695,7 @@ and threads per block to 256? Why?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <p>Your kernel should look something like this:</p>
 <div class="codewrapper sourceCode" id="cb6">
@@ -715,7 +715,7 @@ known as a <em>grid stride loop</em>. As before, it ensures we stay
 within the bounds of the array, but it doesn’t rely on the grid being at
 least as large as the problem. Later, you’ll see it lends itself to
 other common optimisations.</p>
-<p>When the block size it set to 1, the GPU is able to utilise only one
+<p>When the block size is set to 1, the GPU is able to utilise only one
 of its SMs. The rest will sit idle, resulting in very poor utilisation
 of the GPU, also known as <em>occupancy</em>.</p>
 <p>When the thread size is too large, your kernel may crash. When
@@ -741,7 +741,7 @@ indices directly, instead of <code>grid()</code> and
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -773,8 +773,8 @@ the warp then we get <em>warp divergence</em>. In this case, the warp
 must evaluate both branches of the condition, and due to the lockstep
 nature of SIMT, it will do this sequentially: first one branch, and then
 the other. Each thread that is not part of the current conditional
-branch will be masked, essentially performing a “no-op” for eachof their
-respective processor cycles.</li>
+branch will be masked, essentially performing a “no-op” for each of
+their respective processor cycles.</li>
 </ul><p>Warp divergence is expensive since it wastes processor cycles. You
 will want to ensure warp divergence occurs in as few warps as possible,
 and this plays a factor in both kernel design and grid
@@ -826,7 +826,7 @@ y_i\)</span>. Use the grid stride loop pattern.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -935,7 +935,7 @@ why?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
 <div class="accordion-body">
 <p>Two considerations stand out when comparing the kernel options:</p>
 <ul><li>
@@ -1007,7 +1007,7 @@ definition and grid configuration.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
 <div class="accordion-body">
 <p>One solution looks like this:</p>
 <div class="codewrapper sourceCode" id="cb13">
@@ -1025,8 +1025,8 @@ definition and grid configuration.</p>
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a>threads <span class="op">=</span> <span class="dv">16</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a>nblockx <span class="op">=</span> math.ceil(C.size[<span class="dv">0</span>] <span class="op">/</span> threads)</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>nblocky <span class="op">=</span> math.ceil(C.size[<span class="dv">1</span>] <span class="op">/</span> threads)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a>nblockx <span class="op">=</span> math.ceil(C.shape[<span class="dv">0</span>] <span class="op">/</span> threads)</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>nblocky <span class="op">=</span> math.ceil(C.shape[<span class="dv">1</span>] <span class="op">/</span> threads)</span>
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a>matmul[(nblockx, nblocky), (threads, threads)](A, B, C)</span></code></pre>
 </div>
 <p>An alternative is to store the partial sum in a <em>local</em>
@@ -1072,7 +1072,7 @@ yourself with the Python function <code>divmod()</code>.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb16">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1141,7 +1141,7 @@ stage, set <code>N</code> to be small (~100).</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb18">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1180,7 +1180,7 @@ parallel? What is the unit of parallelisation?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
 <div class="accordion-body">
 <p>We parallelise over <span class="math inline">\(k\)</span> but not
 <span class="math inline">\(n\)</span>, since including <span class="math inline">\(n\)</span> would introduce race conditions.</p>
@@ -1196,11 +1196,12 @@ parallel? What is the unit of parallelisation?</p>
 <span id="cb19-7"><a href="#cb19-7" tabindex="-1" aria-label="code-block-19-7"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb19-8"><a href="#cb19-8" tabindex="-1" aria-label="code-block-19-8"></a><span class="kw">def</span> dft(xs):</span>
 <span id="cb19-9"><a href="#cb19-9" tabindex="-1" aria-label="code-block-19-9"></a>    Xs <span class="op">=</span> np.zeros_like(xs)</span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a></span>
-<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a>    <span class="cf">for</span> k <span class="kw">in</span> prange(N):</span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>        kernel(k, xs, Xs)</span>
-<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a></span>
-<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a>    <span class="cf">return</span> Xs</span></code></pre>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a>    N <span class="op">=</span> <span class="bu">len</span>(Xs)</span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>    <span class="cf">for</span> k <span class="kw">in</span> prange(N):</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a>        kernel(k, xs, Xs)</span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a></span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1" aria-label="code-block-19-15"></a>    <span class="cf">return</span> Xs</span></code></pre>
 </div>
 </div>
 </div>
@@ -1240,7 +1241,7 @@ computation. That is:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb20">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>

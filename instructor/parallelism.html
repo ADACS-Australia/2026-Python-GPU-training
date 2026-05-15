@@ -224,9 +224,8 @@
 
     <div id="flush-collapsecurrent" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushcurrent">
       <div class="accordion-body">
-        <ul><li><a href="#serial-programming">Serial programming</a></li>
-<li><a href="#task-parallelism">Task Parallelism</a></li>
-<li><a href="#data-parallelism">Data Parallelism</a></li>
+        <ul><li><a href="#why-go-parallel">Why go parallel?</a></li>
+<li><a href="#flavours-of-parallelism">Flavours of parallelism</a></li>
 <li><a href="#the-pitfalls-of-parallelism">The pitfalls of parallelism</a></li>
         </ul></div><!--/div.accordion-body-->
     </div><!--/div.accordion-collapse-->
@@ -328,7 +327,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>An introduction to parallelism</h1>
-        <p>Last updated on 2026-05-13 |
+        <p>Last updated on 2026-05-15 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/parallelism.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -368,29 +367,44 @@ correctness.</li>
 </div>
 </div>
 </div>
-<section><h2 class="section-heading" id="serial-programming">Serial programming<a class="anchor" aria-label="anchor" href="#serial-programming"></a></h2>
-<hr class="half-width"><p>Serial programming is by far the simplest programming model and is
-the easiest to reason about.</p>
-<p>Serial programming should always be preferred unless performance
-needs necessitate otherwise.</p>
-</section><section><h2 class="section-heading" id="task-parallelism">Task Parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a></h2>
-<hr class="half-width"><p>Task parallelism divides up the work into different types of jobs.
+<section><h2 class="section-heading" id="why-go-parallel">Why go parallel?<a class="anchor" aria-label="anchor" href="#why-go-parallel"></a></h2>
+<hr class="half-width"><p>The short answer is performance. Serial programs execute one
+instruction at a time, and are ultimately limited by the speed of a
+single core. As clock speeds have stalled since the mid-2000s, the
+industry has shifted to delivering performance through parallelism:
+doing more work simultaneously, rather than doing each piece of work
+faster.</p>
+<p>GPU parallelism specifically trades <em>latency</em> for
+<em>throughput</em>: any single GPU core is slower than a modern CPU
+core, but a GPU can run tens of thousands of tasks simultaneously. If
+your problem can be decomposed into many independent units of work, a
+GPU can process all of them in far less total time than a serial CPU
+could manage.</p>
+</section><section><h2 class="section-heading" id="flavours-of-parallelism">Flavours of parallelism<a class="anchor" aria-label="anchor" href="#flavours-of-parallelism"></a></h2>
+<hr class="half-width"><p>Parallel code comes two principal forms. The first, task parallelism,
+is the principal model of threaded operations on the CPU. The GPU,
+however, makes use of a much more restrictive form a parallelism known
+as data parallelism.</p>
+<div class="section level3">
+<h3 id="task-parallelism">Task Parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a></h3>
+<p>Task parallelism divides up the work into different types of jobs.
 Each task functions autonomously and relies on different communication
 methods between tasks to coordinate the work. Tasks in this model form a
 complex graph structure, with dependencies between nodes.</p>
-<p><strong>Example:</strong> If we consider the bike example, perhaps
-one person assembles frames, another constructs tyres and a third puts
-it all together. This is a bit like how a factory may be organised and
-is called <em>pipelining</em>.</p>
-<p><strong>Example:</strong> If the bikes were made to order. Perhaps
-each person builds each bike in its entirety, customised towards the
-order specification. Depending on the type of customisation, builds may
-take varying amounts of time. This is called a <em>worker pool</em>.</p>
+<p><strong>Example:</strong> Consider the process of building a bike:
+prhaps one person assembles frames, another constructs tyres and a third
+puts it all together. This form of task parallelism is a bit like how a
+factory may be organised and is called <em>pipelining</em>.</p>
+<p><strong>Example:</strong> Consider, instead, the process of building
+customised bikes to order. Here each person builds a bike in its
+entirety, but customised towards the order specification. Depending on
+the type of customisation, builds may take varying amounts of time. This
+type of task parallism is called a <em>worker pool</em>.</p>
 <p>Task parallelism requires careful coordination between tasks:</p>
 <ul><li>In pipelining, tasks may operate a different speeds. This means:
 <ul><li>Data must be passed between tasks in a way that clearly construes
-ownership: for example, there’s no point the assembler trying to install
-partially constructed tyres.</li>
+ownership. For example, there’s no point the assembler trying to install
+tyres that are only partially constructed.</li>
 <li>Buffers or queues must be implemented between tasks to absorb the
 different rates of work</li>
 <li>If upstream queues are empty or downstream queues are full, tasks
@@ -409,10 +423,12 @@ conditions</li>
 <li>Channels and pipes</li>
 <li>Software transactional memory</li>
 <li>Message passing interfaces (e.g. OpenMPI)</li>
-</ul></section><section><h2 class="section-heading" id="data-parallelism">Data Parallelism<a class="anchor" aria-label="anchor" href="#data-parallelism"></a></h2>
-<hr class="half-width"><p>Data parallelism applies a computation to data by dividing up the
-data into small, independent chunks of work. Each thread, however,
-performs identical work.</p>
+</ul></div>
+<div class="section level3">
+<h3 id="data-parallelism">Data Parallelism<a class="anchor" aria-label="anchor" href="#data-parallelism"></a></h3>
+<p>Data parallelism applies a computation to data by dividing up the
+data into small, independent chunks of work. In this model, each thread
+performs identical work on variable inputs.</p>
 <p>Data parallelism is implmented in hardware on the CPU as “single
 instruction, multiple data” (SIMD) and on the GPU as “single
 instruction, multiple thread” (SIMT). The “single instruction” is key:
@@ -432,7 +448,10 @@ Customisation is only possible in this context based on providing unique
 inputs, for example, uniquely coloured bike parts. There would be no
 possibility for customising <em>how</em> the bike is put together.</p>
 <p>GPUs are built around data parallelism and gain many of their speed
-advantages from the associated restrictive programming model.</p>
+advantages from the associated restrictive programming model and the
+simplicity this affords both the software and hardware
+implementation.</p>
+</div>
 </section><section><h2 class="section-heading" id="the-pitfalls-of-parallelism">The pitfalls of parallelism<a class="anchor" aria-label="anchor" href="#the-pitfalls-of-parallelism"></a></h2>
 <hr class="half-width"><p>For all the potential speed benefits that we gain from parallelism,
 it is important to be aware of a number of important downsides to
@@ -440,8 +459,8 @@ parallelism.</p>
 <ul><li>Performance overhead</li>
 <li>Race conditions</li>
 <li>More complex code</li>
-</ul><p>When considering moving code from serial to parallel, weigh up these
-costs to ensure</p>
+</ul><p>When considering moving code from serial to parallel, you will need
+to carefully weigh these kinds of costs.</p>
 <div class="section level3">
 <h3 id="performance-overhead">Performance overhead<a class="anchor" aria-label="anchor" href="#performance-overhead"></a></h3>
 <p>Parallel code doesn’t come for free. In fact, sometimes throwing
@@ -679,7 +698,7 @@ any links that you are not going to use.
   "url": "https://carpentries.github.io/workbench-template-md/instructor/parallelism.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/parallelism.html",
   "dateCreated": "2026-05-15",
-  "dateModified": "2026-05-13",
+  "dateModified": "2026-05-15",
   "datePublished": "2026-05-15"
 }
 

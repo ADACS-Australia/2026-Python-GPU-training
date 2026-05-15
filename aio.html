@@ -362,7 +362,7 @@
         
 <section id="aio-parallelism"><p>Content from <a href="parallelism.html">An introduction to parallelism</a></p>
 <hr>
-<p>Last updated on 2026-05-13 |
+<p>Last updated on 2026-05-15 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/parallelism.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -398,35 +398,51 @@ correctness.</li>
 </div>
 </div>
 </div>
-<section><h2 class="section-heading" id="serial-programming">Serial programming<a class="anchor" aria-label="anchor" href="#serial-programming"></a>
+<section><h2 class="section-heading" id="why-go-parallel">Why go parallel?<a class="anchor" aria-label="anchor" href="#why-go-parallel"></a>
 </h2>
 <hr class="half-width">
-<p>Serial programming is by far the simplest programming model and is
-the easiest to reason about.</p>
-<p>Serial programming should always be preferred unless performance
-needs necessitate otherwise.</p>
-</section><section><h2 class="section-heading" id="task-parallelism">Task Parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a>
+<p>The short answer is performance. Serial programs execute one
+instruction at a time, and are ultimately limited by the speed of a
+single core. As clock speeds have stalled since the mid-2000s, the
+industry has shifted to delivering performance through parallelism:
+doing more work simultaneously, rather than doing each piece of work
+faster.</p>
+<p>GPU parallelism specifically trades <em>latency</em> for
+<em>throughput</em>: any single GPU core is slower than a modern CPU
+core, but a GPU can run tens of thousands of tasks simultaneously. If
+your problem can be decomposed into many independent units of work, a
+GPU can process all of them in far less total time than a serial CPU
+could manage.</p>
+</section><section><h2 class="section-heading" id="flavours-of-parallelism">Flavours of parallelism<a class="anchor" aria-label="anchor" href="#flavours-of-parallelism"></a>
 </h2>
 <hr class="half-width">
+<p>Parallel code comes two principal forms. The first, task parallelism,
+is the principal model of threaded operations on the CPU. The GPU,
+however, makes use of a much more restrictive form a parallelism known
+as data parallelism.</p>
+<div class="section level3">
+<h3 id="task-parallelism">Task Parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a>
+</h3>
 <p>Task parallelism divides up the work into different types of jobs.
 Each task functions autonomously and relies on different communication
 methods between tasks to coordinate the work. Tasks in this model form a
 complex graph structure, with dependencies between nodes.</p>
-<p><strong>Example:</strong> If we consider the bike example, perhaps
-one person assembles frames, another constructs tyres and a third puts
-it all together. This is a bit like how a factory may be organised and
-is called <em>pipelining</em>.</p>
-<p><strong>Example:</strong> If the bikes were made to order. Perhaps
-each person builds each bike in its entirety, customised towards the
-order specification. Depending on the type of customisation, builds may
-take varying amounts of time. This is called a <em>worker pool</em>.</p>
+<p><strong>Example:</strong> Consider the process of building a bike:
+prhaps one person assembles frames, another constructs tyres and a third
+puts it all together. This form of task parallelism is a bit like how a
+factory may be organised and is called <em>pipelining</em>.</p>
+<p><strong>Example:</strong> Consider, instead, the process of building
+customised bikes to order. Here each person builds a bike in its
+entirety, but customised towards the order specification. Depending on
+the type of customisation, builds may take varying amounts of time. This
+type of task parallism is called a <em>worker pool</em>.</p>
 <p>Task parallelism requires careful coordination between tasks:</p>
 <ul>
 <li>In pipelining, tasks may operate a different speeds. This means:
 <ul>
 <li>Data must be passed between tasks in a way that clearly construes
-ownership: for example, there’s no point the assembler trying to install
-partially constructed tyres.</li>
+ownership. For example, there’s no point the assembler trying to install
+tyres that are only partially constructed.</li>
 <li>Buffers or queues must be implemented between tasks to absorb the
 different rates of work</li>
 <li>If upstream queues are empty or downstream queues are full, tasks
@@ -448,12 +464,14 @@ conditions</li>
 <li>Channels and pipes</li>
 <li>Software transactional memory</li>
 <li>Message passing interfaces (e.g. OpenMPI)</li>
-</ul></section><section><h2 class="section-heading" id="data-parallelism">Data Parallelism<a class="anchor" aria-label="anchor" href="#data-parallelism"></a>
-</h2>
-<hr class="half-width">
+</ul>
+</div>
+<div class="section level3">
+<h3 id="data-parallelism">Data Parallelism<a class="anchor" aria-label="anchor" href="#data-parallelism"></a>
+</h3>
 <p>Data parallelism applies a computation to data by dividing up the
-data into small, independent chunks of work. Each thread, however,
-performs identical work.</p>
+data into small, independent chunks of work. In this model, each thread
+performs identical work on variable inputs.</p>
 <p>Data parallelism is implmented in hardware on the CPU as “single
 instruction, multiple data” (SIMD) and on the GPU as “single
 instruction, multiple thread” (SIMT). The “single instruction” is key:
@@ -475,7 +493,10 @@ Customisation is only possible in this context based on providing unique
 inputs, for example, uniquely coloured bike parts. There would be no
 possibility for customising <em>how</em> the bike is put together.</p>
 <p>GPUs are built around data parallelism and gain many of their speed
-advantages from the associated restrictive programming model.</p>
+advantages from the associated restrictive programming model and the
+simplicity this affords both the software and hardware
+implementation.</p>
+</div>
 </section><section><h2 class="section-heading" id="the-pitfalls-of-parallelism">The pitfalls of parallelism<a class="anchor" aria-label="anchor" href="#the-pitfalls-of-parallelism"></a>
 </h2>
 <hr class="half-width">
@@ -487,8 +508,8 @@ parallelism.</p>
 <li>Race conditions</li>
 <li>More complex code</li>
 </ul>
-<p>When considering moving code from serial to parallel, weigh up these
-costs to ensure</p>
+<p>When considering moving code from serial to parallel, you will need
+to carefully weigh these kinds of costs.</p>
 <div class="section level3">
 <h3 id="performance-overhead">Performance overhead<a class="anchor" aria-label="anchor" href="#performance-overhead"></a>
 </h3>
@@ -728,9 +749,9 @@ release of the CUDA library in 2006. Much later in 2016, AMD released
 ROCm which provided a similar GPGPU interface to its own hardware. There
 are also open source APIs including OpenCL and Sycl, Microsoft’s OneAPI
 which claims to bridge a range of accelerators, as well as AMD’s
-cross-platform compatility layer known as HIP. Despite these offerings,
-there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA
-API remains dominant.</p>
+cross-platform compatibility layer known as HIP. Despite these
+offerings, there remains strong vendor lock-in, and NVIDIA and its
+proprietary CUDA API remains dominant.</p>
 <p>Today, GPUs have diverged somewhat in their design depending on
 whether they are destined to function as a true <em>graphics</em>
 processing device or as more general purpose compute
@@ -856,7 +877,7 @@ offs:</p>
 <p><strong>Global memory</strong> is where all input data must start and
 ultimately where the results of any computation must be written. When we
 transfer memory from host to device, or back again, we are using global
-memory. It is the largest store of memory on the GPU and is visibile by
+memory. It is the largest store of memory on the GPU and is visible by
 all threads on the GPU. It is fully controlled by the host: the host
 allocates the memory and chooses when to destroy it. It thus outlives
 any kernels that run in the interim.</p>
@@ -864,7 +885,7 @@ any kernels that run in the interim.</p>
 memory that can be utilised by a thread block, and which lives only as
 long as the thread block. Shared memory resides within the SM itself and
 is much faster than global memory. Shared memory is often used by thread
-block as a shared cache or as a means to communicate and coordinate
+blocks as a shared cache or as a means to communicate and coordinate
 work.</p>
 <p><strong>Registers</strong> are the collection of individual variables
 used by a single thread. For example, a register might be used by a loop
@@ -939,8 +960,8 @@ communicate and coordinate with each other quite efficiently, which is
 often essential for many types of problems.</p>
 <p>This <em>software</em> hierarchy of grid &gt; thread blocks &gt;
 threads has a corollary in the <em>hardware</em> hierachy of GPU &gt;
-SMs &gt; cores, but it’s important to keep in mind that are separate
-concepts:</p>
+SMs &gt; cores, but it’s important to keep in mind that they are
+separate concepts:</p>
 <ul>
 <li>You can have vastly many more thread blocks than SMs: thread blocks
 are enqueued to SMs when they have capacity, and each SM usually has a
@@ -1134,7 +1155,7 @@ iterables:</p>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1" aria-label="code-block-1-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1" aria-label="code-block-1-2"></a></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>arr1 <span class="op">=</span> np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])  <span class="co"># from a list</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>arr2 <span class="op">=</span> np.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, step<span class="op">=</span><span class="dv">2</span>))  <span class="co"># from a range</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>arr2 <span class="op">=</span> np.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, <span class="dv">2</span>))  <span class="co"># from a range</span></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1" aria-label="code-block-1-5"></a>arr3 <span class="op">=</span> np.array([x<span class="op">**</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">100</span>)])  <span class="co"># from a list comprehension</span></span></code></pre>
 </div>
 <p>These arrays all reside in host (CPU) memory.</p>
@@ -1147,7 +1168,7 @@ merely need to swap out <code>np</code> for <code>cupy</code>:</p>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a>arr1_d <span class="op">=</span> cupy.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])  <span class="co"># from a list</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a>arr2_d <span class="op">=</span> cupy.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, step<span class="op">=</span><span class="dv">2</span>))  <span class="co"># from a range</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a>arr2_d <span class="op">=</span> cupy.array(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1000</span>, <span class="dv">2</span>))  <span class="co"># from a range</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a>arr3_d <span class="op">=</span> cupy.array([x<span class="op">**</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">100</span>)])  <span class="co"># from a list comprehension</span></span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="co"># Or transfer across an existing numpy array:</span></span>
@@ -1332,10 +1353,10 @@ setup costs like memory transfers don’t eclipse your savings.</p>
 </h2>
 <hr class="half-width">
 <p>Addition, subtraction, trigonometric functions and so: these all work
-just as they with Numpy.</p>
+just as they do with Numpy.</p>
 <p>Let’s consider computing the Taylor expansion the exponential
 function. Recall that this is: <span class="math inline">\(e^x = \sum_n
-\frac{x^n}{n!}\)</span>. In numpy would could compute this expansion
+\frac{x^n}{n!}\)</span>. In numpy we would compute this expansion
 as:</p>
 <div class="codewrapper sourceCode" id="cb8">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1942,14 +1963,14 @@ index of the kernel.</strong> Unlike our previous example, the index is
 not passed in as an argument. We’ve also added a condition to check the
 index is within range.</li>
 <li>
-<strong>We’ve allocated our GPU kernels using
+<strong>We’ve allocated our GPU arrays using
 <code>CuPy.array()</code>.</strong> CuPy GPU arrays are compatible with
 <code>numba.cuda</code> kernels. Numba provides its own methods too,
 such as <code>cuda.device_array()</code>, <code>cuda.to_device()</code>
 and <code>array_d.copy_to_host()</code>, and you might want to use these
 instead if you don’t want CuPy as a dependency in your project.</li>
 <li>
-<strong>We’ve called the <code>add()</code> function by first
+<strong>We’ve called the <code>adder_gpu()</code> function by first
 providing grid dimensions: blocks and threads per block.</strong> Grid
 dimensions configure <em>how many times</em> the kernel is run and are
 directly related to the kernel’s index. Each time you call a GPU kernel,
@@ -1985,7 +2006,7 @@ their respective speeds swaps?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2071,8 +2092,8 @@ coordination or communication.</p>
 <ul>
 <li>Ideally, choose the number of threads per block to be a multiple of
 your warp size. This means multiples of 32 threads for NVIDIA hardware
-and 64 for AMD. Remember that theads are executed in lockstep as a warp;
-if its not a round multiple, any excess cores will nonetheless be
+and 64 for AMD. Remember that threads are executed in lockstep as a
+warp; if its not a round multiple, any excess cores will nonetheless be
 enrolled in the warp with their result ignored.</li>
 <li>Don’t make the threads per block too large. You want to strike a
 balance where you have a lot of blocks so that each SM has a queue of
@@ -2106,7 +2127,7 @@ case our code might look like:</p>
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a></span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a>adder[(<span class="dv">256</span>, <span class="dv">256</span>), (<span class="dv">32</span>, <span class="dv">32</span>)](xs, ys, zs)</span></code></pre>
 </div>
-<p>In practice, it is more common to a one dimensional index.</p>
+<p>In practice, it is more common to use a one dimensional index.</p>
 <p>In actual fact, <code>cuda.grid()</code> and its sibling
 <code>cuda.gridsize()</code> (which returns the total number of threads
 across the grid) are helper functions. They wraps the more primitive
@@ -2171,7 +2192,7 @@ and threads per block to 256? Why?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <p>Your kernel should look something like this:</p>
 <div class="codewrapper sourceCode" id="cb6">
@@ -2191,7 +2212,7 @@ known as a <em>grid stride loop</em>. As before, it ensures we stay
 within the bounds of the array, but it doesn’t rely on the grid being at
 least as large as the problem. Later, you’ll see it lends itself to
 other common optimisations.</p>
-<p>When the block size it set to 1, the GPU is able to utilise only one
+<p>When the block size is set to 1, the GPU is able to utilise only one
 of its SMs. The rest will sit idle, resulting in very poor utilisation
 of the GPU, also known as <em>occupancy</em>.</p>
 <p>When the thread size is too large, your kernel may crash. When
@@ -2217,7 +2238,7 @@ indices directly, instead of <code>grid()</code> and
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2252,8 +2273,8 @@ the warp then we get <em>warp divergence</em>. In this case, the warp
 must evaluate both branches of the condition, and due to the lockstep
 nature of SIMT, it will do this sequentially: first one branch, and then
 the other. Each thread that is not part of the current conditional
-branch will be masked, essentially performing a “no-op” for eachof their
-respective processor cycles.</li>
+branch will be masked, essentially performing a “no-op” for each of
+their respective processor cycles.</li>
 </ul>
 <p>Warp divergence is expensive since it wastes processor cycles. You
 will want to ensure warp divergence occurs in as few warps as possible,
@@ -2308,7 +2329,7 @@ y_i\)</span>. Use the grid stride loop pattern.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2421,7 +2442,7 @@ why?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
 <div class="accordion-body">
 <p>Two considerations stand out when comparing the kernel options:</p>
 <ul>
@@ -2495,7 +2516,7 @@ definition and grid configuration.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
 <div class="accordion-body">
 <p>One solution looks like this:</p>
 <div class="codewrapper sourceCode" id="cb13">
@@ -2513,8 +2534,8 @@ definition and grid configuration.</p>
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a>threads <span class="op">=</span> <span class="dv">16</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a>nblockx <span class="op">=</span> math.ceil(C.size[<span class="dv">0</span>] <span class="op">/</span> threads)</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>nblocky <span class="op">=</span> math.ceil(C.size[<span class="dv">1</span>] <span class="op">/</span> threads)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a>nblockx <span class="op">=</span> math.ceil(C.shape[<span class="dv">0</span>] <span class="op">/</span> threads)</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>nblocky <span class="op">=</span> math.ceil(C.shape[<span class="dv">1</span>] <span class="op">/</span> threads)</span>
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a>matmul[(nblockx, nblocky), (threads, threads)](A, B, C)</span></code></pre>
 </div>
 <p>An alternative is to store the partial sum in a <em>local</em>
@@ -2560,7 +2581,7 @@ yourself with the Python function <code>divmod()</code>.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb16">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2631,7 +2652,7 @@ stage, set <code>N</code> to be small (~100).</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb18">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2670,7 +2691,7 @@ parallel? What is the unit of parallelisation?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
 <div class="accordion-body">
 <p>We parallelise over <span class="math inline">\(k\)</span> but not
 <span class="math inline">\(n\)</span>, since including <span class="math inline">\(n\)</span> would introduce race conditions.</p>
@@ -2686,11 +2707,12 @@ parallel? What is the unit of parallelisation?</p>
 <span id="cb19-7"><a href="#cb19-7" tabindex="-1" aria-label="code-block-19-7"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb19-8"><a href="#cb19-8" tabindex="-1" aria-label="code-block-19-8"></a><span class="kw">def</span> dft(xs):</span>
 <span id="cb19-9"><a href="#cb19-9" tabindex="-1" aria-label="code-block-19-9"></a>    Xs <span class="op">=</span> np.zeros_like(xs)</span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a></span>
-<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a>    <span class="cf">for</span> k <span class="kw">in</span> prange(N):</span>
-<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>        kernel(k, xs, Xs)</span>
-<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a></span>
-<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a>    <span class="cf">return</span> Xs</span></code></pre>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1" aria-label="code-block-19-10"></a>    N <span class="op">=</span> <span class="bu">len</span>(Xs)</span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1" aria-label="code-block-19-11"></a></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1" aria-label="code-block-19-12"></a>    <span class="cf">for</span> k <span class="kw">in</span> prange(N):</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1" aria-label="code-block-19-13"></a>        kernel(k, xs, Xs)</span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1" aria-label="code-block-19-14"></a></span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1" aria-label="code-block-19-15"></a>    <span class="cf">return</span> Xs</span></code></pre>
 </div>
 </div>
 </div>
@@ -2732,7 +2754,7 @@ computation. That is:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb20">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2935,9 +2957,9 @@ communication.</li>
 </h2>
 <hr class="half-width">
 <p>We’re going to start with a toy problem: imaging radio interferometry
-data. In other domains, this is a also known as a non-uniform Fourier
-transform: we transform from a 3D visibility space to a 2D surface
-within the imaging space.</p>
+data. In other domains, this is also known as a non-uniform Fourier
+transform: we transform from an irregularly sampled 3D visibility space
+to a 2D surface within the imaging space.</p>
 <p>An important non-aim: we are not looking to make <em>algorithmic</em>
 improvements. Real-world imaging software rarely performs a full
 <em>direct</em> Fourier transform since it is so costly, but those
@@ -2996,7 +3018,7 @@ chosen to the main radio feature within the image).</p>
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
 <p>Using numba’s <code>njit</code> and <code>prange</code> functions,
-attempt to write an CPU-parallel implementation of the direction imaging
+attempt to write an CPU-parallel implementation of the direct imaging
 equation. Ask yourself: what is the unit of parallelisation?</p>
 <p>Using matplotlib’s <code>imshow()</code>, save a figure of the real
 components of the image.</p>
@@ -3038,7 +3060,7 @@ take too long for you, try reducing the data even more aggressively.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <p>We parallelise over each pixel which, for a 700 x 700 pixel image,
 gives us just shy of 500,000 threads. And since each pixel is its own
@@ -3056,7 +3078,7 @@ independent sum, we don’t have to worry about race conditions.</p>
 <span id="cb5-8"><a href="#cb5-8" tabindex="-1" aria-label="code-block-5-8"></a>        <span class="co"># Retrieve l, m and ndash coordinates associated with this pixel</span></span>
 <span id="cb5-9"><a href="#cb5-9" tabindex="-1" aria-label="code-block-5-9"></a>        l, m, ndash <span class="op">=</span> ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]</span>
 <span id="cb5-10"><a href="#cb5-10" tabindex="-1" aria-label="code-block-5-10"></a></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a>        <span class="co"># Perform the for this one pixel over all of the visibility data</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a>        <span class="co"># Perform the sum for this one pixel over all of the visibility data</span></span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a>        <span class="cf">for</span> u, v, w, datum <span class="kw">in</span> <span class="bu">zip</span>(us, vs, ws, data):</span>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1" aria-label="code-block-5-13"></a>            phase <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> (u <span class="op">*</span> l <span class="op">+</span> v <span class="op">*</span> m <span class="op">+</span> w <span class="op">*</span> ndash)</span>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1" aria-label="code-block-5-14"></a>            img[lpx, mpx] <span class="op">+=</span> datum <span class="op">*</span> np.exp(<span class="ot">1j</span> <span class="op">*</span> phase)</span></code></pre>
@@ -3093,7 +3115,7 @@ identity <span class="math inline">\(e^{i \phi} = \cos{\phi} + i
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <p>The implementation is very similar to that used in Numba’s prange
 loop. Some points of note:</p>
@@ -3252,14 +3274,14 @@ become substantially longer and substantially more complex.</li>
 <hr class="half-width">
 <p>We’ve already touched on this optimisation strategy before, but it’s
 important enough to repeat here: reading and writing to <em>global</em>
-memory is expensive and currently our kernel currently writes to global
-memory on every single inner loop.</p>
+memory is expensive and currently our kernel writes to global memory on
+every single inner loop.</p>
 <p>Memory ordered from fastest to slowest is: local memory, then shared
 memory, and finally global memory. But by the same token, there is far
 less local and shared memory storage available; local arrays should
 typically be sized in the single digits, and shared arrays should
 typically be sized at most to a few hundred or so entries. (Large
-reservations of local and shared arrays cause a scaracity of memory and
+reservations of local and shared arrays cause a scarcity of memory and
 result in fewer simultaneous thread blocks being scheduled in a SM.)</p>
 <p>How do you identify which memory is which?</p>
 <ul>
@@ -3301,7 +3323,7 @@ culmination of the kernel.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb8">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3435,7 +3457,7 @@ the keyword argument <code>dtype</code>. For example:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3518,7 +3540,7 @@ efficient operations.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
 <div class="accordion-body">
 <p>There are a number of candidates which stand out as options here:</p>
 <ul>
@@ -3726,7 +3748,7 @@ the shared memory cache is sized to 8 elements:</p>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" tabindex="-1" aria-label="code-block-13-1"></a><span class="co"># Create shared memory array</span></span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1" aria-label="code-block-13-2"></a>xs_shared <span class="op">=</span> cuda.shared.array(<span class="dv">256</span>, dtype<span class="op">=</span>np.float32)</span>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a>tid <span class="op">=</span> cuda.threadIdx.x. <span class="co"># threadId _within_ the thread block</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a>tid <span class="op">=</span> cuda.threadIdx.x  <span class="co"># threadId _within_ the thread block</span></span>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a>N <span class="op">=</span> <span class="bu">len</span>(xs_global)</span>
 <span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a></span>
 <span id="cb13-7"><a href="#cb13-7" tabindex="-1" aria-label="code-block-13-7"></a><span class="co"># Step through the array in blocks of 256</span></span>
@@ -3763,10 +3785,10 @@ This is not the global thread ID which we get from
 <code>cuda.grid(1)</code>.</p></li>
 <li><p>The thread ID guarantees that each thread reads from, and writes
 to, a unique address in global and shared memory.</p></li>
-<li><p>Since threads within are thread block are not guaranteed to
-operate in lockstep (only at the warp level is this true), we need to
-call the synchronisation function <code>cuda.syncthreads()</code>. This
-function acts a gate that stops threads within a given thread block from
+<li><p>Since threads within a thread block are not guaranteed to operate
+in lockstep (only at the warp level is this true), we need to call the
+synchronisation function <code>cuda.syncthreads()</code>. This function
+acts a gate that stops threads within a given thread block from
 progressing until all threads have reached this point. This guarantees
 two things: that the cache is fully populated before we attempt to read
 from it; and later, that the cache is not updated until all threads have
@@ -3853,9 +3875,9 @@ avoid conflicts, the optimal pattern to access a shared memory is to
 ensure that each thread within the warp reads from a unique address,
 modulo 32 bits.</strong></p>
 <p>You might notice that the 32 bit bank width seems to make bank
-conflicts innevitable when using 64 bit data. Some texts recommend
+conflicts inevitable when using 64 bit data. Some texts recommend
 splitting your 64 bit type into two 32 bit floats and assembling the
-resut over two requests, although this kind of bit fiddling gets messy
+result over two requests, although this kind of bit fiddling gets messy
 fast. In my experience, it is usually equally performant to use an
 access pattern that limits you to just two conflicting requests per
 bank.</p>
@@ -3947,7 +3969,7 @@ memory.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb17">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -4135,7 +4157,7 @@ the ideal factor?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
 <div class="accordion-body">
 <p>On my own machine, I saw best performance when
 <code>THREAD_COARSEN</code> was set to 4, but it will vary based on the
@@ -4232,7 +4254,7 @@ stored in global memory, which is disasterous for performance.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb22">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -4317,7 +4339,7 @@ is, something like this:</p>
 <p>This hot loop optimisation avoids uneccessary accesses to shared
 memory by instead placing those values into registers which are faster.
 However, at least for my environment, this version turned out to be
-actually slower (and I don’t know why!). In both version, the compiler
+actually slower (and I don’t know why!). In both versions, the compiler
 <em>should</em> recognise that these are in fact the same pattern and
 that it should compile to whichever method is faster, but this is
 clearly a case where the compiler fails us. As always, benchmark
@@ -4341,7 +4363,7 @@ operation. In pseudo-code:</p>
 single FMA operation, we can straightforwardly double our performance.
 (In fact, the numbers for GPU floating point performance that you’ll see
 NVIDIA or AMD advertising <em>assume</em> that 100% of your code is pure
-FMA instructions – which almost no non-trivial kernel is possible of
+FMA instructions – which almost no non-trivial kernel is capable of
 achieving.)</p>
 <p>The CUDA compiler <em>should</em> make an effort to automatically
 attempt to insert FMA instructions into your code, but it has been my
@@ -4413,7 +4435,7 @@ like this:</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
 <div class="accordion-body">
 <p>Finally, we arrive at a kernel that looks like that shown below.</p>
 <div class="codewrapper sourceCode" id="cb30">
@@ -4559,7 +4581,7 @@ a warp-wide cache that follows the pattern set out above.</p>
 <p>Note that <code>cuda.shfl_sync()</code> is limited only to floats,
 doubles. For complex values we’ll have to transmit the real and
 imaginary parts separately, e.g.:
-<code>x = complex(cuda.shfl(0xFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFF, nextwarpid, x.imag))</code>.</p>
+<code>x = complex(cuda.shfl(0xFFFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFFFF, nextwarpid, x.imag))</code>.</p>
 </div>
 </div>
 </div>
@@ -4568,7 +4590,7 @@ imaginary parts separately, e.g.:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
 <div class="accordion-body">
 <p>Shared memory is the idiomatic way to cache data and avoid global
 memory operations: it is what you will see in most CUDA tutorials, and
