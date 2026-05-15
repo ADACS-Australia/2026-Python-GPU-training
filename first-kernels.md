@@ -28,8 +28,6 @@ Whatever you choose, besides some syntactical differences, the concepts learned 
 Let's return to the example of adding two vectors elementwise. As a simple loop this looks like:
 
 ```python
-import numpy as np
-
 def adder(xs, ys, zs):
     for i in range(len(xs)):
         zs[i] = xs[i] + ys[i]
@@ -47,9 +45,6 @@ In a parallel context, the interior of the loop is referred to as a _kernel._ Th
 For clarity, let's rewrite this as a parallel loop and with the kernel as a stand alone function:
 
 ```python
-from numba import njit, prange
-import numpy as np
-
 @njit
 def kernel(i, xs, ys, zs):
     zs[i] = xs[i] + ys[i]
@@ -73,11 +68,6 @@ In GPU programming, your work will be all about writing the kernel itself. The o
 Let's try writing this adder function as a kernel on the GPU.
 
 ```python
-import math
-
-import cupy
-from numba import cuda
-
 @cuda.jit
 def adder_gpu(xs, ys, zs):
     i = cuda.grid(1)
@@ -113,13 +103,6 @@ Try benchmarking the each of the parallel CPU and GPU adder functions. Which is 
 ::: solution
 
 ```python
-import math
-
-import cupy
-import cupyx
-import numpy as np
-from numba import cuda, prange, njit
-
 @njit
 def kernel(i, xs, ys, zs):
     zs[i] = xs[i] + ys[i]
@@ -290,11 +273,6 @@ With just minor modifications, change the 1D `adder_gpu` kernel to a `multiplier
 Also add a test to ensure correctness.
 
 ```python
-import math
-
-import cupy
-from numba import cuda
-
 @cuda.jit
 def multiplier(xs, ys, zs):
     # TODO
@@ -315,11 +293,6 @@ zs_d = cupy.empty_like(xs_d)
 ::: solution
 
 ```python
-import math
-
-import cupy
-from numba import cuda
-
 @cuda.jit
 def multiplier(xs, ys, zs):
     for i in range(cuda.grid(1), len(xs), cuda.gridsize(1)):
@@ -346,8 +319,6 @@ Let's attempt to write our own kernel that performs matrix multiplication. Recal
 Let's begin by first writing this in simple Python as a series of for loops:
 
 ```python
-import numpy as np
-
 def matmul(A, B, C):
     for i in range(C.shape[0]):
         for j in range(C.shape[1]):
@@ -414,9 +385,6 @@ On these grounds, kernel 2 is the preferred option with a 2D grid configuration 
 Have a go at filling in the missing lines from within the kernel definition and grid configuration.
 
 ```python
-import cupy
-from numba import cuda
-
 @cuda.jit
 def matmul(A, B, C):
     i, j = cuda.grid(2)
@@ -486,11 +454,6 @@ Rewrite the matrix multiplication using a 1D grid. Under this configuration, eve
 ::: solution
 
 ```python
-import math
-
-import cupy
-from numba import cuda
-
 @cuda.jit
 def matmul(A, B, C):
     ij = cuda.grid(1)
@@ -611,12 +574,6 @@ By the end, you should have a working GPU kernel. Check that the kernel works co
 ::: solution
 
 ```python
-import math
-
-import cupy
-from numba import cuda
-import numpy as np
-
 @cuda.jit
 def dft(xs, Xs):
     k = cuda.grid(1)

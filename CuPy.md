@@ -170,10 +170,6 @@ How does this affect the benchmark? Why?
 ::: solution
 
 ```python
-import cupy
-import cupyx
-import numpy as np
-
 a = np.random.normal(size=100_000_000)
 b = np.random.normal(size=100_000_000)
 
@@ -200,9 +196,6 @@ Addition, subtraction, trigonometric functions and so: these all work just as th
 Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy we would compute this expansion as:
 
 ```python
-import math
-import numpy as np
-
 def exp(xs, ys, degree=12):
     for n in range(degree):
         ys += xs**n / math.factorial(n)
@@ -216,9 +209,6 @@ np.testing.assert_allclose(ys, np.exp(xs))
 We can ensure these computations occur on the GPU simply by swapping in GPU arrays:
 
 ```python
-import math
-import cupy
-
 def exp(xs, ys, degree=12):
     for n in range(degree):
         ys += xs**n / math.factorial(n)
@@ -270,10 +260,6 @@ When fusing works, it works well. However, it can take some time to separate out
 Try running the following on your own machine and compare the performance to the non-fused example:
 
 ```python
-import math
-import cupy
-import cupyx
-
 @cupy.fuse
 def exp_fused(xs, ys, degree=12):
     for n in range(degree):
@@ -381,10 +367,6 @@ CUDA includes an extensive linear algebra library that is highly optimised, and 
 Consider the example of a large matrix multiplication on both CPU and GPU:
 
 ```python
-import numpy as np
-import cupy
-import cupyx
-
 A = np.random.normal(size=(10_000, 10_000))
 B = np.random.normal(size=(10_000, 10_000))
 
@@ -407,8 +389,6 @@ The speed-up is huge: on my own hardware, we observe 16.6 s versus just 107 ms.
 Similarly, we can perform matrix inversion or decomposition just as we would using numpy:
 
 ```python
-import cupy
-
 # Let's solve for x in: Ax = y
 A = cupy.random.normal(size=(1000, 1000))
 y = cupy.random.normal(size=1000)
@@ -430,8 +410,6 @@ Q, R = cupy.linalg.qr(A)
 There's also the `einsum()` method which is not a linear algebra method but which is very powerful if you can write your equations using [Einstein notation](https://en.wikipedia.org/wiki/Einstein_notation), e.g.:
 
 ```python
-import cupy
-
 A = cupy.random.normal(size=(1000, 10_000))
 B = cupy.random.normal(size=(10_000, 1000))
 
@@ -446,8 +424,6 @@ cupy.testing.assert_allclose(C, A @ B)
 Compute the [outer product](https://en.wikipedia.org/wiki/Outer_product) of two large vectors, `x` and `y`, using both CuPy built-in `cupy.outer` routine and using `einsum()`. Check that the different methods give the same result.
 
 ```python
-import cupy
-
 x = cupy.random.normal(size=10_000)
 y = cupy.random.normal(size=10_000)
 
@@ -459,8 +435,6 @@ y = cupy.random.normal(size=10_000)
 ::: solution
 
 ```python
-import cupy
-
 x = cupy.random.normal(size=10_000)
 y = cupy.random.normal(size=10_000)
 
@@ -482,8 +456,6 @@ CUDA provides highly optimised libraries for performing FFTs and CuPy provides a
 In numpy, for example, we can do the following FFT:
 
 ```python
-import numpy as np
-
 # Create a complex valued 4 x 1024 x 1024 array where real
 # and imaginary components are both normally distributed
 a = np.random.normal(size=(4, 1024, 1024)) + 1j * np.random.normal(size=(4, 1024, 1024))
@@ -495,8 +467,6 @@ A = np.fft.fftn(a, axes=(1, 2))
 Performing this on the GPU involves the same steps as before: ensure the arrays reside in GPU memory and replace numpy with CuPY prefixed methods:
 
 ```python
-import cupy
-
 # Create a complex valued 4 x 1024 x 1024 array where real
 # and imaginary components are both normally distributed
 a = cupy.random.normal(size=(4, 1024, 1024)) + 1j * cupy.random.normal(size=(4, 1024, 1024))
@@ -515,9 +485,6 @@ When you run a FFT the CUDA library actually does two things:
 Plan creation creates an overhead. By default, newer versions of CuPy automatically cache these plans and will reuse the plan for identically configured FFTs. However, it is also possible to manually create and manage plans yourself which you might like to do to ensure plan reuse. For example:
 
 ```python
-import cupy
-import cupyx
-
 # Create a complex valued 4 x 1024 x 1024 array where real
 # and imaginary components are both normally distributed
 a = cupy.random.normal(size=(4, 1024, 1024)) + 1j * cupy.random.normal(size=(4, 1024, 1024))
