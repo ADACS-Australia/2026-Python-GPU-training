@@ -441,14 +441,14 @@ part, each kernel must proceed independently</li>
 branches that result in divergence can be costly</li>
 </ul><p><strong>Example:</strong> To return to the bike example, data
 parallelism would take as inputs all the bike parts, and each worker
-would assemble a bike in identical fashion at an identical pace.
-Customisation is only possible in this context based on providing unique
-inputs, for example, uniquely coloured bike parts. There would be no
-possibility for customising <em>how</em> the bike is put together.</p>
+would assemble a bike in <em>identical fashion</em> at an <em>identical
+pace.</em> Customisation is only possible in this context based on
+providing unique inputs, for example, uniquely coloured bike parts.
+There would be no possibility for customising <em>how</em> the bike is
+put together.</p>
 <p>GPUs are built around data parallelism and gain many of their speed
-advantages from the associated restrictive programming model and the
-simplicity this affords both the software and hardware
-implementation.</p>
+advantages from the restrictive programming model and the simplicity
+that this affords to both the software and hardware implementation.</p>
 </div>
 </section><section><h2 class="section-heading" id="the-pitfalls-of-parallelism">The pitfalls of parallelism<a class="anchor" aria-label="anchor" href="#the-pitfalls-of-parallelism"></a></h2>
 <hr class="half-width"><p>For all the potential speed benefits that we gain from parallelism,
