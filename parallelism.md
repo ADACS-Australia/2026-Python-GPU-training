@@ -17,24 +17,28 @@ title: "An introduction to parallelism"
 
 :::
 
-## Serial programming
+## Why go parallel?
 
-Serial programming is by far the simplest programming model and is the easiest to reason about.
+The short answer is performance. Serial programs execute one instruction at a time, and are ultimately limited by the speed of a single core. As clock speeds have stalled since the mid-2000s, the industry has shifted to delivering performance through parallelism: doing more work simultaneously, rather than doing each piece of work faster.
 
-Serial programming should always be preferred unless performance needs necessitate otherwise.
+GPU parallelism specifically trades _latency_ for _throughput_: any single GPU core is slower than a modern CPU core, but a GPU can run tens of thousands of tasks simultaneously. If your problem can be decomposed into many independent units of work, a GPU can process all of them in far less total time than a serial CPU could manage.
 
-## Task Parallelism
+## Flavours of parallelism
+
+Parallel code comes two principal forms. The first, task parallelism, is the principal model of threaded operations on the CPU. The GPU, however, makes use of a much more restrictive form a parallelism known as data parallelism.
+
+### Task Parallelism
 
 Task parallelism divides up the work into different types of jobs. Each task functions autonomously and relies on different communication methods between tasks to coordinate the work. Tasks in this model form a complex graph structure, with dependencies between nodes.
 
-**Example:** If we consider the bike example, perhaps one person assembles frames, another constructs tyres and a third puts it all together. This is a bit like how a factory may be organised and is called _pipelining_.
+**Example:** Consider the process of building a bike: prhaps one person assembles frames, another constructs tyres and a third puts it all together. This form of task parallelism is a bit like how a factory may be organised and is called _pipelining_.
 
-**Example:** If the bikes were made to order. Perhaps each person builds each bike in its entirety, customised towards the order specification. Depending on the type of customisation, builds may take varying amounts of time. This is called a _worker pool_.
+**Example:** Consider, instead, the process of building customised bikes to order. Here each person builds a bike in its entirety, but customised towards the order specification. Depending on the type of customisation, builds may take varying amounts of time. This type of task parallism is called a _worker pool_.
 
 Task parallelism requires careful coordination between tasks:
 
 - In pipelining, tasks may operate a different speeds. This means:
-   - Data must be passed between tasks in a way that clearly construes ownership: for example, there's no point the assembler trying to install partially constructed tyres.
+   - Data must be passed between tasks in a way that clearly construes ownership. For example, there's no point the assembler trying to install tyres that are only partially constructed.
    - Buffers or queues must be implemented between tasks to absorb the different rates of work
    - If upstream queues are empty or downstream queues are full, tasks must be able to pause
 - In worker pools, a system must be designed for optimally allocating and distributing work, as well as collecting the results in the end.
@@ -49,9 +53,9 @@ The coordination aspect of this model has proven in practice to be a common sour
 - Software transactional memory
 - Message passing interfaces (e.g. OpenMPI)
 
-## Data Parallelism
+### Data Parallelism
 
-Data parallelism applies a computation to data by dividing up the data into small, independent chunks of work. Each thread, however, performs identical work.
+Data parallelism applies a computation to data by dividing up the data into small, independent chunks of work. In this model, each thread performs identical work on variable inputs.
 
 Data parallelism is implmented in hardware on the CPU as "single instruction, multiple data" (SIMD) and on the GPU as "single instruction, multiple thread" (SIMT). The "single instruction" is key: the program instruction (perhaps an addition, or a multiplication) is broadcast across multiple pieces of data.
 
@@ -63,7 +67,7 @@ In both cases, the programming model is quite restrictive:
 
 **Example:** To return to the bike example, data parallelism would take as inputs all the bike parts, and each worker would assemble a bike in identical fashion at an identical pace. Customisation is only possible in this context based on providing unique inputs, for example, uniquely coloured bike parts. There would be no possibility for customising _how_ the bike is put together.
 
-GPUs are built around data parallelism and gain many of their speed advantages from the associated restrictive programming model.
+GPUs are built around data parallelism and gain many of their speed advantages from the associated restrictive programming model and the simplicity this affords both the software and hardware implementation.
 
 ## The pitfalls of parallelism
 
@@ -73,7 +77,7 @@ For all the potential speed benefits that we gain from parallelism, it is import
 * Race conditions
 * More complex code
 
-When considering moving code from serial to parallel, weigh up these costs to ensure
+When considering moving code from serial to parallel, you will need to carefully weigh these kinds of costs.
 
 ### Performance overhead
 

@@ -39,7 +39,7 @@ In `Numpy` we can create a numerical array from a range of iterables:
 import numpy as np
 
 arr1 = np.array([1, 2, 3, 4, 5])  # from a list
-arr2 = np.array(range(1, 1000, step=2))  # from a range
+arr2 = np.array(range(1, 1000, 2))  # from a range
 arr3 = np.array([x**2 for x in range(1, 100)])  # from a list comprehension
 ```
 
@@ -52,7 +52,7 @@ import cupy
 import numpy as np
 
 arr1_d = cupy.array([1, 2, 3, 4, 5])  # from a list
-arr2_d = cupy.array(range(1, 1000, step=2))  # from a range
+arr2_d = cupy.array(range(1, 1000, 2))  # from a range
 arr3_d = cupy.array([x**2 for x in range(1, 100)])  # from a list comprehension
 
 # Or transfer across an existing numpy array:
@@ -195,9 +195,9 @@ This is an important consideration to make in all your work with GPUs: even if t
 
 ## Numpy-style computation
 
-Addition, subtraction, trigonometric functions and so: these all work just as they with Numpy.
+Addition, subtraction, trigonometric functions and so: these all work just as they do with Numpy.
 
-Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy would could compute this expansion as:
+Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy we would compute this expansion as:
 
 ```python
 import math
