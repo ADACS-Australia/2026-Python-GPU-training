@@ -270,7 +270,7 @@
 <li><a href="#optimisation-4-hot-loop-experimentation">Optimisation 4: Hot loop experimentation</a></li>
 <li><a href="#intermission">Intermission</a></li>
 <li><a href="#optimisation-5-minimise-reading-from-global-memory">Optimisation 5: Minimise reading from global memory</a></li>
-<li><a href="#optimistion-6-thread-coarsening">Optimistion 6: Thread coarsening</a></li>
+<li><a href="#optimisation-6-thread-coarsening">Optimisation 6: Thread coarsening</a></li>
 <li><a href="#optimisation-7-force-fma-instructions">Optimisation 7: Force FMA instructions</a></li>
 <li><a href="#optimisation-8-warp-shuffling-optional">Optimisation 8: Warp shuffling (optional)</a></li>
 <li><a href="#final-comparison">Final comparison</a></li>
@@ -338,7 +338,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>Optimisation</h1>
-        <p>Last updated on 2026-05-13 |
+        <p>Last updated on 2026-05-15 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/optimisation.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -655,7 +655,7 @@ and this is specifically the role for NSIGHT Compute. Unfortunately, I
 have rarely found this to be useful tool. NSIGHT Compute tabulates all
 sorts of hardware counters (FMA instructions, cache hits, memory
 accesses, etc.) which by itself is overwhelming and rarely useful to the
-non-expert. Along with this raw data, it also tries to forumulate
+non-expert. Along with this raw data, it also tries to formulate
 suggestions as to how to improve your kernel; I’ve found these
 suggestions to be usually hit and miss.</p>
 <p>Some things that NSIGHT Compute can be useful for are:</p>
@@ -707,7 +707,7 @@ less local and shared memory storage available; local arrays should
 typically be sized in the single digits, and shared arrays should
 typically be sized at most to a few hundred or so entries. (Large
 reservations of local and shared arrays cause a scaracity of memory and
-result in fewer simulatenous thread blocks being scheduled in a SM.)</p>
+result in fewer simultaneous thread blocks being scheduled in a SM.)</p>
 <p>How do you identify which memory is which?</p>
 <ul><li>
 <strong>Global memory</strong> is any array that is created on the
@@ -800,6 +800,10 @@ optional <code>dtype</code> keyword argument and setting to
 <code>np.float64</code>, <code>np.float32</code>,
 <code>np.float16</code> (or their complex equivalents,
 <code>np.complex128</code> and <code>np.complex64</code>).</p></li>
+<li><p><strong>Use the <code>dtype</code> attribute when transferring
+arrays to the GPU.</strong> For example,
+<code>arr_d = cupy.array(arr, dtype=np.float32)</code> will transfer
+<em>and</em> cast the floating point values at the same time.</p></li>
 <li><p><strong>Cast existing arrays using the <code>astype()</code>
 method</strong>
 e.g. <code>arr_f32 = arr_f64.astype(np.float32)</code>.</p></li>
@@ -807,7 +811,7 @@ e.g. <code>arr_f32 = arr_f64.astype(np.float32)</code>.</p></li>
 <p><strong>Initialize (or cast) all intermediate variables or
 constants with explicit types.</strong> For example:</p>
 <ul><li>Create an accumator variable with a typed constructor:
-<code>acc = np.complex32(0)</code>
+<code>acc = np.complex64(0)</code>
 </li>
 <li>Cast Pi to the appropriate precision <em>before</em> use in
 computation: <code>np.float32(np.pi)</code>
@@ -1083,7 +1087,7 @@ the optimisation kicked in again.)</p>
 <span id="cb12-20"><a href="#cb12-20" tabindex="-1" aria-label="code-block-12-20"></a>        img[lpx, mpx] <span class="op">=</span> pixel</span></code></pre>
 </div>
 </section><section><h2 class="section-heading" id="intermission">Intermission<a class="anchor" aria-label="anchor" href="#intermission"></a></h2>
-<hr class="half-width"><p>Let’s take stock for a momnent. So far, our optimisation steps have
+<hr class="half-width"><p>Let’s take stock for a moment. So far, our optimisation steps have
 been relatively minor. The code is not substantially more complex and is
 still easy to understand and reason about.</p>
 <p>Our relative performance has increased by more than double:</p>
@@ -1130,7 +1134,7 @@ depicts the pattern using a thread block size of 8, which in turn means
 the shared memory cache is sized to 8 elements:</p>
 <iframe src="fig/shared-memory.html" height="500" width="100%">
 </iframe>
-<p>In pseduo-code:</p>
+<p>In pseudo-code:</p>
 <div class="codewrapper sourceCode" id="cb13">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -1175,7 +1179,7 @@ This is not the global thread ID which we get from
 to, a unique address in global and shared memory.</p></li>
 <li><p>Since threads within are thread block are not guaranteed to
 operate in lockstep (only at the warp level is this true), we need to
-call the synchronisation function <code>cuda.synchthreads()</code>. This
+call the synchronisation function <code>cuda.syncthreads()</code>. This
 function acts a gate that stops threads within a given thread block from
 progressing until all threads have reached this point. This guarantees
 two things: that the cache is fully populated before we attempt to read
@@ -1186,9 +1190,11 @@ completed reading from it.</p></li>
 of 256. In the example above, on the final batch we pad the shared array
 with zeros on the assumption that zero is idempotent under our kernel.
 Other options for handling this remainder exist, such as:</p>
-<pre><code>for i in range(256, min(N - offset)):
+<pre><code>for i in range(min(256, N - offset)):
     x = xs_shared[i]
     # Compute...</code></pre>
+<p>Although computing this range dynamically on every loop is usually
+more computationally costly.</p>
 </li>
 </ul><div id="warning" class="callout">
 <div class="callout-square">
@@ -1201,11 +1207,14 @@ Other options for handling this remainder exist, such as:</p>
 <p><code>cuda.syncthreads()</code> acts as a gate that stops threads
 from progressing until all threads within a thread block have reached
 that point. But beware: <code>cuda.syncthreads()</code> should not be
-put inside a conditional branch since not all threads may reach a
-conditional synchronisation point. The result of doing so is undefined
-and may hang. Likewise, this advice applies to threads that
-conditionally return early and therefore bypass future synchronisation
-points.</p>
+put inside a conditional branch. A conditional branch may result in some
+threads mever reaching the synchronisation point and the result of doing
+so is undefined and may lead to deadlock. Similarly, this advice applies
+to threads that conditionally return early and therefore bypass future
+synchronisation points.</p>
+</div>
+</div>
+</div>
 <div id="coalesced-memory-reads" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
@@ -1235,10 +1244,38 @@ coalescing</em>.</p>
 </div>
 </div>
 </div>
-<p>:: callout</p>
-<div class="section level3">
-<h3 id="bank-conflicts">Bank conflicts<a class="anchor" aria-label="anchor" href="#bank-conflicts"></a></h3>
+<div id="bank-conflicts" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
 </div>
+<span class="callout-header">Callout</span>
+<div id="bank-conflicts" class="callout-inner">
+<h3 class="callout-title">Bank conflicts</h3>
+<div class="callout-content">
+<p>Accessing shared memory comes with its own complications, one of
+which are <em>bank conflicts</em>. Shared memory is divided into memory
+banks and each bank can address only one thread at a time. When multiple
+threads within a warp request shared memory that is controlled by the
+same memory bank, a bank conflict occurs and the operations will be
+serialised. That is, they will be forced to occur one after the
+other.</p>
+<p>Modern NVIDIA GPUs have 32 memory banks. Each bank is responsible for
+32 bits of memory, with bank 1 responsible for the first 32 bits, bank 2
+responsible for the next 32 bits, and so on and repeating. <strong>To
+avoid conflicts, the optimal pattern to access a shared memory is to
+ensure that each thread within the warp reads from a unique address,
+modulo 32 bits.</strong></p>
+<p>You might notice that the 32 bit bank width seems to make bank
+conflicts innevitable when using 64 bit data. Some texts recommend
+splitting your 64 bit type into two 32 bit floats and assembling the
+resut over two requests, although this kind of bit fiddling gets messy
+fast. In my experience, it is usually equally performant to use an
+access pattern that limits you to just two conflicting requests per
+bank.</p>
+<p>Finally: there’s a special exception. If every thread accesses the
+same shared memory address, no conflict occurs and the value will
+instead be <em>broadcast</em> across the warp. (And this is precisely
+what the example code above does in its hot loop.)</p>
 </div>
 </div>
 </div>
@@ -1250,7 +1287,7 @@ coalescing</em>.</p>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
-<p>Modify the kernel to mimimise global memory reads by caching the
+<p>Modify the kernel to minimise global memory reads by caching the
 global values from <code>us</code>, <code>vs</code>, <code>ws</code>,
 and <code>data</code>.</p>
 <p>Start by creating shared memory arrays at the top of the kernel:</p>
@@ -1383,7 +1420,7 @@ memory.</p>
 </div>
 </div>
 </div>
-</section><section><h2 class="section-heading" id="optimistion-6-thread-coarsening">Optimistion 6: Thread coarsening<a class="anchor" aria-label="anchor" href="#optimistion-6-thread-coarsening"></a></h2>
+</section><section><h2 class="section-heading" id="optimisation-6-thread-coarsening">Optimisation 6: Thread coarsening<a class="anchor" aria-label="anchor" href="#optimisation-6-thread-coarsening"></a></h2>
 <hr class="half-width"><p>Sometimes too much of a good thing can be a bad thing. When it comes
 to GPU threads, we want enough threads that all SMs have a number of
 thread blocks queued at any one time. This ensures all CUDA cores are
@@ -1406,7 +1443,7 @@ back” the degree of parallelisation, and instead increase the
 <span id="cb18-4"><a href="#cb18-4" tabindex="-1" aria-label="code-block-18-4"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
 <span id="cb18-5"><a href="#cb18-5" tabindex="-1" aria-label="code-block-18-5"></a></span>
 <span id="cb18-6"><a href="#cb18-6" tabindex="-1" aria-label="code-block-18-6"></a>    <span class="cf">if</span> k <span class="op">&lt;</span> N:</span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1" aria-label="code-block-18-7"></a>        xs_k <span class="op">=</span> np.complex64(<span class="dv">0</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1" aria-label="code-block-18-7"></a>        Xs_k <span class="op">=</span> np.complex64(<span class="dv">0</span>)</span>
 <span id="cb18-8"><a href="#cb18-8" tabindex="-1" aria-label="code-block-18-8"></a>        <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(N):</span>
 <span id="cb18-9"><a href="#cb18-9" tabindex="-1" aria-label="code-block-18-9"></a>            phase <span class="op">=</span> <span class="op">-</span><span class="dv">2</span> <span class="op">*</span> np.float32(np.pi) <span class="op">*</span> k <span class="op">*</span> n <span class="op">/</span> N</span>
 <span id="cb18-10"><a href="#cb18-10" tabindex="-1" aria-label="code-block-18-10"></a>            sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
@@ -1513,13 +1550,13 @@ the ideal factor?</p>
 <code>THREAD_COARSEN</code> was set to 4, but it will vary based on the
 kernel, the GPU, and the problem size. Even larger thread coarsening
 factors risk a number of problems:</p>
-<ol style="list-style-type: decimal"><li>The number of thread blocks may descrease to the point where the
+<ol style="list-style-type: decimal"><li>The number of thread blocks may decrease to the point where the
 GPU’s SMs are not well utilised.</li>
 <li>The memory requirements of each thread will obstruct the number of
 simultaneous thread blocks that can be scheduled on a single SM.</li>
 <li>Eventually, the memory required for a single thread may become so
 large that the local register storage “spills” out into global memory.
-Whe this happens, some of our local variables end up being actually
+When this happens, some of our local variables end up being actually
 stored in global memory, which is disasterous for performance.</li>
 </ol></div>
 </div>
@@ -1684,7 +1721,7 @@ is, something like this:</p>
 <span id="cb23-10"><a href="#cb23-10" tabindex="-1" aria-label="code-block-23-10"></a>        sin, cos <span class="op">=</span> cuda.libdevice.fast_sincosf(phase)</span>
 <span id="cb23-11"><a href="#cb23-11" tabindex="-1" aria-label="code-block-23-11"></a>        pixels[i] <span class="op">+=</span> data_cache[j] <span class="op">*</span> <span class="bu">complex</span>(cos, sin)</span></code></pre>
 </div>
-<p>This hot loop optimisation avoids unneccessary accesses to shared
+<p>This hot loop optimisation avoids uneccessary accesses to shared
 memory by instead placing those values into registers which are faster.
 However, at least for my environment, this version turned out to be
 actually slower (and I don’t know why!). In both version, the compiler
@@ -1698,7 +1735,7 @@ ruthlessly.</p>
 </div>
 </section><section><h2 class="section-heading" id="optimisation-7-force-fma-instructions">Optimisation 7: Force FMA instructions<a class="anchor" aria-label="anchor" href="#optimisation-7-force-fma-instructions"></a></h2>
 <hr class="half-width"><p>Fused multiply add (FMA) instructions are a special hardware
-instruction that combines both a muliplication and addition as a single
+instruction that combines both a multiplication and addition as a single
 operation. In pseudo-code:</p>
 <div class="codewrapper sourceCode" id="cb24">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1755,17 +1792,17 @@ write this as two FMA instructions:</p>
 sequence of 4 FMA instructions.</p>
 <p>There’s a small problem here. Whilst we can retrieve the real and
 imaginary components of a complex number with the <code>.real</code> and
-<code>.imag</code> attributes respectively, we aren’t able to mofify
+<code>.imag</code> attributes respectively, we aren’t able to modify
 these values. To simplify the presentation here, we will create the
-accumlation array <code>pixel</code> as 2D array, with the second
-dimension corrsponding to the real and imaginary components:</p>
+accumulation array <code>pixel</code> as 2D array, with the second
+dimension corresponding to the real and imaginary components:</p>
 <div class="codewrapper sourceCode" id="cb28">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" tabindex="-1" aria-label="code-block-28-1"></a>pixels <span class="op">=</span> cuda.local.array((THREAD_COARSEN, <span class="dv">2</span>), np.float32)</span></code></pre>
 </div>
 <p>(You will need to update the code that zeroes this array too.)</p>
-<p>Once you have done this, attept to write out the inplace complex
+<p>Once you have done this, attempt to write out the inplace complex
 addition as a sequence of 4 FMA instructions. As a hint, the first looks
 like this:</p>
 <div class="codewrapper sourceCode" id="cb29">
@@ -1884,7 +1921,7 @@ input data.</p>
 <p><code>cuda.shfl_sync()</code> accepts 3 parameters:</p>
 <ul><li>The first is a mask which indicates which of the warp threads are to
 participate in the swap. Since we want every thread to play its part, we
-set this to <code>0xFFFFFF</code>.</li>
+set this to <code>0xFFFFFFFF</code>.</li>
 <li>The second parameter is the source ID. Ranging from 0 to 31, this
 identifies the warp whose value we want to receive.</li>
 <li>The payload value. This is the value that we offer up to the
@@ -1905,7 +1942,7 @@ as demonstrated by the following pseudo code:</p>
 <span id="cb31-8"><a href="#cb31-8" tabindex="-1" aria-label="code-block-31-8"></a>        <span class="co"># Do some computation with x</span></span>
 <span id="cb31-9"><a href="#cb31-9" tabindex="-1" aria-label="code-block-31-9"></a></span>
 <span id="cb31-10"><a href="#cb31-10" tabindex="-1" aria-label="code-block-31-10"></a>        <span class="co"># Then daisy chain x amongst the warp</span></span>
-<span id="cb31-11"><a href="#cb31-11" tabindex="-1" aria-label="code-block-31-11"></a>        x <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xFFFFFF</span>, nextwarpid, x)</span></code></pre>
+<span id="cb31-11"><a href="#cb31-11" tabindex="-1" aria-label="code-block-31-11"></a>        x <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xFFFFFFFF</span>, nextwarpid, x)</span></code></pre>
 </div>
 <p>There’s no need to use synchronisation calls because the warp
 executes in lockstep (however, be careful to avoid divergence at any
@@ -1997,13 +2034,13 @@ performance.</p>
 <span id="cb32-49"><a href="#cb32-49" tabindex="-1" aria-label="code-block-32-49"></a>                pixels[i, <span class="dv">1</span>] <span class="op">=</span> cuda.fma(datum.imag, cos, pixels[i, <span class="dv">1</span>])</span>
 <span id="cb32-50"><a href="#cb32-50" tabindex="-1" aria-label="code-block-32-50"></a></span>
 <span id="cb32-51"><a href="#cb32-51" tabindex="-1" aria-label="code-block-32-51"></a>            <span class="co"># Daisychain the values around members of the warp</span></span>
-<span id="cb32-52"><a href="#cb32-52" tabindex="-1" aria-label="code-block-32-52"></a>            u <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xffffff</span>, u, nextwarpid)</span>
-<span id="cb32-53"><a href="#cb32-53" tabindex="-1" aria-label="code-block-32-53"></a>            v <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xffffff</span>, v, nextwarpid)</span>
-<span id="cb32-54"><a href="#cb32-54" tabindex="-1" aria-label="code-block-32-54"></a>            w <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xffffff</span>, w, nextwarpid)</span>
+<span id="cb32-52"><a href="#cb32-52" tabindex="-1" aria-label="code-block-32-52"></a>            u <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xFFFFFFFF</span>, u, nextwarpid)</span>
+<span id="cb32-53"><a href="#cb32-53" tabindex="-1" aria-label="code-block-32-53"></a>            v <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xFFFFFFFF</span>, v, nextwarpid)</span>
+<span id="cb32-54"><a href="#cb32-54" tabindex="-1" aria-label="code-block-32-54"></a>            w <span class="op">=</span> cuda.shfl_sync(<span class="bn">0xFFFFFFFF</span>, w, nextwarpid)</span>
 <span id="cb32-55"><a href="#cb32-55" tabindex="-1" aria-label="code-block-32-55"></a></span>
 <span id="cb32-56"><a href="#cb32-56" tabindex="-1" aria-label="code-block-32-56"></a>            datum <span class="op">=</span> <span class="bu">complex</span>(</span>
-<span id="cb32-57"><a href="#cb32-57" tabindex="-1" aria-label="code-block-32-57"></a>                cuda.shfl_sync(<span class="bn">0xffffff</span>, datum.real, nextwarpid),</span>
-<span id="cb32-58"><a href="#cb32-58" tabindex="-1" aria-label="code-block-32-58"></a>                cuda.shfl_sync(<span class="bn">0xffffff</span>, datum.imag, nextwarpid)</span>
+<span id="cb32-57"><a href="#cb32-57" tabindex="-1" aria-label="code-block-32-57"></a>                cuda.shfl_sync(<span class="bn">0xFFFFFFFF</span>, datum.real, nextwarpid),</span>
+<span id="cb32-58"><a href="#cb32-58" tabindex="-1" aria-label="code-block-32-58"></a>                cuda.shfl_sync(<span class="bn">0xFFFFFFFF</span>, datum.imag, nextwarpid)</span>
 <span id="cb32-59"><a href="#cb32-59" tabindex="-1" aria-label="code-block-32-59"></a>            )</span>
 <span id="cb32-60"><a href="#cb32-60" tabindex="-1" aria-label="code-block-32-60"></a></span>
 <span id="cb32-61"><a href="#cb32-61" tabindex="-1" aria-label="code-block-32-61"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(THREAD_COARSEN):</span>
@@ -2084,9 +2121,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/instructor/optimisation.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/optimisation.html",
-  "dateCreated": "2026-05-13",
-  "dateModified": "2026-05-13",
-  "datePublished": "2026-05-13"
+  "dateCreated": "2026-05-15",
+  "dateModified": "2026-05-15",
+  "datePublished": "2026-05-15"
 }
 
   </script><script>

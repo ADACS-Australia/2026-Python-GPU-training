@@ -327,7 +327,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>A GPU Deep Dive</h1>
-        <p>Last updated on 2026-05-13 |
+        <p>Last updated on 2026-05-15 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -367,7 +367,7 @@ Global).</li>
 </div>
 </div>
 <section><h2 class="section-heading" id="a-little-history">A little history<a class="anchor" aria-label="anchor" href="#a-little-history"></a></h2>
-<hr class="half-width"><p>Grahics Processing Units (GPUs) were originally built to offload 2D
+<hr class="half-width"><p>Graphics Processing Units (GPUs) were originally built to offload 2D
 and 3D visualisation computation from the CPU onto a dedicated device.
 The nature of video processing workloads meant that GPUs were built to
 handle data parallel workloads from the start. As GPUs became
@@ -377,7 +377,7 @@ the potential to perform <em>general purpose</em> computation (GPGPU).
 By early as 2003 there were already papers demonstrating how GPU
 graphics primitives could be repurposed to perform linear algebra.</p>
 <p>NVIDIA formalised this general purpose computing on its GPUs with its
-relase of the CUDA library in 2006. Much later in 2016, AMD released
+release of the CUDA library in 2006. Much later in 2016, AMD released
 ROCm which provided a similar GPGPU interface to its own hardware. There
 are also open source APIs including OpenCL and Sycl, Microsoft’s OneAPI
 which claims to bridge a range of accelerators, as well as AMD’s
@@ -391,7 +391,7 @@ processing device or as more general purpose compute
 decisions that might not be useful for (or even harm!) some scientific
 workloads.</p>
 </section><section><h2 class="section-heading" id="the-gpu">The GPU<a class="anchor" aria-label="anchor" href="#the-gpu"></a></h2>
-<hr class="half-width"><p>In most systems, the GPU is phsically distinct from the CPU. It has
+<hr class="half-width"><p>In most systems, the GPU is physically distinct from the CPU. It has
 its own computing cores, its own memory, its own floating point units,
 its own controllers, and a number of other units. The CPU and the GPU
 communicate with each other across some kind of serialisation link such
@@ -430,7 +430,7 @@ suspend and resume threads with little overhead.</li>
 a batches of 32 (or 64 on AMD hardware) known as a <em>warp</em> and
 assigned to run in lockstep.</li>
 </ul><p>A SM has a number of resources shared amongst the cores. We’ve
-already seen that the reigster space is shared. In addition, it has a
+already seen that the register space is shared. In addition, it has a
 shared floating point unit (FPU) where, just like on the CPU, when
 floating point math needs to be performed, the work will be delegated to
 this shared unit. Unlike on CPUs, these FPUs also have specialised
@@ -454,7 +454,7 @@ it is needed.</p>
 offs:</p>
 <table class="table"><thead><tr><th>Memory type</th>
 <th>Operation</th>
-<th>Visibility &amp; Lifetime</th>
+<th>Visibility</th>
 <th>Size</th>
 <th>Speed</th>
 </tr></thead><tbody><tr><td><strong>Global</strong></td>
@@ -474,14 +474,14 @@ offs:</p>
 <td>Fastest</td>
 </tr><tr><td><strong>L1 Cache</strong></td>
 <td>Automatic</td>
-<td>All threads</td>
-<td>Tens of MBs</td>
-<td>Moderate</td>
-</tr><tr><td><strong>L2 Cache</strong></td>
-<td>Automaitc</td>
 <td>SM</td>
 <td>Hundreds of KBs</td>
 <td>Fast</td>
+</tr><tr><td><strong>L2 Cache</strong></td>
+<td>Automatic</td>
+<td>All threads</td>
+<td>Tens of MBs</td>
+<td>Moderate</td>
 </tr></tbody></table><p><strong>Global memory</strong> is where all input data must start and
 ultimately where the results of any computation must be written. When we
 transfer memory from host to device, or back again, we are using global
@@ -512,7 +512,9 @@ though they are physically stored in global memory. Needless to say, you
 will want to avoid register spills as they are terrible for
 performance.)</p>
 <p>The remaining memory types are caches that are automatically
-populated and managed by the device.</p>
+populated and managed by the device. They may make commonly accessed
+parts of global memory faster, depending on the caching policy in
+effect.</p>
 <p><strong>Understanding the different types of GPU memory is crucial to
 GPU optimisation work</strong>. In general, we want to write code that
 minimises slow global memory operations as much as possible, swapping
@@ -562,7 +564,7 @@ powers. In particular, this allows threads within a thread block to
 communicate and coordinate with each other quite efficiently, which is
 often essential for many types of problems.</p>
 <p>This <em>software</em> hierarchy of grid &gt; thread blocks &gt;
-threads has a corrolorary in the <em>hardware</em> hierachy of GPU &gt;
+threads has a corollary in the <em>hardware</em> hierachy of GPU &gt;
 SMs &gt; cores, but it’s important to keep in mind that are separate
 concepts:</p>
 <ul><li>You can have vastly many more thread blocks than SMs: thread blocks
@@ -596,7 +598,7 @@ one time.</li>
 </ul></li>
 <li>Each SM, in turn, takes this queue and further breaks it down into
 32-thread chunks known as <em>warps</em>.
-<ul><li>Warps are assigned to exactly 8 cores.</li>
+<ul><li>Warps are assigned to run on a subset of SM cores.</li>
 <li>As thread blocks are usually larger than 32 threads, they will
 execute as multiple warps.</li>
 <li>Cores become free when: a warp has completed; or a warp
@@ -606,18 +608,18 @@ execute as multiple warps.</li>
 may be retrieved by the host on completion.</li>
 </ol><p>Throughout this process, there are no guarantees of order: thread
 blocks may be assigned to SMs in any order; SMs may execute warps from
-within an thread block in any order; and warps may be suspended and
+within a thread block in any order; and warps may be suspended and
 resumed at the discretion of the SM.</p>
 <figure><img src="fig/gpu-scheduling.png" class="figure mx-auto d-block"></figure></div>
 </section><section><h2 class="section-heading" id="an-aside-latency-hiding">An aside: latency hiding<a class="anchor" aria-label="anchor" href="#an-aside-latency-hiding"></a></h2>
 <hr class="half-width"><p>Modern CPUs and GPUs are so fast that they outpace most of their
 supporting hardware. Reading from memory, for example, takes hundreds of
-CPU/CPU cycles. And without special mitigation techniques, these
+CPU/GPU cycles. And without special mitigation techniques, these
 operations could leave the CPU/GPU cores idle for most of the time and
 terribly inefficient.</p>
 <p>Modern CPU/GPU designs implement all sorts of techniques to mitigate
 these <em>stalls.</em> CPUs, for example, implement a range of complex
-algorithms and hueristics to keep their cores busy including <a href="https://en.wikipedia.org/wiki/Speculative_execution" class="external-link">speculative
+algorithms and heuristics to keep their cores busy including <a href="https://en.wikipedia.org/wiki/Speculative_execution" class="external-link">speculative
 execution</a>, <a href="https://en.wikipedia.org/wiki/Branch_predictor" class="external-link">branch
 prediction</a>, and <a href="https://en.wikipedia.org/wiki/Out-of-order_execution" class="external-link">out of order
 execution</a>.</p>
@@ -632,7 +634,8 @@ will be queued up once again, ready to continue its work. In this way,
 the GPU cores continue making forward progress each and every cycle so
 long as each SM has a sufficiently large pool of queued warps ready and
 waiting to start (or continue) operation.</p>
-<p>In fact, according <a href="https://en.wikipedia.org/wiki/Little%27s_law" class="external-link">Litte’s Law</a>,
+<p>In fact, since warp scheduling involves managing a queue, then
+according <a href="https://en.wikipedia.org/wiki/Little%27s_law" class="external-link">Little’s Law</a>
 with sufficient concurrency even high-latency instructions like memory
 requests will take, on average, just a single cycle.</p>
 <p><strong>Example:</strong> Suppose we have 1000 threads and each
@@ -650,7 +653,7 @@ processed, the original 10 will have completed their memory operation
 and be ready to make further progress. The cores are never idle, the
 overall runtime drops by almost 130 times (!), and the ratio of time
 spent issuing memory versus computation instructions becomes instead
-1:10. Notice how lantency hiding has swapped the ratio, and memory
+1:10. Notice how latency hiding has swapped the ratio, and memory
 operations now contribute very little to the overall runtime.</p>
 <p>You should take away two things from this discussion:</p>
 <ul><li>
@@ -728,9 +731,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/gpu-deepdive.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/gpu-deepdive.html",
-  "dateCreated": "2026-05-13",
-  "dateModified": "2026-05-13",
-  "datePublished": "2026-05-13"
+  "dateCreated": "2026-05-15",
+  "dateModified": "2026-05-15",
+  "datePublished": "2026-05-15"
 }
 
   </script><script>
