@@ -132,7 +132,7 @@ def my_computation(a, b):
     cupy.cuda.get_current_stream().synchronize()
 ```
 
-Now if we measure the timings, the CuPy version on my machine takes 1.8 ms. That's still a great time but its 3 orders of magnitude slower than we first reported!
+Now if we measure the timings, the CuPy version on my machine takes 1.8 ms. That's still a great time but it's 3 orders of magnitude slower than we first reported!
 
 ### Using `cupyx.benchmark()`
 
@@ -191,7 +191,7 @@ This is an important consideration to make in all your work with GPUs: even if t
 
 ## Numpy-style computation
 
-Addition, subtraction, trigonometric functions and so: these all work just as they do with Numpy.
+Addition, subtraction, trigonometric functions and so on: these all work just as they do with Numpy.
 
 Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy we would compute this expansion as:
 
@@ -464,7 +464,7 @@ a = np.random.normal(size=(4, 1024, 1024)) + 1j * np.random.normal(size=(4, 1024
 A = np.fft.fftn(a, axes=(1, 2))
 ```
 
-Performing this on the GPU involves the same steps as before: ensure the arrays reside in GPU memory and replace numpy with CuPY prefixed methods:
+Performing this on the GPU involves the same steps as before: ensure the arrays reside in GPU memory and replace numpy with CuPy prefixed methods:
 
 ```python
 # Create a complex valued 4 x 1024 x 1024 array where real

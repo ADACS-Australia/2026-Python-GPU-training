@@ -11,7 +11,7 @@ title: "Writing your first GPU kernels"
 
 ::: objectives
 
-- Write a basic @cuda.jit function using 1D and 2D indexing.
+- Write a basic GPU kernel using `@cuda.jit` with both 1D and 2D indexing.
 - Implement a Grid-Stride Loop to handle any array size.
 - Use cuda.atomic.add and cuda.shared.array to perform a block-level reduction.
 
@@ -89,7 +89,7 @@ There's a lot to unpack in this brief snippet of code:
 * First, we added a new import: `numba.cuda`.
 * **We've wrapped our kernel with the decorator `@cuda.jit`.** Just like `numba.jit`, this will allow the kernel to compile "just in time" (jit) when we call it based on the input types (e.g. the types of `xs`, `ys`, and `zs`). There is an overhead associated with this initial compilation but subsequent calls will re-use the cached kernel so long as the input types remain unchanged.
 * **We've called `cuda.grid(1)` to determine the index of the kernel.** Unlike our previous example, the index is not passed in as an argument. We've also added a condition to check the index is within range.
-* **We've allocated our GPU arrays using `CuPy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.
+* **We've allocated our GPU arrays using `cupy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.
 * **We've called the `adder_gpu()` function by first providing grid dimensions: blocks and threads per block.** Grid dimensions configure _how many times_ the kernel is run and are directly related to the kernel's index. Each time you call a GPU kernel, you must configure its grid dimensions. We will discuss grid configuration in depth shortly.
 * **All array and memory allocations occur outside of the kernel.** The kernel cannot allocate global memory and so these arrays must be passed as arguments.
 * **The kernel does not return anything (or implicitly, returns None).** Kernels do not return values, and their "outputs" must be provided as a mutable input. In this case, the output is `zs` which must be allocated outside the kernel and passed as an argument to the kernel.
@@ -201,7 +201,7 @@ You should be comfortable with both versions as you'll see them used interchanga
 
 ::: challenge
 
-Return to `adder_gpu` (with1D grid) and modify the code so that it ensures the full arrays are added _irrespective_ of the grid size. That is, ensure the each element is added whether the grid is sized too small or too large.
+Return to `adder_gpu` (with 1D grid) and modify the code so that it ensures the full arrays are added _irrespective_ of the grid size. That is, ensure the each element is added whether the grid is sized too small or too large.
 
 Hint: try replacing the `if` condition with a `for` loop having a step size given by `cuda.gridsize(1)`.
 
@@ -341,9 +341,7 @@ When considering how to design a kernel for this problem, we need to answer a fe
 
 ::: challenge
 
-Consider the following three different variants of kernels and associated grid configurations. What is the preferred choice and why?
-
-**Option 1:**
+Consider the following four variants of kernels and associated grid configurations. Which is the preferred choice and why?
 
 ```python
 # Grid: 3D grid over all values of i, j, k
@@ -361,7 +359,7 @@ def kernel3(i, k, A, B, C):
         C[i, j] += A[i, k] * B[k, j]
 
 # Grid: 1D grid over all values of i
-def kernel3(i, A, B, C):
+def kernel4(i, A, B, C):
     for j in range(C.shape[1]):
         for k in range(A.shape[1]):
             C[i, j] += A[i, k] * B[k, j]
@@ -373,8 +371,8 @@ def kernel3(i, A, B, C):
 
 Two considerations stand out when comparing the kernel options:
 
-* **Race conditions:** Recall that reading, computing, and writing to memory in parallel code does not happen all at once, and multiple threads competing to do this to _the same memory location_ will introduce _race conditions_. Kernels 1 and 3 both introduce kernels with race conditions. In kenrel 1, for each `i,j` coordindate there will be `k` competing kernels. The situation is similar for kernel 3. There are (complex) ways to mitigate these race conditions but we would have to be justified in taking this route.
-* **Maximal parallisation:** All things being equal, we would typically want to maximise the degree of parallelisation and fan out the work across the many thousands of cores of the GPU. Kernel 1 has $i \times j \times k$ threads which, if it didn't suffer from race conditions, would be ideal. In constrast, kernel 3 parallelises only over the $i$ rows of $A$ and for most sizes of matrices even with thousands of rows, this will poorly utilise the GPU (also known as poor occupancy). Kernel 2, on the other hand, has $i \times j$ threads, which even for kernels with dimensions of only a few hundred rows and columns results in tens of thousands of threads.
+* **Race conditions:** Recall that reading, computing, and writing to memory in parallel code does not happen all at once, and multiple threads competing to do this to _the same memory location_ will introduce _race conditions_. Kernels 1 and 3 both introduce kernels with race conditions. In kernel 1, for each `i,j` coordinate there will be `k` competing kernels. The situation is similar for kernel 3. There are (complex) ways to mitigate these race conditions but we would have to be justified in taking this route.
+* **Maximal parallelisation:** All things being equal, we would typically want to maximise the degree of parallelisation and fan out the work across the many thousands of cores of the GPU. Kernel 1 has $i \times j \times k$ threads which, if it didn't suffer from race conditions, would be ideal. In contrast, kernel 4 parallelises only over the $i$ rows of $A$ and for most sizes of matrices even with thousands of rows, this will result in poor GPU occupancy. Kernel 2, on the other hand, has $i \times j$ threads, which even for kernels with dimensions of only a few hundred rows and columns results in tens of thousands of threads.
 
 On these grounds, kernel 2 is the preferred option with a 2D grid configuration that spans $i \times j$.
 
@@ -489,7 +487,7 @@ $X_k = \sum_n^N x_n  e^{-2 i \pi \frac{k n}{N}}$
 In all the examples, we'll be using a complex input given by:
 
 ```python
-xs = np.random.normal(N) + 1j * np.random.normal(N)
+xs = np.random.normal(size=N) + 1j * np.random.normal(size=N)
 ```
 
 for varying values of N.
@@ -630,7 +628,7 @@ In general, this will fail. Can you see why?
 
 As we saw in the parallelism section, this fails due to a race condition: each thread is attempting to read, add, and write a value to global memory, walking all over each other.
 
-One tool in our toolbox are [_atomic operations_](https://nvidia.github.io/numba-cuda/user/intrinsics.html#supported-atomic-operations). These are a limited set of operations (e.g. +, `max`, `min`, but not multiplication!) on a limited set of types (mostly just floats and integers) that allow us to do something like a read-add-write _as a single operation._ In this case, we can use `cuda.atomic_add()` and see how this works:
+One tool in our toolbox are [_atomic operations_](https://nvidia.github.io/numba-cuda/user/intrinsics.html#supported-atomic-operations). These are a limited set of operations (e.g. +, `max`, `min`, but not multiplication!) on a limited set of types (mostly just floats and integers) that allow us to do something like a read-add-write _as a single operation._ In this case, we can use `cuda.atomic.add()` and see how this works:
 
 ```python
 @cuda.jit

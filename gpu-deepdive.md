@@ -119,7 +119,7 @@ Throughout this process, there are no guarantees of order: thread blocks may be 
 
 ![](fig/gpu-scheduling.png)
 
-## An aside: latency hiding
+## Latency hiding
 
 Modern CPUs and GPUs are so fast that they outpace most of their supporting hardware. Reading from memory, for example, takes hundreds of CPU/GPU cycles. And without special mitigation techniques, these operations could leave the CPU/GPU cores idle for most of the time and terribly inefficient.
 
@@ -129,7 +129,7 @@ GPUs use a much simpler technique called _latency hiding_ which takes advantage 
 
 In fact, since warp scheduling involves managing a queue, then according [Little's Law](https://en.wikipedia.org/wiki/Little%27s_law) with sufficient concurrency even high-latency instructions like memory requests will take, on average, just a single cycle.
 
-**Example:** Suppose we have 1000 threads and each thread performs a memory operation (with a 100 cycle latency) and 10 additions (with a 4 cycle latency). If we were to run each thread sequentially it would take 140,000 cycles, of which 92% of those cycles are stalled, with the time spent performing memory versus computation at a ratio of 5:2, respectively. Compare this to a GPU with just 10 cores which is able to concurrently interleave each of the 1000 threads whenever a stall occurs. In the first cycle, the 10 cores issue the memory instruction for the first 10 threads. These will stall for 100 cycles, and so the cores immediately move on to process the next 10 threads. By the time all 1000 threads have had their first instruction processed, the original 10 will have completed their memory operation and be ready to make further progress. The cores are never idle, the overall runtime drops by almost 130 times (!), and the ratio of time spent issuing memory versus computation instructions becomes instead 1:10. Notice how latency hiding has swapped the ratio, and memory operations now contribute very little to the overall runtime.
+**Example:** Suppose we have 1000 threads and each thread performs a memory operation (with a 100 cycle latency) and 10 additions (with a 4 cycle latency). If we were to run each thread sequentially it would take 140,000 cycles, of which 71% of those cycles are stalled, with the time spent performing memory versus computation at a ratio of 5:2, respectively. Compare this to a GPU with just 10 cores which is able to concurrently interleave each of the 1000 threads whenever a stall occurs. In the first cycle, the 10 cores issue the memory instruction for the first 10 threads. These will stall for 100 cycles, and so the cores immediately move on to process the next 10 threads. By the time all 1000 threads have had their first instruction processed, the original 10 will have completed their memory operation and be ready to make further progress. The cores are never idle, the overall runtime drops by over 80 times, and the ratio of time spent issuing memory instructions versus performing computation becomes instead 1:16. Notice how latency hiding has swapped the ratio, and memory operations now contribute very little to the overall runtime.
 
 You should take away two things from this discussion:
 

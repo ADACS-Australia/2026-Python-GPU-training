@@ -30,7 +30,7 @@ V(l, m) = \sum V(u, v, w) e^{2 \pi i  (u l + v m + w [n - 1])} \\
 \textrm{where} \quad n = \sqrt{1 - l^2 - m^2}
 $$
 
-The dimensions $l$ and $m$ span the image domain, whilst the $u, v, w$ coordinates span the (sparse and unevenly sampled) visibility domain. We are prohibited from treating this as a simple 2D fast Fourier transform problem due to two main factors: u, v, w are not even sampled; and the so-called $w$ term is non-neglible.
+The dimensions $l$ and $m$ span the image domain, whilst the $u, v, w$ coordinates span the (sparse and unevenly sampled) visibility domain. We are prohibited from treating this as a simple 2D fast Fourier transform problem due to two main factors: u, v, w are not even sampled; and the so-called $w$ term is non-negligible.
 
 Image sizes are typically thousands of pixels by thousands of pixels; whilst visibility data is similarly millions of rows in length.
 
@@ -40,7 +40,7 @@ By the end, we hope to be able to image the large radio lobes of Fornax A from t
 
 ## A first implementation
 
-As always, we will approach this first on the CPU where we can ensure we first make things right before attemping a first pass at a kernel.
+As always, we will approach this first on the CPU where we can ensure we first make things right before attempting a first pass at a kernel.
 
 Let's first set things up. Our data is stored in the file `visibilities.npz` and we will extract each datum and its associated baseline coordinates:
 
@@ -224,7 +224,7 @@ Some things that NSIGHT Compute can be useful for are:
 * Understanding what is limiting you: are you compute bound or memory bound? Learn to interpret roofline plots.
 * What is the ratio of fused multiply add (FMA) to total floating point instructions? Are you poorly using the more efficient FMA instruction?
 
-Nonetheless, we will be proceeding without these tools and instead we will be presenting the standard set of optimisation techniques that apply to almost all kernel work. If you do use NSIGHT Compute in your work and it warns of poor occupancy, or non-coalescend memory accesses, after this section you will know what these warnings mean. Hopefully, you will also develop an intuition about whether its recommendations are worth pursuing or not.
+Nonetheless, we will be proceeding without these tools and instead we will be presenting the standard set of optimisation techniques that apply to almost all kernel work. If you do use NSIGHT Compute in your work and it warns of poor occupancy, or non-coalesced memory accesses, after this section you will know what these warnings mean. Hopefully, you will also develop an intuition about whether its recommendations are worth pursuing or not.
 
 ## Optimisation pitfalls
 
@@ -320,7 +320,7 @@ For our usecase, we deem 32 bit precision to be acceptable. Modify the input arr
 Some helpful hints:
 
 * The functions `math.cos()` and `math.sin()` promote inputs to 64 bit floats and output the result as 64 bit floats. To force 32 bit computation, you can use `numba.cuda.libdevice.cosf()` and `numba.cuda.libdevice.sinf()`.
-* The functions `np.complex64` and `np.complex128` return an error when passed two arguments inside a kernel. The current `complex(real, image)` will return a complex `np.complex64` so long as both imnputs are `np.float32`.
+* The functions `np.complex64` and `np.complex128` return an error when passed two arguments inside a kernel. The current `complex(real, imag)` will return a complex `np.complex64` so long as both inputs are `np.float32`.
 * Transfer the arrays to the GPU using `cupy.array()` with the keyword argument `dtype`. For example: `arr_d = cupy.array(arr_cpu, dtype=np.float32)`
 
 :::
@@ -364,13 +364,13 @@ us_d, vs_d, ws_d, ls_d, ms_d, ndashes_d = map(
 
 CUDA provides a [wide range of mathematical functions](https://docs.nvidia.com/cuda/cuda-math-api/index.html) at different precisions. These functions are heavily optimised and will use hardware implementations where possible. Numba exposes a subset of these which are documented [here](https://nvidia.github.io/numba-cuda/reference/libdevice.html) and [here](https://nvidia.github.io/numba-cuda/reference/kernel.html#intrinsic-attributes-and-functions).
 
-In fact, we've already made use of these specialised function by using the `sinf` and `cosf` functions.
+In fact, we've already made use of these specialised functions by using the `sinf` and `cosf` functions.
 
 Depending on your use case, you might use these functions to:
 
 * Control the precision of the function
 * Take advantage of specialised functions that might be more efficient for your use case
-* Use _fathmath_ functions
+* Use _fastmath_ functions
 
 `fastmath` functions are worth commenting on slightly further. Fastmath functions take fewer instructions to complete and are therefore faster, but in exchange they trade both precision and correctness. The NVIDIA programming guide, for example, specifies that `fast_sinf()` has an increased error tolerance of $2^{-21.41}$ in the range $-\pi$ to $\pi$, and that this error is larger elsewhere. Fastmath operations also typically break floating point guarantees around associativity and usually assume strictly finite values (NaN and Inf values may be handled incorrectly).
 
@@ -384,8 +384,8 @@ Scan through the list of available mathematical functions that are part of [libd
 
 There are a number of candidates which stand out as options here:
 
-* `sinpi()` and `cospi()` compute the phase by multiplying it by $\pi$. That's one less multiplication operation that can have a small effect on the speed of our kernel.
-* `fast_sin()` and `fast_cos()` are two among a number of similar `fast_` prefixed functions that use their respective fastmath implmentation.
+* `sinpif()` and `cospif()` compute the phase by multiplying it by $\pi$. That's one less multiplication operation that can have a small effect on the speed of our kernel.
+* `fast_sinf()` and `fast_cosf()` are two among a number of similar `fast_` prefixed functions that use their respective fastmath implmentation.
 
 Looking further however, we also spot a family of functions that _co-compute_ both the `sin` and `cos` components of the phase, sharing the result of intermediate computations for both. They are:
 
@@ -447,7 +447,7 @@ for u, v, w, datum in zip(us, vs, ws, data):
 
 Mathematically these are equivalent. In the first we've factored out the $2 \pi$, whilst in the second we've applied this factor to each of the $l, m, n'$ terms prior to entering the loop. On the surface, we've tripled the number of multiplication operations, but we've done so by applying those operations _outside_ the loop. And when the visibility data is large, this upfront cost tends to zero whilst eliding a multiplication operation.
 
-Unfortunately, this kind of optimisation is not always so simple. Remember, our kernel is compiled, and like most modern compilers, the CUDA compiler is an optimising compiler: it will attempt to optimise our code using special huristics. Sometimes the compiler does the right thing, whilst at other times even a slight change in the code might altogether preclude an optimisation from occurring. Even worse, there are multiple layers between our code and what ultimately runs on the GPU: there is the Python to CUDA translation layer; the intermediate PTX language; and the finally compiled SASS kernel. These translation layers are, for the most part, opaque to us and so it is not always clear what the end code looks like nor what optimisations are being performed by the compiler (short of inspecting the PTX assembly instructions).
+Unfortunately, this kind of optimisation is not always so simple. Remember, our kernel is compiled, and like most modern compilers, the CUDA compiler is an optimising compiler: it will attempt to optimise our code using special heuristics. Sometimes the compiler does the right thing, whilst at other times even a slight change in the code might altogether preclude an optimisation from occurring. Even worse, there are multiple layers between our code and what ultimately runs on the GPU: there is the Python to CUDA translation layer; the intermediate PTX language; and the finally compiled SASS kernel. These translation layers are, for the most part, opaque to us and so it is not always clear what the end code looks like nor what optimisations are being performed by the compiler (short of inspecting the PTX assembly instructions).
 
 **This is all to say: optimising the inner loop of the code is a process of experimentation and benchmarking.** Some optimisations, like above, will be obvious. Others, on the other hand, may even introduce performance regressions. Don't be afraid to experiment with different expressions, even when they _should be_ semantically identical.
 
@@ -486,7 +486,7 @@ Our relative performance has increased by more than double:
 
 ![](fig/benchmark-kernel5.png)
 
-Let me remind you to always optimise with a concreate goal in mind. If this performance improvement is already enough to make your computation tractable, then I would advise stopping and counting that as a win. Otherwise, steel yourself for what comes next!
+Let me remind you to always optimise with a concrete goal in mind. If this performance improvement is already enough to make your computation tractable, then I would advise stopping and counting that as a win. Otherwise, steel yourself for what comes next!
 
 ## Optimisation 5: Minimise reading from global memory
 
@@ -1117,7 +1117,7 @@ There's no need to use synchronisation calls because the warp executes in lockst
 
 Remove the shared memory cache from our kernel and instead implement a warp-wide cache that follows the pattern set out above.
 
-Note that `cuda.shfl_sync()` is limited only to floats, doubles. For complex values we'll have to transmit the real and imaginary parts separately, e.g.: `x = complex(cuda.shfl(0xFFFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFFFF, nextwarpid, x.imag))`.
+Note that `cuda.shfl_sync()` is limited only to floats, doubles. For complex values we'll have to transmit the real and imaginary parts separately, e.g.: `x = complex(cuda.shfl_sync(0xFFFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFFFF, nextwarpid, x.imag))`.
 
 :::
 
