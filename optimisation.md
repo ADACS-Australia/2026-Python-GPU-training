@@ -580,9 +580,9 @@ In the above example, we read from memory using the indexing `offset + tid` whic
 
 ### Bank conflicts
 
-Accessing shared memory comes with its own complications, one of which are _bank conflicts_. Shared memory is divided into memory banks and each bank can address only one thread at a time. When multiple threads within a warp request shared memory that is controlled by the same memory bank, a bank conflict occurs and the operations will be serialised. That is, they will be forced to occur one after the other.
+Accessing shared memory comes with its own complications, one of which are _bank conflicts_. Shared memory operations must go via a limited number of memory banks, and if multiple threads make requests to the same memory bank the resulting conflict will force the operations to be serialised. That is, to be performed one after the other.
 
-Modern NVIDIA GPUs have 32 memory banks. Each bank is responsible for 32 bits of memory, with bank 1 responsible for the first 32 bits, bank 2 responsible for the next 32 bits, and so on and repeating. **To avoid conflicts, the optimal pattern to access a shared memory is to ensure that each thread within the warp reads from a unique address, modulo 32 bits.**
+Modern NVIDIA GPUs have 32 memory banks. Each bank is responsible for a 32 bit chunk of memory, with bank 1 responsible for the first 32 bits, bank 2 responsible for the next 32 bits, and so on, looping around every 32 chunks. **To avoid conflicts, the optimal pattern to access shared memory is to ensure that each thread within the warp reads from a unique address, modulo 32 bits.**
 
 You might notice that the 32 bit bank width seems to make bank conflicts inevitable when using 64 bit data. Some texts recommend splitting your 64 bit type into two 32 bit floats and assembling the result over two requests, although this kind of bit fiddling gets messy fast. In my experience, it is usually equally performant to use an access pattern that limits you to just two conflicting requests per bank.
 
