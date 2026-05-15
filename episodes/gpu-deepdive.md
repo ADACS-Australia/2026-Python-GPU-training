@@ -21,7 +21,7 @@ title: "A GPU Deep Dive"
 
 Graphics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). By early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
 
-NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and Sycl, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
+NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and Sycl, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatibility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
 
 Today, GPUs have diverged somewhat in their design depending on whether they are destined to function as a true _graphics_ processing device or as more general purpose compute _accelerator_. Increasingly, AI workloads are driving design decisions that might not be useful for (or even harm!) some scientific workloads.
 
@@ -69,9 +69,9 @@ The GPU has multiple layers of memory, each with different trade offs:
 | **L1 Cache** | Automatic | SM | Hundreds of KBs | Fast |
 | **L2 Cache** | Automatic | All threads | Tens of MBs | Moderate |
 
-**Global memory** is where all input data must start and ultimately where the results of any computation must be written. When we transfer memory from host to device, or back again, we are using global memory. It is the largest store of memory on the GPU and is visibile by all threads on the GPU. It is fully controlled by the host: the host allocates the memory and chooses when to destroy it. It thus outlives any kernels that run in the interim.
+**Global memory** is where all input data must start and ultimately where the results of any computation must be written. When we transfer memory from host to device, or back again, we are using global memory. It is the largest store of memory on the GPU and is visible by all threads on the GPU. It is fully controlled by the host: the host allocates the memory and chooses when to destroy it. It thus outlives any kernels that run in the interim.
 
-**Shared memory** is a much smaller pool of transient memory that can be utilised by a thread block, and which lives only as long as the thread block. Shared memory resides within the SM itself and is much faster than global memory. Shared memory is often used by thread block as a shared cache or as a means to communicate and coordinate work.
+**Shared memory** is a much smaller pool of transient memory that can be utilised by a thread block, and which lives only as long as the thread block. Shared memory resides within the SM itself and is much faster than global memory. Shared memory is often used by thread blocks as a shared cache or as a means to communicate and coordinate work.
 
 **Registers** are the collection of individual variables used by a single thread. For example, a register might be used by a loop counter, or to store an intermediate calculation, or to cache a value from global memory so that it can later be used. Registers exist only for the life of the thread and are visible only to itself. Unlike with CPUs, registers aren't attached directly to processing cores, but are shared by the entire SM: this allows a warp to be paused and later continued on any of the SMs cores without worrying about transferring registers.
 
@@ -95,7 +95,7 @@ When launching a computation on the GPU, you must first configure its _grid_. A 
 
 You might wonder, why do we have thread blocks? The reason: thread blocks are executed on a single SM, and this gives their threads special powers. In particular, this allows threads within a thread block to communicate and coordinate with each other quite efficiently, which is often essential for many types of problems.
 
-This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierachy of GPU > SMs > cores, but it's important to keep in mind that are separate concepts:
+This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierachy of GPU > SMs > cores, but it's important to keep in mind that they are separate concepts:
 
 * You can have vastly many more thread blocks than SMs: thread blocks are enqueued to SMs when they have capacity, and each SM usually has a number of thread blocks enqueued at any one time.
 * Similarly, the number of threads you can configure can be vastly larger than the physical cores. In fact, for reasons of performance (see: [latency hiding](#an-aside-latency-hiding)) this is usually preferable.

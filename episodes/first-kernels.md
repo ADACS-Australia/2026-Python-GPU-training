@@ -99,8 +99,8 @@ There's a lot to unpack in this brief snippet of code:
 * First, we added a new import: `numba.cuda`.
 * **We've wrapped our kernel with the decorator `@cuda.jit`.** Just like `numba.jit`, this will allow the kernel to compile "just in time" (jit) when we call it based on the input types (e.g. the types of `xs`, `ys`, and `zs`). There is an overhead associated with this initial compilation but subsequent calls will re-use the cached kernel so long as the input types remain unchanged.
 * **We've called `cuda.grid(1)` to determine the index of the kernel.** Unlike our previous example, the index is not passed in as an argument. We've also added a condition to check the index is within range.
-* **We've allocated our GPU kernels using `CuPy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.
-* **We've called the `add()` function by first providing grid dimensions: blocks and threads per block.** Grid dimensions configure _how many times_ the kernel is run and are directly related to the kernel's index. Each time you call a GPU kernel, you must configure its grid dimensions. We will discuss grid configuration in depth shortly.
+* **We've allocated our GPU arrays using `CuPy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.
+* **We've called the `adder_gpu()` function by first providing grid dimensions: blocks and threads per block.** Grid dimensions configure _how many times_ the kernel is run and are directly related to the kernel's index. Each time you call a GPU kernel, you must configure its grid dimensions. We will discuss grid configuration in depth shortly.
 * **All array and memory allocations occur outside of the kernel.** The kernel cannot allocate global memory and so these arrays must be passed as arguments.
 * **The kernel does not return anything (or implicitly, returns None).** Kernels do not return values, and their "outputs" must be provided as a mutable input. In this case, the output is `zs` which must be allocated outside the kernel and passed as an argument to the kernel.
 
@@ -175,7 +175,7 @@ You might wonder at this point: threads make sense as they're the fundamental un
 
 There's a few things to factor in when choosing a grid size:
 
-- Ideally, choose the number of threads per block to be a multiple of your warp size. This means multiples of 32 threads for NVIDIA hardware and 64 for AMD. Remember that theads are executed in lockstep as a warp; if its not a round multiple, any excess cores will nonetheless be enrolled in the warp with their result ignored.
+- Ideally, choose the number of threads per block to be a multiple of your warp size. This means multiples of 32 threads for NVIDIA hardware and 64 for AMD. Remember that threads are executed in lockstep as a warp; if its not a round multiple, any excess cores will nonetheless be enrolled in the warp with their result ignored.
 - Don't make the threads per block too large. You want to strike a balance where you have a lot of blocks so that each SM has a queue of work that it can cycle through as its cores become idle; at the same time you want to ensure the blocks are large enough to mitigate overheads from block scheduling.
 - Rarely will a grid size match the problem size. Whilst your threads per block must be a multiple of 32, we wouldn't expect your data to also be an even multiple. When sizing your grid, you'll need to ensure your kernel includes a condition that checks that its index lies within the data.
 
@@ -198,7 +198,7 @@ zs = cupy.empty_like(xs)
 adder[(256, 256), (32, 32)](xs, ys, zs)
 ```
 
-In practice, it is more common to a one dimensional index.
+In practice, it is more common to use a one dimensional index.
 
 In actual fact, `cuda.grid()` and its sibling `cuda.gridsize()` (which returns the total number of threads across the grid) are helper functions. They wraps the more primitive variables:
 
@@ -244,7 +244,7 @@ def adder_gpu(xs, ys, zs):
 
 Using a for loop like this is a very common idiom in kernel design, known as a _grid stride loop_. As before, it ensures we stay within the bounds of the array, but it doesn't rely on the grid being at least as large as the problem. Later, you'll see it lends itself to other common optimisations.
 
-When the block size it set to 1, the GPU is able to utilise only one of its SMs. The rest will sit idle, resulting in very poor utilisation of the GPU, also known as _occupancy_.
+When the block size is set to 1, the GPU is able to utilise only one of its SMs. The rest will sit idle, resulting in very poor utilisation of the GPU, also known as _occupancy_.
 
 When the thread size is too large, your kernel may crash. When especially large, the kernel may exceed the shared resources of the SM, for example its register space. It's rare that thread counts greater than 1024 are useful or performant.
 
@@ -275,7 +275,7 @@ We've talked earlier about how a warp executes its threads in lockstep. But in t
 When a warp encounters a condition, it will first evaluate the condition. Then:
 
 - If the condition evaluates _identically_ across the warp (e.g. each thread evaluates to true), then the warp will continue executing the one conditional branch.
-- On the other hand, if threads evaluate _differently_ across the warp then we get _warp divergence_. In this case, the warp must evaluate both branches of the condition, and due to the lockstep nature of SIMT, it will do this sequentially: first one branch, and then the other. Each thread that is not part of the current conditional branch will be masked, essentially performing a "no-op" for eachof their respective processor cycles.
+- On the other hand, if threads evaluate _differently_ across the warp then we get _warp divergence_. In this case, the warp must evaluate both branches of the condition, and due to the lockstep nature of SIMT, it will do this sequentially: first one branch, and then the other. Each thread that is not part of the current conditional branch will be masked, essentially performing a "no-op" for each of their respective processor cycles.
 
 Warp divergence is expensive since it wastes processor cycles. You will want to ensure warp divergence occurs in as few warps as possible, and this plays a factor in both kernel design and grid configuration.
 
@@ -454,8 +454,8 @@ And with the following grid configuration:
 
 ```python
 threads = 16
-nblockx = math.ceil(C.size[0] / threads)
-nblocky = math.ceil(C.size[1] / threads)
+nblockx = math.ceil(C.shape[0] / threads)
+nblocky = math.ceil(C.shape[1] / threads)
 matmul[(nblockx, nblocky), (threads, threads)](A, B, C)
 ```
 
@@ -582,6 +582,7 @@ def kernel(k, xs, Xs):
 @njit(parallel=True)
 def dft(xs):
     Xs = np.zeros_like(xs)
+    N = len(Xs)
 
     for k in prange(N):
         kernel(k, xs, Xs)

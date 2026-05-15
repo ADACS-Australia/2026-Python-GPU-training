@@ -19,7 +19,7 @@ title: Optimisation
 
 ## A toy problem
 
-We're going to start with a toy problem: imaging radio interferometry data. In other domains, this is a also known as a non-uniform Fourier transform: we transform from a 3D visibility space to a 2D surface within the imaging space.
+We're going to start with a toy problem: imaging radio interferometry data. In other domains, this is also known as a non-uniform Fourier transform: we transform from an irregularly sampled 3D visibility space to a 2D surface within the imaging space.
 
 An important non-aim: we are not looking to make _algorithmic_ improvements. Real-world imaging software rarely performs a full _direct_ Fourier transform since it is so costly, but those alternative algorithm are more complex and are not our focus here.
 
@@ -64,7 +64,7 @@ ndashes = np.sqrt(1 - ls**2 - ms**2) - 1
 
 ::: challenge
 
-Using numba's `njit` and `prange` functions, attempt to write an CPU-parallel implementation of the direction imaging equation. Ask yourself: what is the unit of parallelisation?
+Using numba's `njit` and `prange` functions, attempt to write an CPU-parallel implementation of the direct imaging equation. Ask yourself: what is the unit of parallelisation?
 
 Using matplotlib's `imshow()`, save a figure of the real components of the image.
 
@@ -114,7 +114,7 @@ def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
         # Retrieve l, m and ndash coordinates associated with this pixel
         l, m, ndash = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
 
-        # Perform the for this one pixel over all of the visibility data
+        # Perform the sum for this one pixel over all of the visibility data
         for u, v, w, datum in zip(us, vs, ws, data):
             phase = 2 * np.pi * (u * l + v * m + w * ndash)
             img[lpx, mpx] += datum * np.exp(1j * phase)
@@ -245,9 +245,9 @@ As you will see as we progress here, optimisation comes with important downsides
 
 ## Optimisation 1: Minimise writing to global memory
 
-We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop.
+We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel writes to global memory on every single inner loop.
 
-Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scaracity of memory and result in fewer simultaneous thread blocks being scheduled in a SM.)
+Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scarcity of memory and result in fewer simultaneous thread blocks being scheduled in a SM.)
 
 How do you identify which memory is which?
 
@@ -519,7 +519,7 @@ In pseudo-code:
 # Create shared memory array
 xs_shared = cuda.shared.array(256, dtype=np.float32)
 
-tid = cuda.threadIdx.x. # threadId _within_ the thread block
+tid = cuda.threadIdx.x  # threadId _within_ the thread block
 N = len(xs_global)
 
 # Step through the array in blocks of 256
@@ -549,7 +549,7 @@ Some important comments:
 * We create shared memory by calling `cuda.shared.array(...)` in each thread. But this syntax is deceptive: it _looks_ like each thread creates its own shared array, but this allocation is actually performed just once at the thread block level. Each thread shares the same shared memory array.
 * The `cuda.threadIdx.x` is the thread ID _within_ the thread block, ranging in this case from 0 to 255. This is not the global thread ID which we get from `cuda.grid(1)`.
 * The thread ID guarantees that each thread reads from, and writes to, a unique address in global and shared memory.
-* Since threads within are thread block are not guaranteed to operate in lockstep (only at the warp level is this true), we need to call the synchronisation function `cuda.syncthreads()`. This function acts a gate that stops threads within a given thread block from progressing until all threads have reached this point. This guarantees two things: that the cache is fully populated before we attempt to read from it; and later, that the cache is not updated until all threads have completed reading from it.
+* Since threads within a thread block are not guaranteed to operate in lockstep (only at the warp level is this true), we need to call the synchronisation function `cuda.syncthreads()`. This function acts a gate that stops threads within a given thread block from progressing until all threads have reached this point. This guarantees two things: that the cache is fully populated before we attempt to read from it; and later, that the cache is not updated until all threads have completed reading from it.
 * We have to handle the case where `N` is not a multiple of 256. In the example above, on the final batch we pad the shared array with zeros on the assumption that zero is idempotent under our kernel. Other options for handling this remainder exist, such as:
 
    ```
@@ -588,7 +588,7 @@ Accessing shared memory comes with its own complications, one of which are _bank
 
 Modern NVIDIA GPUs have 32 memory banks. Each bank is responsible for 32 bits of memory, with bank 1 responsible for the first 32 bits, bank 2 responsible for the next 32 bits, and so on and repeating. **To avoid conflicts, the optimal pattern to access a shared memory is to ensure that each thread within the warp reads from a unique address, modulo 32 bits.**
 
-You might notice that the 32 bit bank width seems to make bank conflicts innevitable when using 64 bit data. Some texts recommend splitting your 64 bit type into two 32 bit floats and assembling the resut over two requests, although this kind of bit fiddling gets messy fast. In my experience, it is usually equally performant to use an access pattern that limits you to just two conflicting requests per bank.
+You might notice that the 32 bit bank width seems to make bank conflicts inevitable when using 64 bit data. Some texts recommend splitting your 64 bit type into two 32 bit floats and assembling the result over two requests, although this kind of bit fiddling gets messy fast. In my experience, it is usually equally performant to use an access pattern that limits you to just two conflicting requests per bank.
 
 Finally: there's a special exception. If every thread accesses the same shared memory address, no conflict occurs and the value will instead be _broadcast_ across the warp. (And this is precisely what the example code above does in its hot loop.)
 
@@ -955,7 +955,7 @@ for j in range(NTHREADS):
         pixels[i] += data_cache[j] * complex(cos, sin)
 ```
 
-This hot loop optimisation avoids uneccessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both version, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
+This hot loop optimisation avoids uneccessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both versions, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
 
 :::
 
@@ -967,7 +967,7 @@ Fused multiply add (FMA) instructions are a special hardware instruction that co
 cuda.fma(a, b, c) = a * b + c
 ```
 
-If we can rewrite a pair multiplication and addition operations as a single FMA operation, we can straightforwardly double our performance. (In fact, the numbers for GPU floating point performance that you'll see NVIDIA or AMD advertising _assume_ that 100% of your code is pure FMA instructions – which almost no non-trivial kernel is possible of achieving.)
+If we can rewrite a pair multiplication and addition operations as a single FMA operation, we can straightforwardly double our performance. (In fact, the numbers for GPU floating point performance that you'll see NVIDIA or AMD advertising _assume_ that 100% of your code is pure FMA instructions – which almost no non-trivial kernel is capable of achieving.)
 
 The CUDA compiler _should_ make an effort to automatically attempt to insert FMA instructions into your code, but it has been my experience that it is less than perfect.
 
@@ -1122,7 +1122,7 @@ There's no need to use synchronisation calls because the warp executes in lockst
 
 Remove the shared memory cache from our kernel and instead implement a warp-wide cache that follows the pattern set out above.
 
-Note that `cuda.shfl_sync()` is limited only to floats, doubles. For complex values we'll have to transmit the real and imaginary parts separately, e.g.: `x = complex(cuda.shfl(0xFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFF, nextwarpid, x.imag))`.
+Note that `cuda.shfl_sync()` is limited only to floats, doubles. For complex values we'll have to transmit the real and imaginary parts separately, e.g.: `x = complex(cuda.shfl(0xFFFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFFFF, nextwarpid, x.imag))`.
 
 :::
 
