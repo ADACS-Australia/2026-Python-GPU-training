@@ -11,7 +11,7 @@ title: "Writing your first GPU kernels"
 
 ::: objectives
 
-- Write a basic @cuda.jit function using 1D and 2D indexing.
+- Write a basic GPU kernel using `@cuda.jit` with both 1D and 2D indexing.
 - Implement a Grid-Stride Loop to handle any array size.
 - Use cuda.atomic.add and cuda.shared.array to perform a block-level reduction.
 
