@@ -19,16 +19,16 @@ title: "A GPU Deep Dive"
 
 ## A little history
 
-Grahics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). By early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
+Graphics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). By early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
 
-NVIDIA formalised this general purpose computing on its GPUs with its relase of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and Sycl, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
+NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and Sycl, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
 
 Today, GPUs have diverged somewhat in their design depending on whether they are destined to function as a true _graphics_ processing device or as more general purpose compute _accelerator_. Increasingly, AI workloads are driving design decisions that might not be useful for (or even harm!) some scientific workloads.
 
 
 ## The GPU
 
-In most systems, the GPU is phsically distinct from the CPU. It has its own computing cores, its own memory, its own floating point units, its own controllers, and a number of other units. The CPU and the GPU communicate with each other across some kind of serialisation link such as PCIe.
+In most systems, the GPU is physically distinct from the CPU. It has its own computing cores, its own memory, its own floating point units, its own controllers, and a number of other units. The CPU and the GPU communicate with each other across some kind of serialisation link such as PCIe.
 
 Oftentimes you will see the CPU referred to as the host, and the GPU referred to as the device. This language should stress the separation of these two domains.
 
@@ -51,7 +51,7 @@ GPU cores (sometimes called a 'CUDA cores', or 'shader processors') are like the
 - They don't have their own register space. Registers are the small "scratch pad" of memory that is immediately accessible by a core. On a CPU, the register is attached to the core, with the downside that if a thread moves between cores it must also move the register memory. On a GPU, the register space is shared by the SM, which makes it easy to suspend and resume threads with little overhead.
 - They always run in SIMD/SIMT mode. Threads are grouped together into a batches of 32 (or 64 on AMD hardware) known as a _warp_ and assigned to run in lockstep.
 
-A SM has a number of resources shared amongst the cores. We've already seen that the reigster space is shared. In addition, it has a shared floating point unit (FPU) where, just like on the CPU, when floating point math needs to be performed, the work will be delegated to this shared unit. Unlike on CPUs, these FPUs also have specialised hardware for computing some more complex math functions, like exponents, logarithms and trigonometry. More modern GPUs also have tensor cores which are specialised for matrix operations.
+A SM has a number of resources shared amongst the cores. We've already seen that the register space is shared. In addition, it has a shared floating point unit (FPU) where, just like on the CPU, when floating point math needs to be performed, the work will be delegated to this shared unit. Unlike on CPUs, these FPUs also have specialised hardware for computing some more complex math functions, like exponents, logarithms and trigonometry. More modern GPUs also have tensor cores which are specialised for matrix operations.
 
 You might ask, why have the streaming multiprocessor at all? Why have this intermediary entity in the hierarchy between the GPU and the cores themselves? The answer: physical locality. A GPU is a physical device and distance matters. By grouping the cores and assigning each a set of shared resources that reside nearby on the die, we can make their use cheaper and faster.
 
@@ -61,13 +61,13 @@ The GPU has its own memory that is distinct from the host memory. In fact, the G
 
 The GPU has multiple layers of memory, each with different trade offs:
 
-| Memory type | Operation |  Visibility & Lifetime | Size | Speed |
+| Memory type | Operation |  Visibility | Size | Speed |
 |---|---|---|----|---|
 | **Global** | Manual | All threads | Tens of GBs | Slow |
 | **Shared** | Manual | Thread block | Hundreds of KBs | Fast |
 | **Registers** | Manual | Thread | Hundreds of KBs | Fastest |
-| **L1 Cache** | Automatic | All threads | Tens of MBs | Moderate |
-| **L2 Cache** | Automaitc | SM | Hundreds of KBs | Fast |
+| **L1 Cache** | Automatic | SM | Hundreds of KBs | Fast |
+| **L2 Cache** | Automatic | All threads | Tens of MBs | Moderate |
 
 **Global memory** is where all input data must start and ultimately where the results of any computation must be written. When we transfer memory from host to device, or back again, we are using global memory. It is the largest store of memory on the GPU and is visibile by all threads on the GPU. It is fully controlled by the host: the host allocates the memory and chooses when to destroy it. It thus outlives any kernels that run in the interim.
 
@@ -77,7 +77,7 @@ The GPU has multiple layers of memory, each with different trade offs:
 
 (Register spills occur when a thread uses so many registers that they can't all fit in the SM. When this happens, the compiler (silently) lets some of the registers "spill" into global memory. These values are referred to as local memory: they're accessible only by the thread even though they are physically stored in global memory. Needless to say, you will want to avoid register spills as they are terrible for performance.)
 
-The remaining memory types are caches that are automatically populated and managed by the device.
+The remaining memory types are caches that are automatically populated and managed by the device. They may make commonly accessed parts of global memory faster, depending on the caching policy in effect.
 
 **Understanding the different types of GPU memory is crucial to GPU optimisation work**. In general, we want to write code that minimises slow global memory operations as much as possible, swapping these for much faster shared or register memory operations.
 
@@ -95,7 +95,7 @@ When launching a computation on the GPU, you must first configure its _grid_. A 
 
 You might wonder, why do we have thread blocks? The reason: thread blocks are executed on a single SM, and this gives their threads special powers. In particular, this allows threads within a thread block to communicate and coordinate with each other quite efficiently, which is often essential for many types of problems.
 
-This _software_ hierarchy of grid > thread blocks > threads has a corrolorary in the _hardware_ hierachy of GPU > SMs > cores, but it's important to keep in mind that are separate concepts:
+This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierachy of GPU > SMs > cores, but it's important to keep in mind that are separate concepts:
 
 * You can have vastly many more thread blocks than SMs: thread blocks are enqueued to SMs when they have capacity, and each SM usually has a number of thread blocks enqueued at any one time.
 * Similarly, the number of threads you can configure can be vastly larger than the physical cores. In fact, for reasons of performance (see: [latency hiding](#an-aside-latency-hiding)) this is usually preferable.
@@ -110,26 +110,26 @@ Putting this all together, we can now describe the lifecycle of computation on a
 3. The computation is launched. The _GPU scheduler_ begins the process of enqueueing thread blocks to each SM.
    * Each SM typically has multiple thread blocks enqueued to it at any one time.
 4. Each SM, in turn, takes this queue and further breaks it down into 32-thread chunks known as _warps_.
-   * Warps are assigned to exactly 8 cores.
+   * Warps are assigned to run on a subset of SM cores.
    * As thread blocks are usually larger than 32 threads, they will execute as multiple warps.
    * Cores become free when: a warp has completed; or a warp "stalls".
 5. The result of the computation is written back to global memory and may be retrieved by the host on completion.
 
-Throughout this process, there are no guarantees of order: thread blocks may be assigned to SMs in any order; SMs may execute warps from within an thread block in any order; and warps may be suspended and resumed at the discretion of the SM.
+Throughout this process, there are no guarantees of order: thread blocks may be assigned to SMs in any order; SMs may execute warps from within a thread block in any order; and warps may be suspended and resumed at the discretion of the SM.
 
 ![](fig/gpu-scheduling.png)
 
 ## An aside: latency hiding
 
-Modern CPUs and GPUs are so fast that they outpace most of their supporting hardware. Reading from memory, for example, takes hundreds of CPU/CPU cycles. And without special mitigation techniques, these operations could leave the CPU/GPU cores idle for most of the time and terribly inefficient.
+Modern CPUs and GPUs are so fast that they outpace most of their supporting hardware. Reading from memory, for example, takes hundreds of CPU/GPU cycles. And without special mitigation techniques, these operations could leave the CPU/GPU cores idle for most of the time and terribly inefficient.
 
-Modern CPU/GPU designs implement all sorts of techniques to mitigate these _stalls._ CPUs, for example, implement a range of complex algorithms and hueristics to keep their cores busy including [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution), [branch prediction](https://en.wikipedia.org/wiki/Branch_predictor), and [out of order execution](https://en.wikipedia.org/wiki/Out-of-order_execution).
+Modern CPU/GPU designs implement all sorts of techniques to mitigate these _stalls._ CPUs, for example, implement a range of complex algorithms and heuristics to keep their cores busy including [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution), [branch prediction](https://en.wikipedia.org/wiki/Branch_predictor), and [out of order execution](https://en.wikipedia.org/wiki/Out-of-order_execution).
 
 GPUs use a much simpler technique called _latency hiding_ which takes advantage of the fact that they _always_ operate in a multithreaded mode. The basic idea is that as soon as a warp stalls (due to any reason: memory request, floating point computation, synchronisation call, etc.) it is suspended and another warp is immediately swapped to run in its place. At some point, the stalled warp will become unstalled (e.g. the memory returned the desired value) and will be queued up once again, ready to continue its work. In this way, the GPU cores continue making forward progress each and every cycle so long as each SM has a sufficiently large pool of queued warps ready and waiting to start (or continue) operation.
 
-In fact, according [Litte's Law](https://en.wikipedia.org/wiki/Little%27s_law), with sufficient concurrency even high-latency instructions like memory requests will take, on average, just a single cycle.
+In fact, since warp scheduling involves managing a queue, then according [Little's Law](https://en.wikipedia.org/wiki/Little%27s_law) with sufficient concurrency even high-latency instructions like memory requests will take, on average, just a single cycle.
 
-**Example:** Suppose we have 1000 threads and each thread performs a memory operation (with a 100 cycle latency) and 10 additions (with a 4 cycle latency). If we were to run each thread sequentially it would take 140,000 cycles, of which 92% of those cycles are stalled, with the time spent performing memory versus computation at a ratio of 5:2, respectively. Compare this to a GPU with just 10 cores which is able to concurrently interleave each of the 1000 threads whenever a stall occurs. In the first cycle, the 10 cores issue the memory instruction for the first 10 threads. These will stall for 100 cycles, and so the cores immediately move on to process the next 10 threads. By the time all 1000 threads have had their first instruction processed, the original 10 will have completed their memory operation and be ready to make further progress. The cores are never idle, the overall runtime drops by almost 130 times (!), and the ratio of time spent issuing memory versus computation instructions becomes instead 1:10. Notice how lantency hiding has swapped the ratio, and memory operations now contribute very little to the overall runtime.
+**Example:** Suppose we have 1000 threads and each thread performs a memory operation (with a 100 cycle latency) and 10 additions (with a 4 cycle latency). If we were to run each thread sequentially it would take 140,000 cycles, of which 92% of those cycles are stalled, with the time spent performing memory versus computation at a ratio of 5:2, respectively. Compare this to a GPU with just 10 cores which is able to concurrently interleave each of the 1000 threads whenever a stall occurs. In the first cycle, the 10 cores issue the memory instruction for the first 10 threads. These will stall for 100 cycles, and so the cores immediately move on to process the next 10 threads. By the time all 1000 threads have had their first instruction processed, the original 10 will have completed their memory operation and be ready to make further progress. The cores are never idle, the overall runtime drops by almost 130 times (!), and the ratio of time spent issuing memory versus computation instructions becomes instead 1:10. Notice how latency hiding has swapped the ratio, and memory operations now contribute very little to the overall runtime.
 
 You should take away two things from this discussion:
 

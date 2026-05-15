@@ -220,7 +220,7 @@ Up till now we have used simple timers to measure performance. NVIDIA provides a
 
 In my personal experience, NSIGHT Systems can be very useful to understand how your program runs, how kernels might be delayed by dependencies such as memory transfers, and how this might be mitigated by using multiple CUDA streams.
 
-Our task here, however, is purely in optimising the kernel itself, and this is specifically the role for NSIGHT Compute. Unfortunately, I have rarely found this to be useful tool. NSIGHT Compute tabulates all sorts of hardware counters (FMA instructions, cache hits, memory accesses, etc.) which by itself is overwhelming and rarely useful to the non-expert. Along with this raw data, it also tries to forumulate suggestions as to how to improve your kernel; I've found these suggestions to be usually hit and miss.
+Our task here, however, is purely in optimising the kernel itself, and this is specifically the role for NSIGHT Compute. Unfortunately, I have rarely found this to be useful tool. NSIGHT Compute tabulates all sorts of hardware counters (FMA instructions, cache hits, memory accesses, etc.) which by itself is overwhelming and rarely useful to the non-expert. Along with this raw data, it also tries to formulate suggestions as to how to improve your kernel; I've found these suggestions to be usually hit and miss.
 
 Some things that NSIGHT Compute can be useful for are:
 
@@ -247,7 +247,7 @@ As you will see as we progress here, optimisation comes with important downsides
 
 We've already touched on this optimisation strategy before, but it's important enough to repeat here: reading and writing to _global_ memory is expensive and currently our kernel currently writes to global memory on every single inner loop.
 
-Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scaracity of memory and result in fewer simulatenous thread blocks being scheduled in a SM.)
+Memory ordered from fastest to slowest is: local memory, then shared memory, and finally global memory. But by the same token, there is far less local and shared memory storage available; local arrays should typically be sized in the single digits, and shared arrays should typically be sized at most to a few hundred or so entries. (Large reservations of local and shared arrays cause a scaracity of memory and result in fewer simultaneous thread blocks being scheduled in a SM.)
 
 How do you identify which memory is which?
 
@@ -302,10 +302,11 @@ On the CPU, floating point performance usually doesn't depend on the precision. 
 To do this for our kernels, there are a few things we need to do:
 
 * **Initialise all arrays by explicitly** passing the optional `dtype` keyword argument and setting to `np.float64`, `np.float32`, `np.float16` (or their complex equivalents, `np.complex128` and `np.complex64`).
+* **Use the `dtype` attribute when transferring arrays to the GPU.** For example, `arr_d = cupy.array(arr, dtype=np.float32)` will transfer _and_ cast the floating point values at the same time.
 * **Cast existing arrays using the `astype()` method** e.g. `arr_f32 = arr_f64.astype(np.float32)`.
 * **Initialize (or cast) all intermediate variables or constants with explicit types.** For example:
 
-   * Create an accumator variable with a typed constructor: `acc = np.complex32(0)`
+   * Create an accumator variable with a typed constructor: `acc = np.complex64(0)`
    * Cast Pi to the appropriate precision _before_ use in computation: `np.float32(np.pi)`
 
 * **Use typed mathematical functions** from [`cuda.libdevice`](https://nvidia.github.io/numba-cuda/reference/libdevice.html) to compute at the desired precision (e.g. using `cuda.libdevice.sinf()` rather than `math.sin()`).
@@ -483,7 +484,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
 ## Intermission
 
-Let's take stock for a momnent. So far, our optimisation steps have been relatively minor. The code is not substantially more complex and is still easy to understand and reason about.
+Let's take stock for a moment. So far, our optimisation steps have been relatively minor. The code is not substantially more complex and is still easy to understand and reason about.
 
 Our relative performance has increased by more than double:
 
@@ -512,7 +513,7 @@ This pattern is illustrated in following animation. This animation depicts the p
 
 <iframe src="fig/shared-memory.html" height=500 width=100%></iframe>
 
-In pseduo-code:
+In pseudo-code:
 
 ```python
 # Create shared memory array
@@ -548,20 +549,24 @@ Some important comments:
 * We create shared memory by calling `cuda.shared.array(...)` in each thread. But this syntax is deceptive: it _looks_ like each thread creates its own shared array, but this allocation is actually performed just once at the thread block level. Each thread shares the same shared memory array.
 * The `cuda.threadIdx.x` is the thread ID _within_ the thread block, ranging in this case from 0 to 255. This is not the global thread ID which we get from `cuda.grid(1)`.
 * The thread ID guarantees that each thread reads from, and writes to, a unique address in global and shared memory.
-* Since threads within are thread block are not guaranteed to operate in lockstep (only at the warp level is this true), we need to call the synchronisation function `cuda.synchthreads()`. This function acts a gate that stops threads within a given thread block from progressing until all threads have reached this point. This guarantees two things: that the cache is fully populated before we attempt to read from it; and later, that the cache is not updated until all threads have completed reading from it.
+* Since threads within are thread block are not guaranteed to operate in lockstep (only at the warp level is this true), we need to call the synchronisation function `cuda.syncthreads()`. This function acts a gate that stops threads within a given thread block from progressing until all threads have reached this point. This guarantees two things: that the cache is fully populated before we attempt to read from it; and later, that the cache is not updated until all threads have completed reading from it.
 * We have to handle the case where `N` is not a multiple of 256. In the example above, on the final batch we pad the shared array with zeros on the assumption that zero is idempotent under our kernel. Other options for handling this remainder exist, such as:
 
    ```
-   for i in range(256, min(N - offset)):
+   for i in range(min(256, N - offset)):
        x = xs_shared[i]
        # Compute...
     ```
+
+   Although computing this range dynamically on every loop is usually more computationally costly.
 
 ::: callout
 
 ### Warning
 
-`cuda.syncthreads()` acts as a gate that stops threads from progressing until all threads within a thread block have reached that point. But beware: `cuda.syncthreads()` should not be put inside a conditional branch since not all threads may reach a conditional synchronisation point. The result of doing so is undefined and may hang. Likewise, this advice applies to threads that conditionally return early and therefore bypass future synchronisation points.
+`cuda.syncthreads()` acts as a gate that stops threads from progressing until all threads within a thread block have reached that point. But beware: `cuda.syncthreads()` should not be put inside a conditional branch. A conditional branch may result in some threads mever reaching the synchronisation point and the result of doing so is undefined and may lead to deadlock. Similarly, this advice applies to threads that conditionally return early and therefore bypass future synchronisation points.
+
+:::
 
 ::: callout
 
@@ -575,15 +580,23 @@ In the above example, we read from memory using the indexing `offset + tid` whic
 
 :::
 
-:: callout
+::: callout
 
 ### Bank conflicts
+
+Accessing shared memory comes with its own complications, one of which are _bank conflicts_. Shared memory is divided into memory banks and each bank can address only one thread at a time. When multiple threads within a warp request shared memory that is controlled by the same memory bank, a bank conflict occurs and the operations will be serialised. That is, they will be forced to occur one after the other.
+
+Modern NVIDIA GPUs have 32 memory banks. Each bank is responsible for 32 bits of memory, with bank 1 responsible for the first 32 bits, bank 2 responsible for the next 32 bits, and so on and repeating. **To avoid conflicts, the optimal pattern to access a shared memory is to ensure that each thread within the warp reads from a unique address, modulo 32 bits.**
+
+You might notice that the 32 bit bank width seems to make bank conflicts innevitable when using 64 bit data. Some texts recommend splitting your 64 bit type into two 32 bit floats and assembling the resut over two requests, although this kind of bit fiddling gets messy fast. In my experience, it is usually equally performant to use an access pattern that limits you to just two conflicting requests per bank.
+
+Finally: there's a special exception. If every thread accesses the same shared memory address, no conflict occurs and the value will instead be _broadcast_ across the warp. (And this is precisely what the example code above does in its hot loop.)
 
 :::
 
 ::: challenge
 
-Modify the kernel to mimimise global memory reads by caching the global values from `us`, `vs`, `ws`, and `data`.
+Modify the kernel to minimise global memory reads by caching the global values from `us`, `vs`, `ws`, and `data`.
 
 Start by creating shared memory arrays at the top of the kernel:
 
@@ -699,7 +712,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
 :::
 
-## Optimistion 6: Thread coarsening
+## Optimisation 6: Thread coarsening
 
 Sometimes too much of a good thing can be a bad thing. When it comes to GPU threads, we want enough threads that all SMs have a number of thread blocks queued at any one time. This ensures all CUDA cores are doing work at any one time, and when a thread block needs to pause to wait for something (e.g. to access global memory) there is another thread block reading and waiting to advance its own work.
 
@@ -716,7 +729,7 @@ def dft(xs, Xs):
     N = len(xs)
 
     if k < N:
-        xs_k = np.complex64(0)
+        Xs_k = np.complex64(0)
         for n in range(N):
             phase = -2 * np.float32(np.pi) * k * n / N
             sin, cos = cuda.libdevice.fast_sincosf(phase)
@@ -792,9 +805,9 @@ print(cupyx.profiler.benchmark(lambda: dft_coarsened[nblocks, threads](xs, Xs), 
 
 On my own machine, I saw best performance when `THREAD_COARSEN` was set to 4, but it will vary based on the kernel, the GPU, and the problem size. Even larger thread coarsening factors risk a number of problems:
 
-1. The number of thread blocks may descrease to the point where the GPU's SMs are not well utilised.
+1. The number of thread blocks may decrease to the point where the GPU's SMs are not well utilised.
 2. The memory requirements of each thread will obstruct the number of simultaneous thread blocks that can be scheduled on a single SM.
-3. Eventually, the memory required for a single thread may become so large that the local register storage "spills" out into global memory. Whe this happens, some of our local variables end up being actually stored in global memory, which is disasterous for performance.
+3. Eventually, the memory required for a single thread may become so large that the local register storage "spills" out into global memory. When this happens, some of our local variables end up being actually stored in global memory, which is disasterous for performance.
 
 :::
 
@@ -942,13 +955,13 @@ for j in range(NTHREADS):
         pixels[i] += data_cache[j] * complex(cos, sin)
 ```
 
-This hot loop optimisation avoids unneccessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both version, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
+This hot loop optimisation avoids uneccessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both version, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
 
 :::
 
 ## Optimisation 7: Force FMA instructions
 
-Fused multiply add (FMA) instructions are a special hardware instruction that combines both a muliplication and addition as a single operation. In pseudo-code:
+Fused multiply add (FMA) instructions are a special hardware instruction that combines both a multiplication and addition as a single operation. In pseudo-code:
 
 ```python
 cuda.fma(a, b, c) = a * b + c
@@ -986,7 +999,7 @@ Check that this makes sense to you!
 
 We are going to rewrite `pixels[i] += data_cache[j] * complex(cos, sin)` as a sequence of 4 FMA instructions.
 
-There's a small problem here. Whilst we can retrieve the real and imaginary components of a complex number with the `.real` and `.imag` attributes respectively, we aren't able to mofify these values. To simplify the presentation here, we will create the accumlation array `pixel` as 2D array, with the second dimension corrsponding to the real and imaginary components:
+There's a small problem here. Whilst we can retrieve the real and imaginary components of a complex number with the `.real` and `.imag` attributes respectively, we aren't able to modify these values. To simplify the presentation here, we will create the accumulation array `pixel` as 2D array, with the second dimension corresponding to the real and imaginary components:
 
 ```python
 pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
@@ -994,7 +1007,7 @@ pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
 
 (You will need to update the code that zeroes this array too.)
 
-Once you have done this, attept to write out the inplace complex addition as a sequence of 4 FMA instructions. As a hint, the first looks like this:
+Once you have done this, attempt to write out the inplace complex addition as a sequence of 4 FMA instructions. As a hint, the first looks like this:
 
 ```python
 pixels[i, 0] = cuda.fma(datum.real, cos, pixels[i, 0])
@@ -1083,7 +1096,7 @@ We're going to use these intrinsics to replace our shared memory cache. Instead 
 
 `cuda.shfl_sync()` accepts 3 parameters:
 
-- The first is a mask which indicates which of the warp threads are to participate in the swap. Since we want every thread to play its part, we set this to `0xFFFFFF`.
+- The first is a mask which indicates which of the warp threads are to participate in the swap. Since we want every thread to play its part, we set this to `0xFFFFFFFF`.
 - The second parameter is the source ID. Ranging from 0 to 31, this identifies the warp whose value we want to receive.
 - The payload value. This is the value that we offer up to the shuffle, and if another warp member set us as the origin, this is the value that they will receive.
 
@@ -1100,7 +1113,7 @@ for i in range(0, N, cuda.warpsize):
         # Do some computation with x
 
         # Then daisy chain x amongst the warp
-        x = cuda.shfl_sync(0xFFFFFF, nextwarpid, x)
+        x = cuda.shfl_sync(0xFFFFFFFF, nextwarpid, x)
 ```
 
 There's no need to use synchronisation calls because the warp executes in lockstep (however, be careful to avoid divergence at any place where `shfl_sync` is called).
@@ -1171,13 +1184,13 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                 pixels[i, 1] = cuda.fma(datum.imag, cos, pixels[i, 1])
 
             # Daisychain the values around members of the warp
-            u = cuda.shfl_sync(0xffffff, u, nextwarpid)
-            v = cuda.shfl_sync(0xffffff, v, nextwarpid)
-            w = cuda.shfl_sync(0xffffff, w, nextwarpid)
+            u = cuda.shfl_sync(0xFFFFFFFF, u, nextwarpid)
+            v = cuda.shfl_sync(0xFFFFFFFF, v, nextwarpid)
+            w = cuda.shfl_sync(0xFFFFFFFF, w, nextwarpid)
 
             datum = complex(
-                cuda.shfl_sync(0xffffff, datum.real, nextwarpid),
-                cuda.shfl_sync(0xffffff, datum.imag, nextwarpid)
+                cuda.shfl_sync(0xFFFFFFFF, datum.real, nextwarpid),
+                cuda.shfl_sync(0xFFFFFFFF, datum.imag, nextwarpid)
             )
 
     for i in range(THREAD_COARSEN):
