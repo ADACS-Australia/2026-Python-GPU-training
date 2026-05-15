@@ -25,19 +25,19 @@ GPU parallelism specifically trades _latency_ for _throughput_: any single GPU c
 
 ## Flavours of parallelism
 
-Parallel code comes two principal forms. The first, task parallelism, is the principal model of threaded operations on the CPU. The GPU, however, makes use of a much more restrictive form a parallelism known as data parallelism.
+Parallel code comes in two principal forms. The first, task parallelism, is the principal model of threaded operations on the CPU. The GPU, however, makes use of a much more restrictive form known as data parallelism.
 
 ### Task Parallelism
 
 Task parallelism divides up the work into different types of jobs. Each task functions autonomously and relies on different communication methods between tasks to coordinate the work. Tasks in this model form a complex graph structure, with dependencies between nodes.
 
-**Example:** Consider the process of building a bike: prhaps one person assembles frames, another constructs tyres and a third puts it all together. This form of task parallelism is a bit like how a factory may be organised and is called _pipelining_.
+**Example:** Consider the process of building a bike: perhaps one person assembles frames, another constructs tyres and a third puts it all together. This form of task parallelism is a bit like how a factory may be organised and is called _pipelining_.
 
-**Example:** Consider, instead, the process of building customised bikes to order. Here each person builds a bike in its entirety, but customised towards the order specification. Depending on the type of customisation, builds may take varying amounts of time. This type of task parallism is called a _worker pool_.
+**Example:** Consider, instead, the process of building customised bikes to order. Here each person builds a bike in its entirety, but customised towards the order specification. Depending on the type of customisation, builds may take varying amounts of time. This type of task parallelism is called a _worker pool_.
 
 Task parallelism requires careful coordination between tasks:
 
-- In pipelining, tasks may operate a different speeds. This means:
+- In pipelining, tasks may operate at different speeds. This means:
    - Data must be passed between tasks in a way that clearly construes ownership. For example, there's no point the assembler trying to install tyres that are only partially constructed.
    - Buffers or queues must be implemented between tasks to absorb the different rates of work
    - If upstream queues are empty or downstream queues are full, tasks must be able to pause
@@ -87,7 +87,7 @@ The types of overhead differ between CPU and GPU. When using CPU-backed threads,
 
 - **Thread spawning**: which involves creating a thread and allocating it some initial memory
 - **Context switching:** when there are more threads than cores, the host OS will periodically suspend threads to "fairly" let each thread advance its work
-- **Communication overhead:** all higher level communication methods are built on a toolbox of atomics, locks, semphores and condition variables and these have a non-neglible overhead
+- **Communication overhead:** all higher level communication methods are built on a toolbox of atomics, locks, sempahores and condition variables and these have a non-negligible overhead
 
 On the GPU the costs are different mostly owe to the fact that a CPU (the "host") and the GPU (the "device") are physically distinct. Some of these costs include:
 
@@ -114,7 +114,7 @@ for i in prange(len(xs)):  # prange executes each iteration of the loop in paral
     xs[i - 1] = x  # shift down
 ```
 
-This is example of a race condition: the code implicitly expects all threads to have read from `xs` before any thread then writes to it. The problem is that there is no guarantee that these operations will occur in lockstep across all the threads. One thread, for example, might write to `xs` before other threads have even begun, or vice versa.
+This is an example of a race condition: the code implicitly expects all threads to have read from `xs` before any thread then writes to it. The problem is that there is no guarantee that these operations will occur in lockstep across all the threads. One thread, for example, might write to `xs` before other threads have even begun, or vice versa.
 
 Or consider a data parallel sum:
 
