@@ -509,7 +509,7 @@ of our computation function:</p>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1" aria-label="code-block-5-5"></a>    cupy.cuda.get_current_stream().synchronize()</span></code></pre>
 </div>
 <p>Now if we measure the timings, the CuPy version on my machine takes
-1.8 ms. That’s still a great time but its 3 orders of magnitude slower
+1.8 ms. That’s still a great time but it’s 3 orders of magnitude slower
 than we first reported!</p>
 </div>
 <div class="section level3">
@@ -589,8 +589,8 @@ setup costs like memory transfers don’t eclipse your savings.</p>
 </div>
 </div>
 </section><section><h2 class="section-heading" id="numpy-style-computation">Numpy-style computation<a class="anchor" aria-label="anchor" href="#numpy-style-computation"></a></h2>
-<hr class="half-width"><p>Addition, subtraction, trigonometric functions and so: these all work
-just as they do with Numpy.</p>
+<hr class="half-width"><p>Addition, subtraction, trigonometric functions and so on: these all
+work just as they do with Numpy.</p>
 <p>Let’s consider computing the Taylor expansion the exponential
 function. Recall that this is: <span class="math inline">\(e^x = \sum_n
 \frac{x^n}{n!}\)</span>. In numpy we would compute this expansion
@@ -962,7 +962,7 @@ essential to getting good performance.</p>
 <span id="cb20-6"><a href="#cb20-6" tabindex="-1" aria-label="code-block-20-6"></a>A <span class="op">=</span> np.fft.fftn(a, axes<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span></code></pre>
 </div>
 <p>Performing this on the GPU involves the same steps as before: ensure
-the arrays reside in GPU memory and replace numpy with CuPY prefixed
+the arrays reside in GPU memory and replace numpy with CuPy prefixed
 methods:</p>
 <div class="codewrapper sourceCode" id="cb21">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>

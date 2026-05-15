@@ -235,7 +235,7 @@
       <div class="accordion-body">
         <ul><li><a href="#a-little-history">A little history</a></li>
 <li><a href="#the-gpu">The GPU</a></li>
-<li><a href="#an-aside-latency-hiding">An aside: latency hiding</a></li>
+<li><a href="#latency-hiding">Latency hiding</a></li>
         </ul></div><!--/div.accordion-body-->
     </div><!--/div.accordion-collapse-->
 
@@ -613,7 +613,7 @@ blocks may be assigned to SMs in any order; SMs may execute warps from
 within a thread block in any order; and warps may be suspended and
 resumed at the discretion of the SM.</p>
 <figure><img src="../fig/gpu-scheduling.png" class="figure mx-auto d-block"></figure></div>
-</section><section><h2 class="section-heading" id="an-aside-latency-hiding">An aside: latency hiding<a class="anchor" aria-label="anchor" href="#an-aside-latency-hiding"></a></h2>
+</section><section><h2 class="section-heading" id="latency-hiding">Latency hiding<a class="anchor" aria-label="anchor" href="#latency-hiding"></a></h2>
 <hr class="half-width"><p>Modern CPUs and GPUs are so fast that they outpace most of their
 supporting hardware. Reading from memory, for example, takes hundreds of
 CPU/GPU cycles. And without special mitigation techniques, these
@@ -643,7 +643,7 @@ requests will take, on average, just a single cycle.</p>
 <p><strong>Example:</strong> Suppose we have 1000 threads and each
 thread performs a memory operation (with a 100 cycle latency) and 10
 additions (with a 4 cycle latency). If we were to run each thread
-sequentially it would take 140,000 cycles, of which 92% of those cycles
+sequentially it would take 140,000 cycles, of which 71% of those cycles
 are stalled, with the time spent performing memory versus computation at
 a ratio of 5:2, respectively. Compare this to a GPU with just 10 cores
 which is able to concurrently interleave each of the 1000 threads
@@ -653,10 +653,10 @@ cycles, and so the cores immediately move on to process the next 10
 threads. By the time all 1000 threads have had their first instruction
 processed, the original 10 will have completed their memory operation
 and be ready to make further progress. The cores are never idle, the
-overall runtime drops by almost 130 times (!), and the ratio of time
-spent issuing memory versus computation instructions becomes instead
-1:10. Notice how latency hiding has swapped the ratio, and memory
-operations now contribute very little to the overall runtime.</p>
+overall runtime drops by over 80 times, and the ratio of time spent
+issuing memory instructions versus performing computation becomes
+instead 1:16. Notice how latency hiding has swapped the ratio, and
+memory operations now contribute very little to the overall runtime.</p>
 <p>You should take away two things from this discussion:</p>
 <ul><li>
 <strong>Architect your GPU kernels to ensure that you achieve high

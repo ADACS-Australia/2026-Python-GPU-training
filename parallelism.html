@@ -379,10 +379,10 @@ your problem can be decomposed into many independent units of work, a
 GPU can process all of them in far less total time than a serial CPU
 could manage.</p>
 </section><section><h2 class="section-heading" id="flavours-of-parallelism">Flavours of parallelism<a class="anchor" aria-label="anchor" href="#flavours-of-parallelism"></a></h2>
-<hr class="half-width"><p>Parallel code comes two principal forms. The first, task parallelism,
-is the principal model of threaded operations on the CPU. The GPU,
-however, makes use of a much more restrictive form a parallelism known
-as data parallelism.</p>
+<hr class="half-width"><p>Parallel code comes in two principal forms. The first, task
+parallelism, is the principal model of threaded operations on the CPU.
+The GPU, however, makes use of a much more restrictive form known as
+data parallelism.</p>
 <div class="section level3">
 <h3 id="task-parallelism">Task Parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a></h3>
 <p>Task parallelism divides up the work into different types of jobs.
@@ -390,16 +390,16 @@ Each task functions autonomously and relies on different communication
 methods between tasks to coordinate the work. Tasks in this model form a
 complex graph structure, with dependencies between nodes.</p>
 <p><strong>Example:</strong> Consider the process of building a bike:
-prhaps one person assembles frames, another constructs tyres and a third
-puts it all together. This form of task parallelism is a bit like how a
-factory may be organised and is called <em>pipelining</em>.</p>
+perhaps one person assembles frames, another constructs tyres and a
+third puts it all together. This form of task parallelism is a bit like
+how a factory may be organised and is called <em>pipelining</em>.</p>
 <p><strong>Example:</strong> Consider, instead, the process of building
 customised bikes to order. Here each person builds a bike in its
 entirety, but customised towards the order specification. Depending on
 the type of customisation, builds may take varying amounts of time. This
-type of task parallism is called a <em>worker pool</em>.</p>
+type of task parallelism is called a <em>worker pool</em>.</p>
 <p>Task parallelism requires careful coordination between tasks:</p>
-<ul><li>In pipelining, tasks may operate a different speeds. This means:
+<ul><li>In pipelining, tasks may operate at different speeds. This means:
 <ul><li>Data must be passed between tasks in a way that clearly construes
 ownership. For example, there’s no point the assembler trying to install
 tyres that are only partially constructed.</li>
@@ -475,7 +475,7 @@ each thread advance its work</li>
 <li>
 <strong>Communication overhead:</strong> all higher level
 communication methods are built on a toolbox of atomics, locks,
-semphores and condition variables and these have a non-neglible
+sempahores and condition variables and these have a non-negligible
 overhead</li>
 </ul><p>On the GPU the costs are different mostly owe to the fact that a CPU
 (the “host”) and the GPU (the “device”) are physically distinct. Some of
@@ -520,12 +520,12 @@ each item in an array down one element (and wrap around):</p>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>    x <span class="op">=</span> xs[i]</span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>    xs[i <span class="op">-</span> <span class="dv">1</span>] <span class="op">=</span> x  <span class="co"># shift down</span></span></code></pre>
 </div>
-<p>This is example of a race condition: the code implicitly expects all
-threads to have read from <code>xs</code> before any thread then writes
-to it. The problem is that there is no guarantee that these operations
-will occur in lockstep across all the threads. One thread, for example,
-might write to <code>xs</code> before other threads have even begun, or
-vice versa.</p>
+<p>This is an example of a race condition: the code implicitly expects
+all threads to have read from <code>xs</code> before any thread then
+writes to it. The problem is that there is no guarantee that these
+operations will occur in lockstep across all the threads. One thread,
+for example, might write to <code>xs</code> before other threads have
+even begun, or vice versa.</p>
 <p>Or consider a data parallel sum:</p>
 <div class="codewrapper sourceCode" id="cb2">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -603,7 +603,7 @@ serial form first, and use this to test your parallel code later.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>

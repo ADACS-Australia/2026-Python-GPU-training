@@ -394,14 +394,14 @@ V(l, m) = \sum V(u, v, w) e^{2 \pi i  (u l + v m + w [n - 1])} \\
 <p>The dimensions <span class="math inline">\(l\)</span> and <span class="math inline">\(m\)</span> span the image domain, whilst the <span class="math inline">\(u, v, w\)</span> coordinates span the (sparse and
 unevenly sampled) visibility domain. We are prohibited from treating
 this as a simple 2D fast Fourier transform problem due to two main
-factors: u, v, w are not even sampled; and the so-called <span class="math inline">\(w\)</span> term is non-neglible.</p>
+factors: u, v, w are not even sampled; and the so-called <span class="math inline">\(w\)</span> term is non-negligible.</p>
 <p>Image sizes are typically thousands of pixels by thousands of pixels;
 whilst visibility data is similarly millions of rows in length.</p>
 <p>By the end, we hope to be able to image the large radio lobes of
 Fornax A from the raw visibility data.</p>
 <figure><img src="../fig/fornaxA.png" class="figure mx-auto d-block"></figure></section><section><h2 class="section-heading" id="a-first-implementation">A first implementation<a class="anchor" aria-label="anchor" href="#a-first-implementation"></a></h2>
 <hr class="half-width"><p>As always, we will approach this first on the CPU where we can ensure
-we first make things right before attemping a first pass at a
+we first make things right before attempting a first pass at a
 kernel.</p>
 <p>Let’s first set things up. Our data is stored in the file
 <code>visibilities.npz</code> and we will extract each datum and its
@@ -476,7 +476,7 @@ take too long for you, try reducing the data even more aggressively.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <p>We parallelise over each pixel which, for a 700 x 700 pixel image,
 gives us just shy of 500,000 threads. And since each pixel is its own
@@ -530,7 +530,7 @@ identity <span class="math inline">\(e^{i \phi} = \cos{\phi} + i
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <p>The implementation is very similar to that used in Numba’s prange
 loop. Some points of note:</p>
@@ -612,7 +612,7 @@ might you encounter and how could they be mitigated?</p>
 <button class="accordion-button instructor-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructor1" aria-expanded="false" aria-controls="collapseInstructor1">
   <h3 class="accordion-header" id="headingInstructor1">  <div class="note-square"><i aria-hidden="true" class="callout-icon" data-feather="edit-2"></i></div> Instructor Note </h3>
 </button>
-<div id="collapseInstructor1" class="accordion-collapse collapse" data-bs-parent="#accordionInstructor1" aria-labelledby="headingInstructor1">
+<div id="collapseInstructor1" class="accordion-collapse collapse" aria-labelledby="headingInstructor1" data-bs-parent="#accordionInstructor1">
 <div class="accordion-body">
 <p>Like with the DFT, this would be two-fold operation: a broadcasting
 operation that would produce a 3-dimensional array, following by a
@@ -666,7 +666,7 @@ instruction?</li>
 </ul><p>Nonetheless, we will be proceeding without these tools and instead we
 will be presenting the standard set of optimisation techniques that
 apply to almost all kernel work. If you do use NSIGHT Compute in your
-work and it warns of poor occupancy, or non-coalescend memory accesses,
+work and it warns of poor occupancy, or non-coalesced memory accesses,
 after this section you will know what these warnings mean. Hopefully,
 you will also develop an intuition about whether its recommendations are
 worth pursuing or not.</p>
@@ -740,7 +740,7 @@ culmination of the kernel.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb8">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -849,8 +849,8 @@ To force 32 bit computation, you can use
 <code>numba.cuda.libdevice.sinf()</code>.</li>
 <li>The functions <code>np.complex64</code> and
 <code>np.complex128</code> return an error when passed two arguments
-inside a kernel. The current <code>complex(real, image)</code> will
-return a complex <code>np.complex64</code> so long as both imnputs are
+inside a kernel. The current <code>complex(real, imag)</code> will
+return a complex <code>np.complex64</code> so long as both inputs are
 <code>np.float32</code>.</li>
 <li>Transfer the arrays to the GPU using <code>cupy.array()</code> with
 the keyword argument <code>dtype</code>. For example:
@@ -864,7 +864,7 @@ the keyword argument <code>dtype</code>. For example:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -908,13 +908,13 @@ of mathematical functions</a> at different precisions. These functions
 are heavily optimised and will use hardware implementations where
 possible. Numba exposes a subset of these which are documented <a href="https://nvidia.github.io/numba-cuda/reference/libdevice.html" class="external-link">here</a>
 and <a href="https://nvidia.github.io/numba-cuda/reference/kernel.html#intrinsic-attributes-and-functions" class="external-link">here</a>.</p>
-<p>In fact, we’ve already made use of these specialised function by
+<p>In fact, we’ve already made use of these specialised functions by
 using the <code>sinf</code> and <code>cosf</code> functions.</p>
 <p>Depending on your use case, you might use these functions to:</p>
 <ul><li>Control the precision of the function</li>
 <li>Take advantage of specialised functions that might be more efficient
 for your use case</li>
-<li>Use <em>fathmath</em> functions</li>
+<li>Use <em>fastmath</em> functions</li>
 </ul><p><code>fastmath</code> functions are worth commenting on slightly
 further. Fastmath functions take fewer instructions to complete and are
 therefore faster, but in exchange they trade both precision and
@@ -943,17 +943,17 @@ efficient operations.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
 <div class="accordion-body">
 <p>There are a number of candidates which stand out as options here:</p>
 <ul><li>
-<code>sinpi()</code> and <code>cospi()</code> compute the phase by
+<code>sinpif()</code> and <code>cospif()</code> compute the phase by
 multiplying it by <span class="math inline">\(\pi\)</span>. That’s one
 less multiplication operation that can have a small effect on the speed
 of our kernel.</li>
 <li>
-<code>fast_sin()</code> and <code>fast_cos()</code> are two among a
-number of similar <code>fast_</code> prefixed functions that use their
+<code>fast_sinf()</code> and <code>fast_cosf()</code> are two among
+a number of similar <code>fast_</code> prefixed functions that use their
 respective fastmath implmentation.</li>
 </ul><p>Looking further however, we also spot a family of functions that
 <em>co-compute</em> both the <code>sin</code> and <code>cos</code>
@@ -1038,7 +1038,7 @@ a multiplication operation.</p>
 <p>Unfortunately, this kind of optimisation is not always so simple.
 Remember, our kernel is compiled, and like most modern compilers, the
 CUDA compiler is an optimising compiler: it will attempt to optimise our
-code using special huristics. Sometimes the compiler does the right
+code using special heuristics. Sometimes the compiler does the right
 thing, whilst at other times even a slight change in the code might
 altogether preclude an optimisation from occurring. Even worse, there
 are multiple layers between our code and what ultimately runs on the
@@ -1087,10 +1087,10 @@ the optimisation kicked in again.)</p>
 been relatively minor. The code is not substantially more complex and is
 still easy to understand and reason about.</p>
 <p>Our relative performance has increased by more than double:</p>
-<figure><img src="../fig/benchmark-kernel5.png" class="figure mx-auto d-block"></figure><p>Let me remind you to always optimise with a concreate goal in mind.
-If this performance improvement is already enough to make your
-computation tractable, then I would advise stopping and counting that as
-a win. Otherwise, steel yourself for what comes next!</p>
+<figure><img src="../fig/benchmark-kernel5.png" class="figure mx-auto d-block"></figure><p>Let me remind you to always optimise with a concrete goal in mind. If
+this performance improvement is already enough to make your computation
+tractable, then I would advise stopping and counting that as a win.
+Otherwise, steel yourself for what comes next!</p>
 </section><section><h2 class="section-heading" id="optimisation-5-minimise-reading-from-global-memory">Optimisation 5: Minimise reading from global memory<a class="anchor" aria-label="anchor" href="#optimisation-5-minimise-reading-from-global-memory"></a></h2>
 <hr class="half-width"><p>We’ve previously used a local accumulation variable to minimise
 <em>writes</em> to global memory. In this section, however, we’re going
@@ -1355,7 +1355,7 @@ memory.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb17">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1539,7 +1539,7 @@ the ideal factor?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
 <div class="accordion-body">
 <p>On my own machine, I saw best performance when
 <code>THREAD_COARSEN</code> was set to 4, but it will vary based on the
@@ -1634,7 +1634,7 @@ stored in global memory, which is disasterous for performance.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb22">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1813,7 +1813,7 @@ like this:</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
 <div class="accordion-body">
 <p>Finally, we arrive at a kernel that looks like that shown below.</p>
 <div class="codewrapper sourceCode" id="cb30">
@@ -1955,7 +1955,7 @@ a warp-wide cache that follows the pattern set out above.</p>
 <p>Note that <code>cuda.shfl_sync()</code> is limited only to floats,
 doubles. For complex values we’ll have to transmit the real and
 imaginary parts separately, e.g.:
-<code>x = complex(cuda.shfl(0xFFFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFFFF, nextwarpid, x.imag))</code>.</p>
+<code>x = complex(cuda.shfl_sync(0xFFFFFFFF, nextwarpid, x.real), cuda.shfl(0xFFFFFFFF, nextwarpid, x.imag))</code>.</p>
 </div>
 </div>
 </div>
@@ -1964,7 +1964,7 @@ imaginary parts separately, e.g.:
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
 <div class="accordion-body">
 <p>Shared memory is the idiomatic way to cache data and avoid global
 memory operations: it is what you will see in most CUDA tutorials, and
