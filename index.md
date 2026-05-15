@@ -61,4 +61,4 @@ Additionally, the examples given here are aimed towards people coming from a phy
 With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
 
 * The shared memory optimisation animation (using Gemini 3).
-* Code proofing and final feedback (Claude 4.6)
+* Final code proofing and feedback (Claude 4.6)
