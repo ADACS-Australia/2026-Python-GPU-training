@@ -42,20 +42,6 @@ This course is taught using Python and a number of libraries that allow writing 
 
 And rest assured: the concepts learned here can be applied wholesale to CUDA programming in C or C++ (or Julia, Rust, ...).
 
-## Expected background
-
-This course sets a reasonably high bar for what you are expected to already know, including:
-
-* Python
-* Primitive data types: integers, floats, doubles, etc. and their machine representation
-* numpy, including [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html)
-* Some experience with `numba` and its [parallelisation functions](https://numba.pydata.org/numba-doc/dev/user/parallel.html)
-
-Additionally, the examples given here are aimed towards people coming from a physics, astronomy, or engineering background. It will help if you are familiar with:
-
-* Basic mathematical sum notation, e.g. for [discrete Fourier transform](https://en.wikipedia.org/wiki/Discrete_Fourier_transform)
-* Complex numbers (and, for example, [Euler's formula](https://en.wikipedia.org/wiki/Euler's_formula))
-
 ## AI Declaration
 
 With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
