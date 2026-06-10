@@ -89,7 +89,7 @@ def my_computation(a, b):
 
 timer = timeit.Timer(lambda: my_computation(a, b))
 
-# Call `do_some_work()` just once, and repeat this 10 times
+# Call `my_computation()` just once, and repeat this 10 times
 elapsed_times = timer.repeat(repeat=10, number=1)
 print(min(elapsed_times))
 ```
@@ -355,7 +355,7 @@ def DFT_fused(xs):
     kns = ks[:, None] * ns[None, :]
 
     # The sum is a reduction operation that shouldn't be fused
-    return cupy.sum(xs[None, :] *  _DFT_fused(kns, N), axis=1)
+    return cupy.sum(xs[None, :] * _DFT_fused(kns, N), axis=1)
 ```
 
 :::
@@ -384,7 +384,7 @@ print(
 
 Note that here we've used the matrix multiplication operator, `@`, which is shorthand for either `np.linalg.matmul` or `cupy.linalg.matmul` depending on the array type.
 
-The speed-up is huge: on my own hardware, we observe 16.6 s versus just 107 ms.
+The speed-up is huge: on my own hardware, I observe 16.6 s versus just 107 ms.
 
 Similarly, we can perform matrix inversion or decomposition just as we would using numpy:
 
