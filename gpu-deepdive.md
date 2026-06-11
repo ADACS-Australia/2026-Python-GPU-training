@@ -19,9 +19,9 @@ title: "A GPU Deep Dive"
 
 ## A little history
 
-Graphics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). By early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
+Graphics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). As early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
 
-NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and Sycl, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatibility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
+NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and SYCL, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatibility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
 
 Today, GPUs have diverged somewhat in their design depending on whether they are destined to function as a true _graphics_ processing device or as more general purpose compute _accelerator_. Increasingly, AI workloads are driving design decisions that might not be useful for (or even harm!) some scientific workloads.
 
@@ -49,7 +49,7 @@ GPU cores (sometimes called a 'CUDA cores', or 'shader processors') are like the
 - They are much simpler in design.
 - They are physically smaller, mostly as a result of being slower and simpler.
 - They don't have their own register space. Registers are the small "scratch pad" of memory that is immediately accessible by a core. On a CPU, the register is attached to the core, with the downside that if a thread moves between cores it must also move the register memory. On a GPU, the register space is shared by the SM, which makes it easy to suspend and resume threads with little overhead.
-- They always run in SIMD/SIMT mode. Threads are grouped together into a batches of 32 (or 64 on AMD hardware) known as a _warp_ and assigned to run in lockstep.
+- They always run in SIMD/SIMT mode. Threads are grouped together into batches of 32 (or 64 on AMD hardware) known as a _warp_ and assigned to run in lockstep.
 
 A SM has a number of resources shared amongst the cores. We've already seen that the register space is shared. In addition, it has a shared floating point unit (FPU) where, just like on the CPU, when floating point math needs to be performed, the work will be delegated to this shared unit. Unlike on CPUs, these FPUs also have specialised hardware for computing some more complex math functions, like exponents, logarithms and trigonometry. More modern GPUs also have tensor cores which are specialised for matrix operations.
 
@@ -95,11 +95,57 @@ When launching a computation on the GPU, you must first configure its _grid_. A 
 
 You might wonder, why do we have thread blocks? The reason: thread blocks are executed on a single SM, and this gives their threads special powers. In particular, this allows threads within a thread block to communicate and coordinate with each other quite efficiently, which is often essential for many types of problems.
 
-This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierachy of GPU > SMs > cores, but it's important to keep in mind that they are separate concepts:
+This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierarchy of GPU > SMs > cores, but it's important to keep in mind that they are separate concepts:
 
 * You can have vastly many more thread blocks than SMs: thread blocks are enqueued to SMs when they have capacity, and each SM usually has a number of thread blocks enqueued at any one time.
 * Similarly, the number of threads you can configure can be vastly larger than the physical cores. In fact, for reasons of performance (see: [latency hiding](#an-aside-latency-hiding)) this is usually preferable.
 * Thread blocks don't need to be multiples of the warp size, e.g. multiples of 32. You can size your thread blocks arbitrarily, up to the hardware-imposed limit of your GPU. Although for performance reasons you probably shouldn't!
+
+::: challenge
+
+### Why thread blocks?
+
+The GPU hardware hierarchy is GPU → SMs → cores. The software hierarchy is grid → thread blocks → threads.
+
+1. Why doesn't the GPU scheduler simply assign threads directly to cores, skipping the intermediate layer of thread blocks?
+2. Two thread blocks A and B are launched. Is it possible for threads in block A to communicate with threads in block B using shared memory? Why or why not?
+3. What happens if you launch a grid with more thread blocks than there are SMs?
+
+:::
+
+::: solution
+
+1. Thread blocks exist because they are the unit of scheduling and resource management on the GPU. Key reasons:
+
+   - Thread blocks are assigned to a single SM for their entire lifetime. This gives their threads access to shared memory and synchronisation primitives, which are SM-local resources. Without blocks, the GPU would have to track which threads share which resources on a per-thread basis, which is far more complex.
+  - Thread blocks are the granularity at which the GPU schedules work. The scheduler enqueues and dequeues blocks (not individual threads) onto SMs. If it had to schedule millions of individual threads, the bookkeeping overhead would be enormous.
+  - Resource limits (registers, shared memory) are enforced per-block, so the GPU can decide at launch time whether a block fits on an SM without having to reason about arbitrary groups of threads.
+
+2. No. Shared memory is scoped to a thread block. Threads in block A and block B may be on different SMs, each with its own shared memory. Even if both blocks happen to be on the same SM, their shared memory allocations are independent. There is no mechanism in CUDA for cross-block shared memory communication. (Cross-block communication requires global memory, atomics, or multi-pass approaches.)
+
+3. The GPU scheduler queues the excess blocks and dispatches them to SMs as they become available. This is normal and expected — in fact, having more blocks than SMs is desirable because it provides the warp pool needed for latency hiding (see later section). As soon as an SM finishes all the blocks currently assigned to it, it pulls the next blocks from the queue.
+
+:::
+
+::: challenge
+
+### Thread count arithmetic
+
+A GPU has 80 SMs. You launch a kernel with a grid of 2000 thread blocks, each containing 256 threads. Each SM can hold at most 16 active thread blocks at a time.
+
+1. How many total threads are in the grid?
+2. How many thread blocks can be resident on the GPU at once across all SMs? What might affect this limit in practice?
+3. Is every SM utilised? If not, what fraction is idle?
+
+:::
+
+::: solution
+
+1. Total threads = (thread blocks) $\times$ (threads per block) = $2000 \times 256 = 512000$
+2. The theoretical maximum active thread blocks = (SM count ) $\times$ (max thread blocks per SM) = $80 \times 16 = 1280$ This maximum is realised only if the resource use of each block is small. If, however, a thread block makes extensive use of registers and shared memory, the maximum active thread blocks per SM will be reduced. This is a key tension in writing for the GPU: shared memory use, for example, might be advantageous for the performance of a thread block in isolation, but the effect on the overall occupancy of the GPU may in fact destroy those performance gains.
+3. There are enough blocks to fully saturate the queues of each SM. Toward the end of the computation, as the pending thread blocks still to compute is exhausted, some of the SMs may become idle whilst others are still finishing. Sometimes this tail idle time can have an outsized effect on the overall performance of the kernel.
+
+:::
 
 ### Processing lifecycle
 

@@ -61,6 +61,8 @@ zs = np.empty_like(xs)
 adder(xs, ys, zs)
 ```
 
+Remember: `@njit` compiles the function it wraps to machine code that runs directly on the CPU.
+
 In GPU programming, your work will be all about writing the kernel itself. The outer loop, on the other hand, is something that the GPU will manage for you. It is up to the GPU to decide how to parallelise that loop, when to run the kernels, and the order they execute in.
 
 ## A first kernel
@@ -68,6 +70,11 @@ In GPU programming, your work will be all about writing the kernel itself. The o
 Let's try writing this adder function as a kernel on the GPU.
 
 ```python
+import math
+import numpy as np
+import cupy
+from numba import cuda
+
 @cuda.jit
 def adder_gpu(xs, ys, zs):
     i = cuda.grid(1)
@@ -87,7 +94,7 @@ adder_gpu[nblocks, nthreads](xs_d, ys_d, zs_d)
 There's a lot to unpack in this brief snippet of code:
 
 * First, we added a new import: `numba.cuda`.
-* **We've wrapped our kernel with the decorator `@cuda.jit`.** Just like `numba.jit`, this will allow the kernel to compile "just in time" (jit) when we call it based on the input types (e.g. the types of `xs`, `ys`, and `zs`). There is an overhead associated with this initial compilation but subsequent calls will re-use the cached kernel so long as the input types remain unchanged.
+* **We've wrapped our kernel with the decorator `@cuda.jit`.** Just like `@numba.jit`, this will allow the kernel to compile "just in time" (jit) when we call it based on the input types (e.g. the types of `xs`, `ys`, and `zs`). The difference is `@numba.jit` compiled this kernel for the CPU, whereas `@cuda.jit` is compiled for the GPU. There is an overhead associated with this initial compilation but subsequent calls will re-use the cached kernel so long as the input types remain unchanged.
 * **We've called `cuda.grid(1)` to determine the index of the kernel.** Unlike our previous example, the index is not passed in as an argument. We've also added a condition to check the index is within range.
 * **We've allocated our GPU arrays using `cupy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.
 * **We've called the `adder_gpu()` function by first providing grid dimensions: blocks and threads per block.** Grid dimensions configure _how many times_ the kernel is run and are directly related to the kernel's index. Each time you call a GPU kernel, you must configure its grid dimensions. We will discuss grid configuration in depth shortly.
@@ -164,7 +171,7 @@ There's a few things to factor in when choosing a grid size:
 
 A good rule of thumb for threads per block is somewhere between 128 to 1024 threads. As always benchmark your code.
 
-You grid can 1, 2 or 3 dimensional. As an example, if we were adding two large matrices we might choose to index by row and column. In this case our code might look like:
+Your grid can be 1, 2, or 3 dimensional. As an example, if we were adding two large matrices we might choose to index by row and column. In this case our code might look like:
 
 ```python
 @cuda.jit
@@ -432,7 +439,7 @@ An alternative is to store the partial sum in a _local_ variable before writing 
 def matmul(A, B, C):
     i, j = cuda.grid(2)
     if i < C.shape[0] and j < C.shape[1]:
-        cij = 0
+        cij = 0.0
         for k in range(A.shape[1]):
             cij += A[i, k] * B[k, j]
 
@@ -565,7 +572,7 @@ Complete the transition to a working GPU kernel:
 
 By the end, you should have a working GPU kernel. Check that the kernel works correctly by comparing to `cupy.fft.fft()`.
 
-**Hint:** `np.exp()` is not available on the GPU. The function `math.exp()` is available however it will only accept real values. The trick is to recall that $e^{i \theta} = \cos{\theta} + i \sin{\theta}$ and to use this identity to rewrite the computation. That is: `np.exp(1j * phase) = complex(math.cos(phase), math.sin(phase))`.
+**Hint:** Complex exponentials (e.g. `np.exp(1j * phase)`) are not directly available inside Numba CUDA kernels. The trick is to recall that $e^{i \theta} = \cos{\theta} + i \sin{\theta}$ and to use this identity with `math.cos()` and `math.sin()` (which are available for real values). That is: replace `np.exp(1j * phase)` with `complex(math.cos(phase), math.sin(phase))`. Don't forget to `import math` at the top of your file.
 
 :::
 
