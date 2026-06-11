@@ -70,6 +70,11 @@ In GPU programming, your work will be all about writing the kernel itself. The o
 Let's try writing this adder function as a kernel on the GPU.
 
 ```python
+import math
+import numpy as np
+import cupy
+from numba import cuda
+
 @cuda.jit
 def adder_gpu(xs, ys, zs):
     i = cuda.grid(1)
@@ -166,7 +171,7 @@ There's a few things to factor in when choosing a grid size:
 
 A good rule of thumb for threads per block is somewhere between 128 to 1024 threads. As always benchmark your code.
 
-You grid can 1, 2 or 3 dimensional. As an example, if we were adding two large matrices we might choose to index by row and column. In this case our code might look like:
+Your grid can be 1, 2, or 3 dimensional. As an example, if we were adding two large matrices we might choose to index by row and column. In this case our code might look like:
 
 ```python
 @cuda.jit
@@ -434,7 +439,7 @@ An alternative is to store the partial sum in a _local_ variable before writing 
 def matmul(A, B, C):
     i, j = cuda.grid(2)
     if i < C.shape[0] and j < C.shape[1]:
-        cij = 0
+        cij = 0.0
         for k in range(A.shape[1]):
             cij += A[i, k] * B[k, j]
 
@@ -567,7 +572,7 @@ Complete the transition to a working GPU kernel:
 
 By the end, you should have a working GPU kernel. Check that the kernel works correctly by comparing to `cupy.fft.fft()`.
 
-**Hint:** `np.exp()` is not available on the GPU. The function `math.exp()` is available however it will only accept real values. The trick is to recall that $e^{i \theta} = \cos{\theta} + i \sin{\theta}$ and to use this identity to rewrite the computation. That is: `np.exp(1j * phase) = complex(math.cos(phase), math.sin(phase))`.
+**Hint:** Complex exponentials (e.g. `np.exp(1j * phase)`) are not directly available inside Numba CUDA kernels. The trick is to recall that $e^{i \theta} = \cos{\theta} + i \sin{\theta}$ and to use this identity with `math.cos()` and `math.sin()` (which are available for real values). That is: replace `np.exp(1j * phase)` with `complex(math.cos(phase), math.sin(phase))`. Don't forget to `import math` at the top of your file.
 
 :::
 

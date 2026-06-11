@@ -21,7 +21,7 @@ title: Optimisation
 
 We're going to start with a toy problem: imaging radio interferometry data. In other domains, this is also known as a non-uniform Fourier transform: we transform from an irregularly sampled 3D visibility space to a 2D surface within the imaging space.
 
-An important non-aim: we are not looking to make _algorithmic_ improvements. Real-world imaging software rarely performs a full _direct_ Fourier transform since it is so costly, but those alternative algorithm are more complex and are not our focus here.
+An important non-aim: we are not looking to make _algorithmic_ improvements. Real-world imaging software rarely performs a full _direct_ Fourier transform since it is so costly, but those alternative algorithms are more complex and are not our focus here.
 
 The discrete imaging equation is defined as follows:
 
@@ -505,7 +505,7 @@ Suppose there are 256 threads per block. Then the pattern proceeds as follows:
 
 The cycle is then repeated: the _next_ 256 values from global memory are written into shared memory, and so on, until the global memory is exhausted.
 
-This pattern is illustrated in following animation. This animation depicts the pattern using a thread block size of 8, which in turn means the shared memory cache is sized to 8 elements:
+This pattern is illustrated in the following animation. This animation depicts the pattern using a thread block size of 8, which in turn means the shared memory cache is sized to 8 elements:
 
 <iframe src="fig/shared-memory.html" height=500 width=100%></iframe>
 
@@ -560,7 +560,7 @@ Some important comments:
 
 ### Warning
 
-`cuda.syncthreads()` acts as a gate that stops threads from progressing until all threads within a thread block have reached that point. But beware: `cuda.syncthreads()` should not be put inside a conditional branch. A conditional branch may result in some threads mever reaching the synchronisation point and the result of doing so is undefined and may lead to deadlock. Similarly, this advice applies to threads that conditionally return early and therefore bypass future synchronisation points.
+`cuda.syncthreads()` acts as a gate that stops threads from progressing until all threads within a thread block have reached that point. But beware: `cuda.syncthreads()` should not be put inside a conditional branch. A conditional branch may result in some threads never reaching the synchronisation point and the result of doing so is undefined and may lead to deadlock. Similarly, this advice applies to threads that conditionally return early and therefore bypass future synchronisation points.
 
 :::
 
@@ -802,7 +802,7 @@ On my own machine, I saw best performance when `THREAD_COARSEN` was set to 4, bu
 
 1. The number of thread blocks may decrease to the point where the GPU's SMs are not well utilised.
 2. The memory requirements of each thread will obstruct the number of simultaneous thread blocks that can be scheduled on a single SM.
-3. Eventually, the memory required for a single thread may become so large that the local register storage "spills" out into global memory. When this happens, some of our local variables end up being actually stored in global memory, which is disasterous for performance.
+3. Eventually, the memory required for a single thread may become so large that the local register storage "spills" out into global memory. When this happens, some of our local variables end up being actually stored in global memory, which is disastrous for performance.
 
 :::
 
@@ -962,7 +962,7 @@ Fused multiply add (FMA) instructions are a special hardware instruction that co
 cuda.fma(a, b, c) = a * b + c
 ```
 
-If we can rewrite a pair multiplication and addition operations as a single FMA operation, we can straightforwardly double our performance. (In fact, the numbers for GPU floating point performance that you'll see NVIDIA or AMD advertising _assume_ that 100% of your code is pure FMA instructions – which almost no non-trivial kernel is capable of achieving.)
+If we can rewrite paired multiply-then-add operations as single FMA operations, we can significantly improve throughput — in the best case approaching a 2x speedup for the arithmetic portion of the kernel. (In fact, the numbers for GPU floating point performance that you'll see NVIDIA or AMD advertising _assume_ that 100% of your code is pure FMA instructions – which almost no non-trivial kernel is capable of achieving.)
 
 The CUDA compiler _should_ make an effort to automatically attempt to insert FMA instructions into your code, but it has been my experience that it is less than perfect.
 
@@ -1091,9 +1091,9 @@ We're going to use these intrinsics to replace our shared memory cache. Instead 
 
 `cuda.shfl_sync()` accepts 3 parameters:
 
-- The first is a mask which indicates which of the warp threads are to participate in the swap. Since we want every thread to play its part, we set this to `0xFFFFFFFF`.
-- The second parameter is the source ID. Ranging from 0 to 31, this identifies the warp whose value we want to receive.
-- The payload value. This is the value that we offer up to the shuffle, and if another warp member set us as the origin, this is the value that they will receive.
+- The first is a mask which indicates which of the warp threads are to participate in the shuffle. Since we want every thread to play its part, we set this to `0xFFFFFFFF`.
+- The second parameter is the value to shuffle. This is the value that this thread offers up, and if another warp member targets us, this is the value they will receive.
+- The third parameter is the source lane ID. Ranging from 0 to 31, this identifies the warp member whose value we want to receive.
 
 We can use `cuda.shfl_sync()` to act as a warp-wide cache as demonstrated by the following pseudo code:
 
@@ -1108,7 +1108,7 @@ for i in range(0, N, cuda.warpsize):
         # Do some computation with x
 
         # Then daisy chain x amongst the warp
-        x = cuda.shfl_sync(0xFFFFFFFF, nextwarpid, x)
+        x = cuda.shfl_sync(0xFFFFFFFF, x, nextwarpid)
 ```
 
 There's no need to use synchronisation calls because the warp executes in lockstep (however, be careful to avoid divergence at any place where `shfl_sync` is called).

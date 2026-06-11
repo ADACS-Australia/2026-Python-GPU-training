@@ -27,7 +27,7 @@ CuPy is the GPU equivalent to Numpy, and likewise it is based on its own `ndarra
 
 Numpy's and CuPy's arrays are both multidimensional arrays, and they both expose similar APIs.
 
-They differ in _where_ they reside. The CPU (host) and the GPU (device) each have their own independent memory, which is something we will cover in much more detail later. Objects stored in host memory can't be "seen" by the GPU without first transferring the data across to the device, and vice versa.
+They differ in _where_ they reside. The CPU (host) and the GPU (device) each have their own independent memory, as we discussed in the GPU deep dive. Objects stored in host memory can't be "seen" by the GPU without first transferring the data across to the device, and vice versa.
 
 Numpy arrays exist in host memory and CuPy arrays exist on the GPU. To perform operations involving multiple arrays you must ensure that each array is within the same portion of memory: if all the arrays are on the host, the computation will be performed by the CPU; if they are all on the device, the computation will be performed by the GPU.
 
@@ -65,7 +65,7 @@ arr3 = cupy.asnumpy(arr3_d)
 
 Note the convention of appending `_d` to the names of arrays that are on the GPU **d**evice. This is purely convention but, in the absence of types, this can help you keep track of where an array is located.
 
-(There's also `cupy.asarray(otherarray)`: this will create a GPU array _only if_ `otherarray` isn't already on the GPU device. It's handy function to ensure an array is on the GPU but will avoid a copy if it isn't needed.)
+(There's also `cupy.asarray(otherarray)`: this will return `otherarray` unchanged if it's already a CuPy GPU array, otherwise it will copy to the GPU. It's a handy function to ensure an array is on the GPU without an unnecessary copy if it's already there.)
 
 
 ## An aside: on benchmarking
@@ -111,7 +111,7 @@ def my_computation(a, b):
 
 timer = timeit.Timer(lambda: my_computation(a, b))
 
-# Call `do_some_work()` just once, and repeat this 10 times
+# Call `my_computation()` just once, and repeat this 10 times
 elapsed_times = timer.repeat(repeat=10, number=1)
 print(min(elapsed_times))
 ```

@@ -4,18 +4,19 @@ teaching: 10 # teaching time in minutes
 exercises: 2 # exercise time in minutes
 ---
 
-:::::::::::::::::::::::::::::::::::::: questions
+::: questions
 
-- How do you write a lesson using Markdown and `{sandpaper}`?
+- Why use GPU acceleration for scientific computation?
+- What can you expect to get out of this two-day workshop?
 
-::::::::::::::::::::::::::::::::::::::::::::::::
+:::
 
-::::::::::::::::::::::::::::::::::::: objectives
+::: objectives
 
-- Explain how to use markdown with The Carpentries Workbench
-- Demonstrate how to include pieces of code, figures, and nested challenge blocks
+- Understand the types of problems suitable for GPU parallelisation.
+- Get an overview of the workshop structure and prerequisites.
 
-::::::::::::::::::::::::::::::::::::::::::::::::
+:::
 
 ## Introduction
 
@@ -56,3 +57,4 @@ Source: [Nvidia on Youtube](https://web.archive.org/web/20241001024753/https://w
 With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
 
 * The shared memory optimisation animation (using Gemini 3).
+* Final proof and code checking (using Qwen 3.6)

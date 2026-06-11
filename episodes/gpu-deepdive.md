@@ -19,9 +19,9 @@ title: "A GPU Deep Dive"
 
 ## A little history
 
-Graphics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). By early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
+Graphics Processing Units (GPUs) were originally built to offload 2D and 3D visualisation computation from the CPU onto a dedicated device. The nature of video processing workloads meant that GPUs were built to handle data parallel workloads from the start. As GPUs became increasingly sophisticated, especially with the advent of programmable shaders and floating point support, it became apparent that GPUs offered the potential to perform _general purpose_ computation (GPGPU). As early as 2003 there were already papers demonstrating how GPU graphics primitives could be repurposed to perform linear algebra.
 
-NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and Sycl, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatibility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
+NVIDIA formalised this general purpose computing on its GPUs with its release of the CUDA library in 2006. Much later in 2016, AMD released ROCm which provided a similar GPGPU interface to its own hardware. There are also open source APIs including OpenCL and SYCL, Microsoft's OneAPI which claims to bridge a range of accelerators, as well as AMD's cross-platform compatibility layer known as HIP. Despite these offerings, there remains strong vendor lock-in, and NVIDIA and its proprietary CUDA API remains dominant.
 
 Today, GPUs have diverged somewhat in their design depending on whether they are destined to function as a true _graphics_ processing device or as more general purpose compute _accelerator_. Increasingly, AI workloads are driving design decisions that might not be useful for (or even harm!) some scientific workloads.
 
@@ -49,7 +49,7 @@ GPU cores (sometimes called a 'CUDA cores', or 'shader processors') are like the
 - They are much simpler in design.
 - They are physically smaller, mostly as a result of being slower and simpler.
 - They don't have their own register space. Registers are the small "scratch pad" of memory that is immediately accessible by a core. On a CPU, the register is attached to the core, with the downside that if a thread moves between cores it must also move the register memory. On a GPU, the register space is shared by the SM, which makes it easy to suspend and resume threads with little overhead.
-- They always run in SIMD/SIMT mode. Threads are grouped together into a batches of 32 (or 64 on AMD hardware) known as a _warp_ and assigned to run in lockstep.
+- They always run in SIMD/SIMT mode. Threads are grouped together into batches of 32 (or 64 on AMD hardware) known as a _warp_ and assigned to run in lockstep.
 
 A SM has a number of resources shared amongst the cores. We've already seen that the register space is shared. In addition, it has a shared floating point unit (FPU) where, just like on the CPU, when floating point math needs to be performed, the work will be delegated to this shared unit. Unlike on CPUs, these FPUs also have specialised hardware for computing some more complex math functions, like exponents, logarithms and trigonometry. More modern GPUs also have tensor cores which are specialised for matrix operations.
 
@@ -95,7 +95,7 @@ When launching a computation on the GPU, you must first configure its _grid_. A 
 
 You might wonder, why do we have thread blocks? The reason: thread blocks are executed on a single SM, and this gives their threads special powers. In particular, this allows threads within a thread block to communicate and coordinate with each other quite efficiently, which is often essential for many types of problems.
 
-This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierachy of GPU > SMs > cores, but it's important to keep in mind that they are separate concepts:
+This _software_ hierarchy of grid > thread blocks > threads has a corollary in the _hardware_ hierarchy of GPU > SMs > cores, but it's important to keep in mind that they are separate concepts:
 
 * You can have vastly many more thread blocks than SMs: thread blocks are enqueued to SMs when they have capacity, and each SM usually has a number of thread blocks enqueued at any one time.
 * Similarly, the number of threads you can configure can be vastly larger than the physical cores. In fact, for reasons of performance (see: [latency hiding](#an-aside-latency-hiding)) this is usually preferable.

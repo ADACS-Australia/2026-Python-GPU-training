@@ -24,9 +24,9 @@ exercises: 15
 
 The short answer is speed.
 
-You've probably heard of [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law), the observation that the number of transisters in a CPU doubles every two years. Up until the early 2000s, this law held true for the single-core CPUs of the time. Processor speeds increased from being measured in mere kHz, to MHz and finally to GHz. But physical limitations, and in particular power draw and heat, put a stop to those increases. CPU cores today have clock speeds measured in the same single digit GHz range as they did 25 years ago (with only marginal gains coming from [instruction efficiencies](https://en.wikipedia.org/wiki/Instructions_per_cycle)).
+You've probably heard of [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law), the observation that the number of transistors in a CPU doubles every two years. Up until the early 2000s, this law held true for the single-core CPUs of the time. Processor speeds increased from being measured in mere kHz, to MHz and finally to GHz. But physical limitations, and in particular power draw and heat, put a stop to those increases. CPU cores today have clock speeds measured in the same single digit GHz range as they did 25 years ago (with only marginal gains coming from [instruction efficiencies](https://en.wikipedia.org/wiki/Instructions_per_cycle)).
 
-Moore's Law has continued unabated, but those extra transisters have spilled over into multicorecore CPUs and GPUs. Serial programs that execute one instruction at a time gain nothing from this shift. Increasing performance must come instead through parallelism: doing more work simultaneously, rather than doing each piece of work faster.
+Moore's Law has continued unabated, but those extra transistors have spilled over into multicore CPUs and GPUs. Serial programs that execute one instruction at a time gain nothing from this shift. Increasing performance must come instead through parallelism: doing more work simultaneously, rather than doing each piece of work faster.
 
 GPUs take this to an extreme. GPU parallelism trades _latency_ for _throughput_: any single GPU core is considerably slower than a modern CPU core, but a GPU can run tens of thousands of tasks simultaneously. If your problem can be decomposed into many independent units of work, a GPU can process all of them in far less total time than a serial CPU could manage.
 
@@ -192,8 +192,8 @@ Parallel code promises increased performance but it comes with some real costs t
 
 - **Not everything parallelises.** Some parts of your algorithm may inherently depend on results from earlier steps. These inherently serial aspects of your code place strict limits on the effects of parallelisation (see Amdahl's law).
 - **Parallel code is harder to reason about.** Parallel code is usually more complex to write. It is also harder to understand: with multiple threads executing at once, the order of operations is no longer guaranteed.
-- **More complexity means more bugs.** Parallelism introduces a entirely new class of errors — data races — that appear when threads compete for shared resources.
-- **Parallel code introduces its own costs** There is an overhead cost to managing and scheduling multiple threads; and there can arise resource bottlenecks for memory or I/O.
+- **More complexity means more bugs.** Parallelism introduces an entirely new class of errors — data races — that appear when threads compete for shared resources.
+- **Parallel code introduces its own costs.** There is an overhead cost to managing and scheduling multiple threads; and there can arise resource bottlenecks for memory or I/O.
 
 Something that we will stress repeatedly throughout this course is that you must carefully weigh these costs against any possible performance gains. Be selective in what is parallelised, and always consider performance improvements in terms of the lifecycle of the entire program (and that includes development time too!).
 
@@ -265,7 +265,7 @@ The types of overhead differ between CPU and GPU. When using CPU-backed threads,
 
 - **Thread spawning**: which involves creating a thread and allocating it some initial memory
 - **Context switching:** when there are more threads than cores, the host OS will periodically suspend threads to "fairly" let each thread advance its work
-- **Communication overhead:** all higher level communication methods are built on a toolbox of atomics, locks, sempahores and condition variables and these have a non-negligible overhead
+- **Communication overhead:** all higher level communication methods are built on a toolbox of atomics, locks, semaphores and condition variables and these have a non-negligible overhead
 
 On the GPU the costs are different mostly owe to the fact that a CPU (the "host") and the GPU (the "device") are physically distinct. Some of these costs include:
 
@@ -312,7 +312,7 @@ for i in range(len(xs)):
 
 # D
 x_min = xs[0]
-for i in rage(len(xs)):
+for i in range(len(xs)):
     if xs[i] < x_min:
         x_min = xs[i]
 
