@@ -225,7 +225,8 @@
     <div id="flush-collapsecurrent" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushcurrent">
       <div class="accordion-body">
         <ul><li><a href="#why-go-parallel">Why go parallel?</a></li>
-<li><a href="#flavours-of-parallelism">Flavours of parallelism</a></li>
+<li><a href="#task-parallelism-versus-data-parallelism">Task parallelism versus data parallelism</a></li>
+<li><a href="#an-introduction-to-numba">An introduction to Numba</a></li>
 <li><a href="#the-pitfalls-of-parallelism">The pitfalls of parallelism</a></li>
         </ul></div><!--/div.accordion-body-->
     </div><!--/div.accordion-collapse-->
@@ -327,13 +328,13 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>An introduction to parallelism</h1>
-        <p>Last updated on 2026-05-15 |
+        <p>Last updated on 2026-06-11 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/parallelism.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
 
 
-
+        <p>Estimated time: <i aria-hidden="true" data-feather="clock"></i> 40 minutes</p>
 
         <div class="text-end">
           <button role="button" aria-pressed="false" tabindex="0" id="expand-code" class="pull-right" data-expand="Expand All Solutions " data-collapse="Collapse All Solutions "> Expand All Solutions <i aria-hidden="true" data-feather="plus"></i></button>
@@ -349,8 +350,9 @@
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul><li>What is the difference between task and data parallelism?</li>
-<li>What are the fundamental risks of moving from serial to parallel
-code?</li>
+<li>How does Amdahl’s Law constrain the maximum speedup from
+parallelism?</li>
+<li>What is a data race and how do you avoid one?</li>
 </ul></div>
 </div>
 </div>
@@ -359,108 +361,381 @@ code?</li>
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul><li>Identify “embarrassingly parallel” problems.</li>
-<li>Define and identify a race condition.</li>
-<li>Understand why serial code is the baseline for testing parallel
-correctness.</li>
+<li>Define and identify a data race.</li>
+<li>Use Numba’s <code>@njit</code> and <code>prange</code> to
+parallelise Python loops on the CPU.</li>
 </ul></div>
 </div>
 </div>
 </div>
 </div>
 <section><h2 class="section-heading" id="why-go-parallel">Why go parallel?<a class="anchor" aria-label="anchor" href="#why-go-parallel"></a></h2>
-<hr class="half-width"><p>The short answer is performance. Serial programs execute one
-instruction at a time, and are ultimately limited by the speed of a
-single core. As clock speeds have stalled since the mid-2000s, the
-industry has shifted to delivering performance through parallelism:
-doing more work simultaneously, rather than doing each piece of work
-faster.</p>
-<p>GPU parallelism specifically trades <em>latency</em> for
-<em>throughput</em>: any single GPU core is slower than a modern CPU
-core, but a GPU can run tens of thousands of tasks simultaneously. If
-your problem can be decomposed into many independent units of work, a
-GPU can process all of them in far less total time than a serial CPU
-could manage.</p>
-</section><section><h2 class="section-heading" id="flavours-of-parallelism">Flavours of parallelism<a class="anchor" aria-label="anchor" href="#flavours-of-parallelism"></a></h2>
-<hr class="half-width"><p>Parallel code comes in two principal forms. The first, task
-parallelism, is the principal model of threaded operations on the CPU.
-The GPU, however, makes use of a much more restrictive form known as
-data parallelism.</p>
+<hr class="half-width"><p>The short answer is speed.</p>
+<p>You’ve probably heard of <a href="https://en.wikipedia.org/wiki/Moore%27s_law" class="external-link">Moore’s Law</a>, the
+observation that the number of transistors in a CPU doubles every two
+years. Up until the early 2000s, this law held true for the single-core
+CPUs of the time. Processor speeds increased from being measured in mere
+kHz, to MHz and finally to GHz. But physical limitations, and in
+particular power draw and heat, put a stop to those increases. CPU cores
+today have clock speeds measured in the same single digit GHz range as
+they did 25 years ago (with only marginal gains coming from <a href="https://en.wikipedia.org/wiki/Instructions_per_cycle" class="external-link">instruction
+efficiencies</a>).</p>
+<p>Moore’s Law has continued unabated, but those extra transistors have
+spilled over into multicore CPUs and GPUs. Serial programs that execute
+one instruction at a time gain nothing from this shift. Increasing
+performance must come instead through parallelism: doing more work
+simultaneously, rather than doing each piece of work faster.</p>
+<p>GPUs take this to an extreme. GPU parallelism trades <em>latency</em>
+for <em>throughput</em>: any single GPU core is considerably slower than
+a modern CPU core, but a GPU can run tens of thousands of tasks
+simultaneously. If your problem can be decomposed into many independent
+units of work, a GPU can process all of them in far less total time than
+a serial CPU could manage.</p>
 <div class="section level3">
-<h3 id="task-parallelism">Task Parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a></h3>
-<p>Task parallelism divides up the work into different types of jobs.
-Each task functions autonomously and relies on different communication
-methods between tasks to coordinate the work. Tasks in this model form a
-complex graph structure, with dependencies between nodes.</p>
-<p><strong>Example:</strong> Consider the process of building a bike:
-perhaps one person assembles frames, another constructs tyres and a
-third puts it all together. This form of task parallelism is a bit like
-how a factory may be organised and is called <em>pipelining</em>.</p>
-<p><strong>Example:</strong> Consider, instead, the process of building
-customised bikes to order. Here each person builds a bike in its
-entirety, but customised towards the order specification. Depending on
-the type of customisation, builds may take varying amounts of time. This
-type of task parallelism is called a <em>worker pool</em>.</p>
-<p>Task parallelism requires careful coordination between tasks:</p>
-<ul><li>In pipelining, tasks may operate at different speeds. This means:
-<ul><li>Data must be passed between tasks in a way that clearly construes
-ownership. For example, there’s no point the assembler trying to install
-tyres that are only partially constructed.</li>
-<li>Buffers or queues must be implemented between tasks to absorb the
-different rates of work</li>
-<li>If upstream queues are empty or downstream queues are full, tasks
-must be able to pause</li>
-</ul></li>
-<li>In worker pools, a system must be designed for optimally allocating
-and distributing work, as well as collecting the results in the
-end.</li>
-</ul><p>It is also common for pipelining and worker pools to be combined.</p>
-<p>The coordination aspect of this model has proven in practice to be a
-common source of bugs. In response, a host of techniques have been
-developed to help mitigate, including:</p>
-<ul><li>Synchronisation primitivies: semaphores, mutexes, locks, and
-conditions</li>
-<li>Atomic values</li>
-<li>Channels and pipes</li>
-<li>Software transactional memory</li>
-<li>Message passing interfaces (e.g. OpenMPI)</li>
-</ul></div>
+<h3 id="amdahls-law">Amdahl’s Law<a class="anchor" aria-label="anchor" href="#amdahls-law"></a></h3>
+<p><a href="https://en.wikipedia.org/wiki/Amdahl%27s_law" class="external-link">Amdahl’s
+Law</a> formalises what is a very obvious observation. Consider an
+example where 80% of your computation is parallelisable. Then no matter
+how many threads you throw at a problem, that remaining 20% represents a
+hard floor. With only 4 cores, the actual speedup is closer to 2.86x —
+significantly less than the 4x you might naively expect.</p>
+<p>More formally, the speed up, <span class="math inline">\(S\)</span>,
+is given by:</p>
+<p><span class="math display">\[S = \frac{1}{(1 - p) +
+\frac{p}{N}}\]</span></p>
+<p>where <span class="math inline">\(p\)</span> is the fraction of the
+program that can be parallelised, and <span class="math inline">\(N\)</span> is the number of parallel execution
+units (cores, threads, etc.).</p>
+<figure><img src="../fig/AmdahlsLaw.svg" class="figure mx-auto d-block"></figure><p>Credit: Daniels220 at English Wikipedia</p>
+<p><strong>The practical takeaway:</strong> parallelism delivers the
+most benefit when the parallelisable portion of your code is both large
+and dominates the runtime. If your bottleneck is I/O or your algorithm
+is principally serial in nature, throwing more cores at it will do
+little.</p>
+<div id="discussion1" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>Think about your own code: which parts are parallelisable and which
+are fundamentally serial? Can you provide an estimate of the kinds of
+speedup you could expect?</p>
+</div>
+</div>
+</div>
+</div>
+</section><section><h2 class="section-heading" id="task-parallelism-versus-data-parallelism">Task parallelism versus data parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism-versus-data-parallelism"></a></h2>
+<hr class="half-width"><p>Parallel code comes in two principal forms.</p>
 <div class="section level3">
-<h3 id="data-parallelism">Data Parallelism<a class="anchor" aria-label="anchor" href="#data-parallelism"></a></h3>
-<p>Data parallelism applies a computation to data by dividing up the
-data into small, independent chunks of work. In this model, each thread
-performs identical work on variable inputs.</p>
-<p>Data parallelism is implmented in hardware on the CPU as “single
-instruction, multiple data” (SIMD) and on the GPU as “single
-instruction, multiple thread” (SIMT). The “single instruction” is key:
-the program instruction (perhaps an addition, or a multiplication) is
-broadcast across multiple pieces of data.</p>
-<p>In both cases, the programming model is quite restrictive:</p>
-<ul><li>The computation (or “kernel”) must be identical for each data
-input</li>
-<li>Communication between threads is very limited and, for the most
-part, each kernel must proceed independently</li>
-<li>Computation across each thread proceeds in lockstep: conditions or
-branches that result in divergence can be costly</li>
-</ul><p><strong>Example:</strong> To return to the bike example, data
-parallelism would take as inputs all the bike parts, and each worker
-would assemble a bike in <em>identical fashion</em> at an <em>identical
-pace.</em> Customisation is only possible in this context based on
-providing unique inputs, for example, uniquely coloured bike parts.
-There would be no possibility for customising <em>how</em> the bike is
-put together.</p>
-<p>GPUs are built around data parallelism and gain many of their speed
-advantages from the restrictive programming model and the simplicity
-that this affords to both the software and hardware implementation.</p>
+<h3 id="task-parallelism">Task parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a></h3>
+<p>Task parallelism divides work into different types of jobs. Each task
+functions autonomously and relies on communication between tasks to
+coordinate.</p>
+<p><strong>Example:</strong> Consider building a bike: one person
+assembles frames, another builds tyres, and a third puts it all
+together. This series of specialised tasks is one form of task
+parallelism known as <em>pipelining</em>. Another is a <em>worker
+pool</em>: each person builds a complete bike from scratch, but
+(possibly) to a different customer specification.</p>
+<p>Task parallelism requires careful coordination — semaphores, mutexes,
+locks, message passing, and other synchronisation primitives. This
+coordination is a common source of bugs.</p>
+<p>Task parallelism is the principal model of threaded operations on the
+CPU (e.g., Python’s <code>threading</code> or
+<code>multiprocessing</code> modules, or C’s OpenMP tasks).</p>
+</div>
+<div class="section level3">
+<h3 id="data-parallelism">Data parallelism<a class="anchor" aria-label="anchor" href="#data-parallelism"></a></h3>
+<p>Data parallelism applies the <em>same</em> computation to many
+independent pieces of data. Each thread performs identical work on
+variable inputs.</p>
+<p><strong>Example:</strong> Applying a filter to every pixel in an
+image. The filter is the same; the pixel data differs.</p>
+<p>Data parallelism is implemented in hardware on the CPU as “single
+instruction, multiple data” (SIMD) — for example, AVX or SSE
+instructions that operate on vectors of data within a single CPU
+register. On the GPU it is implemented as “single instruction, multiple
+thread” (SIMT) — the same concept scaled to tens of thousands of
+threads.</p>
+<p>This programming model is quite restrictive:</p>
+<ul><li>The computation must be identical for each data element.</li>
+<li>Communication between threads is very limited; each thread should
+proceed independently.</li>
+<li>Threads ideally proceed in lockstep — branches that cause threads to
+diverge can be costly.</li>
+</ul><p>GPUs are built around data parallelism and derive much of their speed
+advantage from the restrictive model and the simplicity it affords to
+both the hardware and software implementations.</p>
+<p><strong>Throughout this workshop we focus exclusively on data
+parallelism.</strong> The GPU is a data parallel machine, and the
+kernels you will write are data parallel kernels.</p>
+</div>
+</section><section><h2 class="section-heading" id="an-introduction-to-numba">An introduction to Numba<a class="anchor" aria-label="anchor" href="#an-introduction-to-numba"></a></h2>
+<hr class="half-width"><p>To experiment with data parallelism on the CPU before moving to the
+GPU, we are going to use <a href="https://numba.pydata.org/" class="external-link">Numba</a>.
+Numba is a just-in-time (JIT) compiler that translates annotated Python
+code into fast, machine-level code.</p>
+<p>JIT compilation means that the translation happens at
+<em>runtime</em>: the first time a decorated function is called, Numba
+compiles it based on the argument types. Subsequent calls reuse the
+compiled version, so the compilation overhead is paid only once. The
+same JIT mechanism is used later when we write GPU kernels — the kernel
+is compiled to CUDA code on first call and cached thereafter.</p>
+<p>Numba will be fundamental to our later workflows for writing GPU
+kernels: we first write the kernel on the CPU, verify that it works when
+run in parallel in Numba, and finally shift the code onto the GPU.</p>
+<div id="callout1" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div class="callout-inner">
+<div class="callout-content">
+<p>The JIT compiler used in Numba (and later in CUDA) compiles code at
+the function boundary. When the function is first called, the compiler
+will first inspect the types of each of the function’s arguments
+(e.g. <code>int</code>, <code>float</code>, or perhaps
+<code>np.array(dtype=complex)</code>). Based on these input types, the
+types of the whole function are then <em>inferred</em> and finally the
+function is compiled to machine code. This compilation takes a little
+time (a few hundred ms or so), but only needs to be done once. Next time
+the function is called, and the types match, the cached function will be
+used.</p>
+<p>You might also sometimes see <code>@njit</code> code with type
+annotations in the decorator. Whilst these have no effect on performance
+they may be useful as documentation or in ensuring argument types match
+expectations.</p>
+</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="the-njit-decorator">The <code>@njit</code> decorator<a class="anchor" aria-label="anchor" href="#the-njit-decorator"></a></h3>
+<p>The simplest way to use Numba is the <code>@njit</code> decorator,
+which compiles a function into optimised machine code:</p>
+<div class="codewrapper sourceCode" id="cb1">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1" aria-label="code-block-1-1"></a><span class="im">from</span> numba <span class="im">import</span> njit</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1" aria-label="code-block-1-2"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a><span class="at">@njit</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1" aria-label="code-block-1-5"></a><span class="kw">def</span> add(xs, ys, zs):</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1" aria-label="code-block-1-6"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1" aria-label="code-block-1-7"></a>        zs[i] <span class="op">=</span> xs[i] <span class="op">+</span> ys[i]</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1" aria-label="code-block-1-8"></a></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1" aria-label="code-block-1-9"></a>N <span class="op">=</span> <span class="dv">1_000_000</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1" aria-label="code-block-1-10"></a>xs <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1" aria-label="code-block-1-11"></a>ys <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1" aria-label="code-block-1-12"></a>zs <span class="op">=</span> np.empty(N)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1" aria-label="code-block-1-13"></a></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1" aria-label="code-block-1-14"></a>add(xs, ys, zs)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1" aria-label="code-block-1-15"></a>np.testing.assert_allclose(zs, xs <span class="op">+</span> ys)</span></code></pre>
+</div>
+<p>The function looks like ordinary Python, but after JIT compilation it
+runs at near-C speed. Numba supports a substantial (but limited) subset
+of Python: loops, conditionals, numpy array access, and many math
+functions. It does not support most Python object-oriented features or
+dynamic typing.</p>
+<p>Note that we allocated the memory (<code>xs</code>, <code>ys</code>,
+and <code>zs</code>) <em>outside</em> the function. Just as we will see
+later with CUDA kernels, it is best to pre-allocate Numba arrays in
+regular Python and pass them in as arguments, with one of those
+arguments typically used to write the function output.</p>
+</div>
+<div class="section level3">
+<h3 id="parallel-loops-with-prange">Parallel loops with <code>prange</code>
+<a class="anchor" aria-label="anchor" href="#parallel-loops-with-prange"></a></h3>
+<p>Numba’s <code>prange</code> (parallel range) is the easiest way to
+write data parallel code. It tells Numba to distribute each of the loop
+iterations across CPU threads:</p>
+<div class="codewrapper sourceCode" id="cb2">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="kw">def</span> add(xs, ys, zs):</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a>        zs[i] <span class="op">=</span> xs[i] <span class="op">+</span> ys[i]</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a>N <span class="op">=</span> <span class="dv">1_000_000</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1" aria-label="code-block-2-10"></a>xs <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1" aria-label="code-block-2-11"></a>ys <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1" aria-label="code-block-2-12"></a>zs <span class="op">=</span> np.empty(N)</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1" aria-label="code-block-2-13"></a></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1" aria-label="code-block-2-14"></a>add(xs, ys, zs)</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1" aria-label="code-block-2-15"></a>np.testing.assert_allclose(zs, xs <span class="op">+</span> ys)</span></code></pre>
+</div>
+<p>Two things changed here:</p>
+<ul><li>We use <code>prange</code> for the loop instead of the regular
+<code>range</code>
+</li>
+<li>We set <code>parallel=True</code> in the decorator</li>
+</ul><p>Each iteration of the loop is independent — thread <code>i</code>
+reads from and writes to index <code>i</code>, and no other thread
+touches that index. This is the hallmark of a good data parallel
+problem: the work is decomposed into independent units that can proceed
+in any order.</p>
+<p>Keep in mind that while <code>prange</code> looks like
+<code>range</code> the iterations are not guaranteed to execute in
+order, nor are they guaranteed to execute all at once. Numba decides how
+to distribute the work across available CPU threads.</p>
+<div id="discussion2" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>Write a <code>prange</code>-parallel function that computes the
+element-wise square root of an array. Verify correctness against
+<code>numpy.sqrt</code>.</p>
+<div class="codewrapper sourceCode" id="cb3">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="kw">def</span> parallel_sqrt(xs, ys):</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a>    <span class="co"># </span><span class="al">TODO</span><span class="co">: use prange to fill ys with the square root of each element of xs</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a>    <span class="cf">pass</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a>xs <span class="op">=</span> np.random.uniform(<span class="dv">0</span>, <span class="dv">10</span>, size<span class="op">=</span><span class="dv">1_000_000</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a>ys <span class="op">=</span> np.empty_like(xs)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a>parallel_sqrt(xs, ys)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>np.testing.assert_allclose(ys, np.sqrt(xs))</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div id="accordionSolution1" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
+  <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
+</button>
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div class="accordion-body">
+<div class="codewrapper sourceCode" id="cb4">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" tabindex="-1" aria-label="code-block-4-1"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1" aria-label="code-block-4-2"></a><span class="kw">def</span> parallel_sqrt(xs, ys):</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1" aria-label="code-block-4-3"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1" aria-label="code-block-4-4"></a>        ys[i] <span class="op">=</span> np.sqrt(xs[i])</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </section><section><h2 class="section-heading" id="the-pitfalls-of-parallelism">The pitfalls of parallelism<a class="anchor" aria-label="anchor" href="#the-pitfalls-of-parallelism"></a></h2>
-<hr class="half-width"><p>For all the potential speed benefits that we gain from parallelism,
-it is important to be aware of a number of important downsides to
-parallelism.</p>
-<ul><li>Performance overhead</li>
-<li>Race conditions</li>
-<li>More complex code</li>
-</ul><p>When considering moving code from serial to parallel, you will need
-to carefully weigh these kinds of costs.</p>
+<hr class="half-width"><p>Parallel code promises increased performance but it comes with some
+real costs too. For example:</p>
+<ul><li>
+<strong>Not everything parallelises.</strong> Some parts of your
+algorithm may inherently depend on results from earlier steps. These
+inherently serial aspects of your code place strict limits on the
+effects of parallelisation (see Amdahl’s law).</li>
+<li>
+<strong>Parallel code is harder to reason about.</strong> Parallel
+code is usually more complex to write. It is also harder to understand:
+with multiple threads executing at once, the order of operations is no
+longer guaranteed.</li>
+<li>
+<strong>More complexity means more bugs.</strong> Parallelism
+introduces an entirely new class of errors — data races — that appear
+when threads compete for shared resources.</li>
+<li>
+<strong>Parallel code introduces its own costs.</strong> There is an
+overhead cost to managing and scheduling multiple threads; and there can
+arise resource bottlenecks for memory or I/O.</li>
+</ul><p>Something that we will stress repeatedly throughout this course is
+that you must carefully weigh these costs against any possible
+performance gains. Be selective in what is parallelised, and always
+consider performance improvements in terms of the lifecycle of the
+entire program (and that includes development time too!).</p>
+<div class="section level3">
+<h3 id="data-races">Data races<a class="anchor" aria-label="anchor" href="#data-races"></a></h3>
+<p>The most insidious class of bugs in parallel code is the <em>data
+race</em>. A data race occurs when two or more threads access the same
+memory location concurrently, and at least one of them is writing — with
+no synchronisation between them.</p>
+<p>Consider this attempt at a parallel sum:</p>
+<div class="codewrapper sourceCode" id="cb5">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" tabindex="-1" aria-label="code-block-5-1"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1" aria-label="code-block-5-2"></a><span class="kw">def</span> racy_sum(xs):</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1" aria-label="code-block-5-3"></a>    <span class="co"># We initialise x_sum as a single element array to stop Numba from fixing our</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1" aria-label="code-block-5-4"></a>    <span class="co"># race condition. If we used a scalar value, e.g. by initialising x_sum = 0;</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1" aria-label="code-block-5-5"></a>    <span class="co"># then Numba will secretly fix our race condition.</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1" aria-label="code-block-5-6"></a>    x_sum <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1" aria-label="code-block-5-7"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1" aria-label="code-block-5-8"></a>        x_sum[<span class="dv">0</span>] <span class="op">+=</span> xs[i]</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1" aria-label="code-block-5-9"></a>    <span class="cf">return</span> x_sum[<span class="dv">0</span>]</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1" aria-label="code-block-5-10"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, racy_sum(xs))</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1" aria-label="code-block-5-13"></a><span class="co"># Expected: 1000000.0</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1" aria-label="code-block-5-14"></a><span class="co"># Actual:   ? (likely wrong, and varies each run!)</span></span></code></pre>
+</div>
+<p>The problem is that <code>x_sum[0] += xs[i]</code> is not a single
+operation — it is three:</p>
+<ol style="list-style-type: decimal"><li>
+<strong>Read</strong> the current value of
+<code>x_sum[0]</code>.</li>
+<li>
+<strong>Add</strong> <code>xs[i]</code> to it.</li>
+<li>
+<strong>Write</strong> the result back to
+<code>x_sum[0]</code>.</li>
+</ol><p>With multiple threads executing these steps simultaneously, threads
+can read a stale value before another thread has written its update. The
+result is lost, and the final sum is incorrect — and nondeterministic,
+varying from run to run.</p>
+<p>Race conditions occur in any situation where multiple threads access
+shared and mutable state of some kind.</p>
+<div id="discussion3" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>Run the <code>racy_sum</code> function several times. Does it always
+return the same result? Does the result change if you increase the size
+of the input array?</p>
+</div>
+</div>
+</div>
+<p>One approach to resolving this problem is to give each thread its own
+accumulator:</p>
+<div class="codewrapper sourceCode" id="cb6">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" tabindex="-1" aria-label="code-block-6-1"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange, get_num_threads, get_thread_id</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1" aria-label="code-block-6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1" aria-label="code-block-6-3"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1" aria-label="code-block-6-4"></a><span class="kw">def</span> safe_sum(xs):</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1" aria-label="code-block-6-5"></a>    <span class="co"># Each thread gets its own slot</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1" aria-label="code-block-6-6"></a>    x_sums <span class="op">=</span> np.zeros(get_num_threads())</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1" aria-label="code-block-6-7"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1" aria-label="code-block-6-8"></a>        x_sums[get_thread_id()] <span class="op">+=</span> xs[i]</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1" aria-label="code-block-6-9"></a></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1" aria-label="code-block-6-10"></a>    <span class="co"># Serial reduction of per-thread sums</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1" aria-label="code-block-6-11"></a>    <span class="cf">return</span> x_sums.<span class="bu">sum</span>()</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1" aria-label="code-block-6-12"></a></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1" aria-label="code-block-6-13"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1" aria-label="code-block-6-14"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, safe_sum(xs))  <span class="co"># 1000000.0 — correct and deterministic</span></span></code></pre>
+</div>
+<p>Each thread writes only to its own index, so there is no contention.
+The final serial reduction is cheap because there is one entry per CPU
+thread (typically fewer than 64).</p>
+</div>
 <div class="section level3">
 <h3 id="performance-overhead">Performance overhead<a class="anchor" aria-label="anchor" href="#performance-overhead"></a></h3>
 <p>Parallel code doesn’t come for free. In fact, sometimes throwing
@@ -477,7 +752,7 @@ each thread advance its work</li>
 <li>
 <strong>Communication overhead:</strong> all higher level
 communication methods are built on a toolbox of atomics, locks,
-sempahores and condition variables and these have a non-negligible
+semaphores and condition variables and these have a non-negligible
 overhead</li>
 </ul><p>On the GPU the costs are different mostly owe to the fact that a CPU
 (the “host”) and the GPU (the “device”) are physically distinct. Some of
@@ -500,53 +775,8 @@ algorithm uses synchronisation sparingly.</p>
 <strong>resource contention.</strong> This occurs when different threads
 all attempt to access a single resource of some kind, perhaps a file on
 disk, a network resource, or even to access memory. Slow downs due to
-resource contention can be non-linear.</p>
-</div>
-<div class="section level3">
-<h3 id="race-conditions">Race conditions<a class="anchor" aria-label="anchor" href="#race-conditions"></a></h3>
-<p>With multiple threads operating at the same time, parallelism makes
-it difficult to <em>order</em> access to anything that might be shared:
-reading or writing to memory; printing to a terminal; accessing files;
-and so on. This is because threads make few guarantees about when they
-execute, and do not guarantee uninterrupted execution either.</p>
-<p>In short, parallelism upsets the order of operations. And anything
-that relies on order must take explicit steps to enforce a desired
-ordering.</p>
-<p>As an example, consider this parallel shift, where we want to move
-each item in an array down one element (and wrap around):</p>
-<div class="codewrapper sourceCode" id="cb1">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" tabindex="-1" aria-label="code-block-1-1"></a>xs <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1" aria-label="code-block-1-2"></a><span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):  <span class="co"># prange executes each iteration of the loop in parallel</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1" aria-label="code-block-1-3"></a>    x <span class="op">=</span> xs[i]</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1" aria-label="code-block-1-4"></a>    xs[i <span class="op">-</span> <span class="dv">1</span>] <span class="op">=</span> x  <span class="co"># shift down</span></span></code></pre>
-</div>
-<p>This is an example of a race condition: the code implicitly expects
-all threads to have read from <code>xs</code> before any thread then
-writes to it. The problem is that there is no guarantee that these
-operations will occur in lockstep across all the threads. One thread,
-for example, might write to <code>xs</code> before other threads have
-even begun, or vice versa.</p>
-<p>Or consider a data parallel sum:</p>
-<div class="codewrapper sourceCode" id="cb2">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a>xs <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">2</span>, ...]</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a>x_sum <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a>    x_sum <span class="op">+=</span> xs[i]</span></code></pre>
-</div>
-<p>This is also subject to a data race. Even though the operation
-<code>x_sum += xs[i]</code> <em>looks</em> like a single instruction, it
-is in fact equivalent to <code>x_sum = x_sum + xs[i]</code>. In this
-form you can see that the variable <code>x_sum</code> is first read, the
-addition is computed, and result is written back. Once again, the race
-is on to ensure that all threads read first before any writes occur, and
-without some kind of synchronisation this is not guaranteed.</p>
-<p>In later sections, we will discuss the kinds of available
-synchronisation techniques available to you.</p>
+resource contention can sometimes be non-linear (known as performance
+cliffs).</p>
 </div>
 <div class="section level3">
 <h3 id="code-complexity">Code complexity<a class="anchor" aria-label="anchor" href="#code-complexity"></a></h3>
@@ -565,8 +795,9 @@ synchronisation</li>
 </ul><p>These complexities mean that bugs are more likely, and you must weigh
 this against the performance benefits you expect.</p>
 <p>We recommend to always write your algorithm in a single threaded,
-serial form first, and use this to test your parallel code later.</p>
-<div id="discussion1" class="callout discussion">
+serial form first, and use this to test your parallel code later for
+correctness.</p>
+<div id="discussion4" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -574,59 +805,53 @@ serial form first, and use this to test your parallel code later.</p>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
-<p>Run the following code: what do you expect and what do you get?</p>
-<p>Can you rewrite the code without a race condition? Hint: use
-<code>numba.get_num_threads()</code> and
-<code>numba.get_thread_id()</code>.</p>
-<div class="codewrapper sourceCode" id="cb3">
+<p>Consider the following simple Python loops. Which of these is safe to
+parallelise with <code>prange</code>, and if not, why not.</p>
+<div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a><span class="kw">def</span> psum(xs):</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a>    <span class="co"># We use an array of len=1 to avoid numba automatically</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a>    <span class="co"># fixing our race condition</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a>    x_sum <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1" aria-label="code-block-3-10"></a>        x_sum[<span class="dv">0</span>] <span class="op">+=</span> xs[i]</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1" aria-label="code-block-3-11"></a></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1" aria-label="code-block-3-12"></a>    <span class="cf">return</span> x_sum[<span class="dv">0</span>]</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1" aria-label="code-block-3-13"></a></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1" aria-label="code-block-3-14"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1" aria-label="code-block-3-15"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, psum(xs))</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" tabindex="-1" aria-label="code-block-7-1"></a><span class="co"># A</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1" aria-label="code-block-7-2"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs) <span class="op">-</span> <span class="dv">1</span>):</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1" aria-label="code-block-7-3"></a>    ys[i] <span class="op">=</span> xs[i] <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> xs[i <span class="op">+</span> <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1" aria-label="code-block-7-4"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1" aria-label="code-block-7-5"></a><span class="co"># B</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1" aria-label="code-block-7-6"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="bu">len</span>(xs)<span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1" aria-label="code-block-7-7"></a>    ys[i] <span class="op">=</span> (xs[i<span class="op">-</span><span class="dv">1</span>] <span class="op">+</span> xs[i<span class="op">+</span><span class="dv">1</span>]) <span class="op">/</span> <span class="dv">2</span>   <span class="co"># read from xs, write to ys</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1" aria-label="code-block-7-8"></a></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1" aria-label="code-block-7-9"></a><span class="co"># C</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1" aria-label="code-block-7-10"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1" aria-label="code-block-7-11"></a>    <span class="cf">if</span> xs[i] <span class="op">&gt;</span> threshold:</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1" aria-label="code-block-7-12"></a>        indices.append(i)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1" aria-label="code-block-7-13"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1" aria-label="code-block-7-14"></a><span class="co"># D</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1" aria-label="code-block-7-15"></a>x_min <span class="op">=</span> xs[<span class="dv">0</span>]</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1" aria-label="code-block-7-16"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1" aria-label="code-block-7-17"></a>    <span class="cf">if</span> xs[i] <span class="op">&lt;</span> x_min:</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1" aria-label="code-block-7-18"></a>        x_min <span class="op">=</span> xs[i]</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1" aria-label="code-block-7-19"></a></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1" aria-label="code-block-7-20"></a><span class="co"># E</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1" aria-label="code-block-7-21"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1" aria-label="code-block-7-22"></a>    <span class="cf">if</span> xs[i] <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1" aria-label="code-block-7-23"></a>        ys[i] <span class="op">=</span> math.sqrt(xs[i])</span></code></pre>
 </div>
 </div>
 </div>
 </div>
-<div id="accordionSolution1" class="accordion challenge-accordion accordion-flush">
+<div id="accordionSolution2" class="accordion challenge-accordion accordion-flush">
 <div class="accordion-item">
-<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
-  <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
+  <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
-<div class="codewrapper sourceCode" id="cb4">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" tabindex="-1" aria-label="code-block-4-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1" aria-label="code-block-4-2"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange, get_num_threads, get_thread_id</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1" aria-label="code-block-4-3"></a></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1" aria-label="code-block-4-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1" aria-label="code-block-4-5"></a><span class="kw">def</span> psum(xs):</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1" aria-label="code-block-4-6"></a>    <span class="co"># Give each thread a unique array index</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1" aria-label="code-block-4-7"></a>    x_sum <span class="op">=</span> np.zeros(get_num_threads())</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1" aria-label="code-block-4-8"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1" aria-label="code-block-4-9"></a>        x_sum[get_thread_id()] <span class="op">+=</span> xs[i]</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1" aria-label="code-block-4-10"></a></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1" aria-label="code-block-4-11"></a>    <span class="co"># Finally sum the individual thread sums in the main thread</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1" aria-label="code-block-4-12"></a>    <span class="cf">return</span> x_sum.<span class="bu">sum</span>()</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1" aria-label="code-block-4-13"></a></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1" aria-label="code-block-4-14"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1" aria-label="code-block-4-15"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, psum(xs))</span></code></pre>
-</div>
-</div>
+<ul><li>A is safe: threads read from the same values, but since these are
+not changed this is not a race condition.</li>
+<li>B is safe: reads and writes to different arrays.</li>
+<li>C is not safe: appending to an array mutates shared state.</li>
+<li>D is not safe: there is a race condition on the shared and mutable
+<code>x_min</code> value.</li>
+<li>E is safe: conditional is per-thread, no shared state.</li>
+</ul></div>
 </div>
 </div>
 </div>
@@ -697,9 +922,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/instructor/parallelism.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/parallelism.html",
-  "dateCreated": "2026-05-26",
-  "dateModified": "2026-05-15",
-  "datePublished": "2026-06-09"
+  "dateCreated": "2026-06-11",
+  "dateModified": "2026-06-11",
+  "datePublished": "2026-06-11"
 }
 
   </script><script>

@@ -126,11 +126,11 @@
   Lesson Title
 </div>
 
-<aside class="col-md-12 lesson-progress"><div style="width: 20%" class="percentage">
-    20%
+<aside class="col-md-12 lesson-progress"><div style="width: 50%" class="percentage">
+    50%
   </div>
   <div class="progress software">
-    <div class="progress-bar software" role="progressbar" style="width: 20%" aria-valuenow="20" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar software" role="progressbar" style="width: 50%" aria-valuenow="50" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">
     </div>
   </div>
 </aside><div class="container">
@@ -327,7 +327,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>A GPU Deep Dive</h1>
-        <p>Last updated on 2026-05-15 |
+        <p>Last updated on 2026-06-11 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -374,12 +374,12 @@ handle data parallel workloads from the start. As GPUs became
 increasingly sophisticated, especially with the advent of programmable
 shaders and floating point support, it became apparent that GPUs offered
 the potential to perform <em>general purpose</em> computation (GPGPU).
-By early as 2003 there were already papers demonstrating how GPU
+As early as 2003 there were already papers demonstrating how GPU
 graphics primitives could be repurposed to perform linear algebra.</p>
 <p>NVIDIA formalised this general purpose computing on its GPUs with its
 release of the CUDA library in 2006. Much later in 2016, AMD released
 ROCm which provided a similar GPGPU interface to its own hardware. There
-are also open source APIs including OpenCL and Sycl, Microsoft’s OneAPI
+are also open source APIs including OpenCL and SYCL, Microsoft’s OneAPI
 which claims to bridge a range of accelerators, as well as AMD’s
 cross-platform compatibility layer known as HIP. Despite these
 offerings, there remains strong vendor lock-in, and NVIDIA and its
@@ -427,7 +427,7 @@ thread moves between cores it must also move the register memory. On a
 GPU, the register space is shared by the SM, which makes it easy to
 suspend and resume threads with little overhead.</li>
 <li>They always run in SIMD/SIMT mode. Threads are grouped together into
-a batches of 32 (or 64 on AMD hardware) known as a <em>warp</em> and
+batches of 32 (or 64 on AMD hardware) known as a <em>warp</em> and
 assigned to run in lockstep.</li>
 </ul><p>A SM has a number of resources shared amongst the cores. We’ve
 already seen that the register space is shared. In addition, it has a
@@ -564,7 +564,7 @@ powers. In particular, this allows threads within a thread block to
 communicate and coordinate with each other quite efficiently, which is
 often essential for many types of problems.</p>
 <p>This <em>software</em> hierarchy of grid &gt; thread blocks &gt;
-threads has a corollary in the <em>hardware</em> hierachy of GPU &gt;
+threads has a corollary in the <em>hardware</em> hierarchy of GPU &gt;
 SMs &gt; cores, but it’s important to keep in mind that they are
 separate concepts:</p>
 <ul><li>You can have vastly many more thread blocks than SMs: thread blocks
@@ -578,7 +578,110 @@ usually preferable.</li>
 e.g. multiples of 32. You can size your thread blocks arbitrarily, up to
 the hardware-imposed limit of your GPU. Although for performance reasons
 you probably shouldn’t!</li>
-</ul></div>
+</ul><div id="why-thread-blocks" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div id="why-thread-blocks" class="callout-inner">
+<h3 class="callout-title">Why thread blocks?</h3>
+<div class="callout-content">
+<p>The GPU hardware hierarchy is GPU → SMs → cores. The software
+hierarchy is grid → thread blocks → threads.</p>
+<ol style="list-style-type: decimal"><li>Why doesn’t the GPU scheduler simply assign threads directly to
+cores, skipping the intermediate layer of thread blocks?</li>
+<li>Two thread blocks A and B are launched. Is it possible for threads
+in block A to communicate with threads in block B using shared memory?
+Why or why not?</li>
+<li>What happens if you launch a grid with more thread blocks than there
+are SMs?</li>
+</ol></div>
+</div>
+</div>
+<div id="accordionSolution1" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
+  <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
+</button>
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div class="accordion-body">
+<ol style="list-style-type: decimal"><li>
+<p>Thread blocks exist because they are the unit of scheduling and
+resource management on the GPU. Key reasons:</p>
+<ul><li>Thread blocks are assigned to a single SM for their entire lifetime.
+This gives their threads access to shared memory and synchronisation
+primitives, which are SM-local resources. Without blocks, the GPU would
+have to track which threads share which resources on a per-thread basis,
+which is far more complex.</li>
+</ul></li>
+</ol><ul><li>Thread blocks are the granularity at which the GPU schedules work.
+The scheduler enqueues and dequeues blocks (not individual threads) onto
+SMs. If it had to schedule millions of individual threads, the
+bookkeeping overhead would be enormous.</li>
+<li>Resource limits (registers, shared memory) are enforced per-block,
+so the GPU can decide at launch time whether a block fits on an SM
+without having to reason about arbitrary groups of threads.</li>
+</ul><ol start="2" style="list-style-type: decimal"><li><p>No. Shared memory is scoped to a thread block. Threads in block A
+and block B may be on different SMs, each with its own shared memory.
+Even if both blocks happen to be on the same SM, their shared memory
+allocations are independent. There is no mechanism in CUDA for
+cross-block shared memory communication. (Cross-block communication
+requires global memory, atomics, or multi-pass approaches.)</p></li>
+<li><p>The GPU scheduler queues the excess blocks and dispatches them to
+SMs as they become available. This is normal and expected — in fact,
+having more blocks than SMs is desirable because it provides the warp
+pool needed for latency hiding (see later section). As soon as an SM
+finishes all the blocks currently assigned to it, it pulls the next
+blocks from the queue.</p></li>
+</ol></div>
+</div>
+</div>
+</div>
+<div id="thread-count-arithmetic" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div id="thread-count-arithmetic" class="callout-inner">
+<h3 class="callout-title">Thread count arithmetic</h3>
+<div class="callout-content">
+<p>A GPU has 80 SMs. You launch a kernel with a grid of 2000 thread
+blocks, each containing 256 threads. Each SM can hold at most 16 active
+thread blocks at a time.</p>
+<ol style="list-style-type: decimal"><li>How many total threads are in the grid?</li>
+<li>How many thread blocks can be resident on the GPU at once across all
+SMs? What might affect this limit in practice?</li>
+<li>Is every SM utilised? If not, what fraction is idle?</li>
+</ol></div>
+</div>
+</div>
+<div id="accordionSolution2" class="accordion challenge-accordion accordion-flush">
+<div class="accordion-item">
+<button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
+  <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
+</button>
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div class="accordion-body">
+<ol style="list-style-type: decimal"><li>Total threads = (thread blocks) <span class="math inline">\(\times\)</span> (threads per block) = <span class="math inline">\(2000 \times 256 = 512000\)</span>
+</li>
+<li>The theoretical maximum active thread blocks = (SM count ) <span class="math inline">\(\times\)</span> (max thread blocks per SM) = <span class="math inline">\(80 \times 16 = 1280\)</span> This maximum is
+realised only if the resource use of each block is small. If, however, a
+thread block makes extensive use of registers and shared memory, the
+maximum active thread blocks per SM will be reduced. This is a key
+tension in writing for the GPU: shared memory use, for example, might be
+advantageous for the performance of a thread block in isolation, but the
+effect on the overall occupancy of the GPU may in fact destroy those
+performance gains.</li>
+<li>There are enough blocks to fully saturate the queues of each SM.
+Toward the end of the computation, as the pending thread blocks still to
+compute is exhausted, some of the SMs may become idle whilst others are
+still finishing. Sometimes this tail idle time can have an outsized
+effect on the overall performance of the kernel.</li>
+</ol></div>
+</div>
+</div>
+</div>
+</div>
 <div class="section level3">
 <h3 id="processing-lifecycle">Processing lifecycle<a class="anchor" aria-label="anchor" href="#processing-lifecycle"></a></h3>
 <p>Putting this all together, we can now describe the lifecycle of
@@ -665,11 +768,12 @@ progress.</li>
 <strong>The runtime of your kernel is not the sum of its
 parts.</strong> Latency hiding can result in parts of your kernel
 contributing to the overall runtime in unintuitive ways (and this can be
-a problem when trying to optimise your kernel).</li>
-</ul><!--
+a problem when trying to optimise your kernel). <!--
 Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
- --></section></div> <!-- / div.lesson-content -->
+ -->
+</li>
+</ul></section></div> <!-- / div.lesson-content -->
     </main><!-- / main#main-content.main-content --><nav class="bottom-pagination mx-md-4" aria-label="Previous and Next Chapter"><div class="d-block d-sm-block d-md-none">
         <a class="chapter-link" href="parallelism.html"><i aria-hidden="true" class="small-arrow" data-feather="arrow-left"></i>Previous</a>
         <a class="chapter-link float-end" href="CuPy.html">Next<i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
@@ -731,9 +835,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/gpu-deepdive.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/gpu-deepdive.html",
-  "dateCreated": "2026-05-26",
-  "dateModified": "2026-05-15",
-  "datePublished": "2026-06-09"
+  "dateCreated": "2026-06-11",
+  "dateModified": "2026-06-11",
+  "datePublished": "2026-06-11"
 }
 
   </script><script>

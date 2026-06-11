@@ -126,11 +126,11 @@
   Lesson Title
 </div>
 
-<aside class="col-md-12 lesson-progress"><div style="width: 60%" class="percentage">
-    60%
+<aside class="col-md-12 lesson-progress"><div style="width: 75%" class="percentage">
+    75%
   </div>
   <div class="progress software">
-    <div class="progress-bar software" role="progressbar" style="width: 60%" aria-valuenow="60" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar software" role="progressbar" style="width: 75%" aria-valuenow="75" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">
     </div>
   </div>
 </aside><div class="container">
@@ -332,7 +332,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>Writing your first GPU kernels</h1>
-        <p>Last updated on 2026-05-15 |
+        <p>Last updated on 2026-06-11 |
 
         <a href="https://github.com/carpentries/workbench-template-md/edit/main/episodes/first-kernels.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -429,6 +429,8 @@ kernel as a stand alone function:</p>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1" aria-label="code-block-2-13"></a>zs <span class="op">=</span> np.empty_like(xs)</span>
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1" aria-label="code-block-2-14"></a>adder(xs, ys, zs)</span></code></pre>
 </div>
+<p>Remember: <code>@njit</code> compiles the function it wraps to
+machine code that runs directly on the CPU.</p>
 <p>In GPU programming, your work will be all about writing the kernel
 itself. The outer loop, on the other hand, is something that the GPU
 will manage for you. It is up to the GPU to decide how to parallelise
@@ -438,31 +440,39 @@ that loop, when to run the kernels, and the order they execute in.</p>
 <div class="codewrapper sourceCode" id="cb3">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="at">@cuda.jit</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="kw">def</span> adder_gpu(xs, ys, zs):</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a>    i <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a>    <span class="cf">if</span> i <span class="op">&lt;</span> <span class="bu">len</span>(xs):</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a>        zs[i] <span class="op">=</span> xs[i] <span class="op">+</span> ys[i]</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a>N <span class="op">=</span> <span class="dv">1000</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a>xs_d <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">1000</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>ys_d <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">1000</span>)</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1" aria-label="code-block-3-10"></a>zs_d <span class="op">=</span> cupy.empty_like(xs_d)</span>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="im">import</span> math</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a><span class="im">import</span> cupy</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a><span class="im">from</span> numba <span class="im">import</span> cuda</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a><span class="at">@cuda.jit</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a><span class="kw">def</span> adder_gpu(xs, ys, zs):</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a>    i <span class="op">=</span> cuda.grid(<span class="dv">1</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>    <span class="cf">if</span> i <span class="op">&lt;</span> <span class="bu">len</span>(xs):</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1" aria-label="code-block-3-10"></a>        zs[i] <span class="op">=</span> xs[i] <span class="op">+</span> ys[i]</span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1" aria-label="code-block-3-11"></a></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1" aria-label="code-block-3-12"></a>nthreads <span class="op">=</span> <span class="dv">256</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1" aria-label="code-block-3-13"></a>nblocks <span class="op">=</span> math.ceil(N <span class="op">/</span> nthreads)</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1" aria-label="code-block-3-14"></a>adder_gpu[nblocks, nthreads](xs_d, ys_d, zs_d)</span></code></pre>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1" aria-label="code-block-3-12"></a>N <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1" aria-label="code-block-3-13"></a>xs_d <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1" aria-label="code-block-3-14"></a>ys_d <span class="op">=</span> cupy.random.normal(size<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1" aria-label="code-block-3-15"></a>zs_d <span class="op">=</span> cupy.empty_like(xs_d)</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1" aria-label="code-block-3-16"></a></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1" aria-label="code-block-3-17"></a>nthreads <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1" aria-label="code-block-3-18"></a>nblocks <span class="op">=</span> math.ceil(N <span class="op">/</span> nthreads)</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1" aria-label="code-block-3-19"></a>adder_gpu[nblocks, nthreads](xs_d, ys_d, zs_d)</span></code></pre>
 </div>
 <p>There’s a lot to unpack in this brief snippet of code:</p>
 <ul><li>First, we added a new import: <code>numba.cuda</code>.</li>
 <li>
 <strong>We’ve wrapped our kernel with the decorator
-<code>@cuda.jit</code>.</strong> Just like <code>numba.jit</code>, this
+<code>@cuda.jit</code>.</strong> Just like <code>@numba.jit</code>, this
 will allow the kernel to compile “just in time” (jit) when we call it
 based on the input types (e.g. the types of <code>xs</code>,
-<code>ys</code>, and <code>zs</code>). There is an overhead associated
-with this initial compilation but subsequent calls will re-use the
-cached kernel so long as the input types remain unchanged.</li>
+<code>ys</code>, and <code>zs</code>). The difference is
+<code>@numba.jit</code> compiled this kernel for the CPU, whereas
+<code>@cuda.jit</code> is compiled for the GPU. There is an overhead
+associated with this initial compilation but subsequent calls will
+re-use the cached kernel so long as the input types remain
+unchanged.</li>
 <li>
 <strong>We’ve called <code>cuda.grid(1)</code> to determine the
 index of the kernel.</strong> Unlike our previous example, the index is
@@ -600,9 +610,9 @@ kernel includes a condition that checks that its index lies within the
 data.</li>
 </ul><p>A good rule of thumb for threads per block is somewhere between 128
 to 1024 threads. As always benchmark your code.</p>
-<p>You grid can 1, 2 or 3 dimensional. As an example, if we were adding
-two large matrices we might choose to index by row and column. In this
-case our code might look like:</p>
+<p>Your grid can be 1, 2, or 3 dimensional. As an example, if we were
+adding two large matrices we might choose to index by row and column. In
+this case our code might look like:</p>
 <div class="codewrapper sourceCode" id="cb5">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -1005,7 +1015,7 @@ variable before writing out to the global memory location at
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1" aria-label="code-block-15-2"></a><span class="kw">def</span> matmul(A, B, C):</span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1" aria-label="code-block-15-3"></a>    i, j <span class="op">=</span> cuda.grid(<span class="dv">2</span>)</span>
 <span id="cb15-4"><a href="#cb15-4" tabindex="-1" aria-label="code-block-15-4"></a>    <span class="cf">if</span> i <span class="op">&lt;</span> C.shape[<span class="dv">0</span>] <span class="kw">and</span> j <span class="op">&lt;</span> C.shape[<span class="dv">1</span>]:</span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1" aria-label="code-block-15-5"></a>        cij <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1" aria-label="code-block-15-5"></a>        cij <span class="op">=</span> <span class="fl">0.0</span></span>
 <span id="cb15-6"><a href="#cb15-6" tabindex="-1" aria-label="code-block-15-6"></a>        <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(A.shape[<span class="dv">1</span>]):</span>
 <span id="cb15-7"><a href="#cb15-7" tabindex="-1" aria-label="code-block-15-7"></a>            cij <span class="op">+=</span> A[i, k] <span class="op">*</span> B[k, j]</span>
 <span id="cb15-8"><a href="#cb15-8" tabindex="-1" aria-label="code-block-15-8"></a></span>
@@ -1188,12 +1198,14 @@ required blocks.</li>
 <li>Ensure the input and output arrays reside on the GPU.</li>
 </ul><p>By the end, you should have a working GPU kernel. Check that the
 kernel works correctly by comparing to <code>cupy.fft.fft()</code>.</p>
-<p><strong>Hint:</strong> <code>np.exp()</code> is not available on the
-GPU. The function <code>math.exp()</code> is available however it will
-only accept real values. The trick is to recall that <span class="math inline">\(e^{i \theta} = \cos{\theta} + i
-\sin{\theta}\)</span> and to use this identity to rewrite the
-computation. That is:
-<code>np.exp(1j * phase) = complex(math.cos(phase), math.sin(phase))</code>.</p>
+<p><strong>Hint:</strong> Complex exponentials
+(e.g. <code>np.exp(1j * phase)</code>) are not directly available inside
+Numba CUDA kernels. The trick is to recall that <span class="math inline">\(e^{i \theta} = \cos{\theta} + i
+\sin{\theta}\)</span> and to use this identity with
+<code>math.cos()</code> and <code>math.sin()</code> (which are available
+for real values). That is: replace <code>np.exp(1j * phase)</code> with
+<code>complex(math.cos(phase), math.sin(phase))</code>. Don’t forget to
+<code>import math</code> at the top of your file.</p>
 </div>
 </div>
 </div>
@@ -1416,9 +1428,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/instructor/first-kernels.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/instructor/first-kernels.html",
-  "dateCreated": "2026-05-26",
-  "dateModified": "2026-05-15",
-  "datePublished": "2026-06-09"
+  "dateCreated": "2026-06-11",
+  "dateModified": "2026-06-11",
+  "datePublished": "2026-06-11"
 }
 
   </script><script>
