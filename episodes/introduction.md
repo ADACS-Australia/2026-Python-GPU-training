@@ -47,7 +47,7 @@ This course is taught using Python and a number of libraries that allow writing 
 And rest assured: the concepts learned here can be applied wholesale to CUDA programming in C or C++ (or Julia, Rust, ...).
 
 <video height=480 width=270>
-   <source src="fig/gpu-mythbusters.mkv" type="video/webm">
+   <source src="https://github.com/ADACS-Australia/2026-Python-GPU-training/releases/download/mythbusters/gpu-mythbusters.webm" type="video/webm">
 </video>
 
 Source: [Nvidia on Youtube](https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI)

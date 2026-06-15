@@ -950,7 +950,7 @@ for j in range(NTHREADS):
         pixels[i] += data_cache[j] * complex(cos, sin)
 ```
 
-This hot loop optimisation avoids uneccessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both versions, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
+This hot loop optimisation avoids unnecessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both versions, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
 
 :::
 
@@ -964,7 +964,7 @@ cuda.fma(a, b, c) = a * b + c
 
 If we can rewrite paired multiply-then-add operations as single FMA operations, we can significantly improve throughput — in the best case approaching a 2x speedup for the arithmetic portion of the kernel. (In fact, the numbers for GPU floating point performance that you'll see NVIDIA or AMD advertising _assume_ that 100% of your code is pure FMA instructions – which almost no non-trivial kernel is capable of achieving.)
 
-The CUDA compiler _should_ make an effort to automatically attempt to insert FMA instructions into your code, but it has been my experience that it is less than perfect.
+The CUDA compiler _should_ make an effort to automatically insert FMA instructions into your code, but it has been my experience that it is less than perfect.
 
 Let's consider the expression from our inner loop:
 

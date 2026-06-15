@@ -103,7 +103,7 @@ There's a lot to unpack in this brief snippet of code:
 
 ::: challenge
 
-Try benchmarking the each of the parallel CPU and GPU adder functions. Which is faster? Try making N larger: is there a point where their respective speeds swaps?
+Try benchmarking each of the parallel CPU and GPU adder functions. Which is faster? Try making N larger: is there a point where their respective speeds swaps?
 
 :::
 

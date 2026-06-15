@@ -193,7 +193,7 @@ This is an important consideration to make in all your work with GPUs: even if t
 
 Addition, subtraction, trigonometric functions and so on: these all work just as they do with Numpy.
 
-Let's consider computing the Taylor expansion the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy we would compute this expansion as:
+Let's consider computing the Taylor expansion of the exponential function. Recall that this is: $e^x = \sum_n \frac{x^n}{n!}$. In numpy we would compute this expansion as:
 
 ```python
 def exp(xs, ys, degree=12):
