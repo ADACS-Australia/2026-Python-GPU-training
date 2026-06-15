@@ -267,7 +267,7 @@ The types of overhead differ between CPU and GPU. When using CPU-backed threads,
 - **Context switching:** when there are more threads than cores, the host OS will periodically suspend threads to "fairly" let each thread advance its work
 - **Communication overhead:** all higher level communication methods are built on a toolbox of atomics, locks, semaphores and condition variables and these have a non-negligible overhead
 
-On the GPU the costs are different mostly owe to the fact that a CPU (the "host") and the GPU (the "device") are physically distinct. Some of these costs include:
+On the GPU, the costs are different — owing mostly to the fact that the CPU (the "host") and the GPU (the "device") are physically distinct. Some of these costs include:
 
 - **Memory transfers:** GPUs have their own memory that is separate from the host and it takes time to transfer back and forth
 - **Command latency:** telling the GPU what to do and transferring kernels has some associated latency
