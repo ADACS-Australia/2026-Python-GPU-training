@@ -42,7 +42,7 @@ By the end, we hope to be able to image the large radio lobes of Fornax A from t
 
 As always, we will approach this first on the CPU where we can ensure we first make things right before attempting a first pass at a kernel.
 
-Let's first set things up. Our data is stored in the file `visibilities.npz` and we will extract each datum and its associated baseline coordinates:
+Let's first set things up. Our data is stored in the file [`visibilities.npz`](https://github.com/ADACS-Australia/2026-Python-GPU-training/releases/download/mythbusters/visibilities.npz) and we will extract each datum and its associated baseline coordinates:
 
 ```python
 data = np.load("visibilities.npz")
