@@ -403,7 +403,9 @@ Fourier transform</a>
 <li>Complex numbers (and, for example, <a href="https://en.wikipedia.org/wiki/Euler's_formula" class="external-link">Euler’s
 formula</a>)</li>
 </ul></section><section><h2 class="section-heading" id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a></h2>
-<hr class="half-width"><p>You will need a computer with an NVIDIA GPU and <a href="https://developer.nvidia.com/cuda/toolkit" class="external-link">CUDA toolkit</a>
+<hr class="half-width"><div class="section level3">
+<h3 id="installing-the-environment-on-a-local-machine">Installing the environment on a local machine<a class="anchor" aria-label="anchor" href="#installing-the-environment-on-a-local-machine"></a></h3>
+<p>You will need a computer with an NVIDIA GPU and <a href="https://developer.nvidia.com/cuda/toolkit" class="external-link">CUDA toolkit</a>
 installed. (CuPy <em>does</em> have some support AMD GPUs, but
 <code>numba-cuda</code> does not.)</p>
 <p>We recommend installing the requisite packages using <a href="https://docs.astral.sh/uv/" class="external-link"><code>uv</code></a> (although
@@ -416,26 +418,170 @@ $ uv add numpy \
        numba \
        numba-cuda \
        cupy \
-       matplotlib</code></pre>
+       matplotlib \
+       pytest
+
+$ source .venv/bin/activate</code></pre>
+</div>
+<div class="section level3">
+<h3 id="installing-the-environment-on-hpc">Installing the environment on HPC<a class="anchor" aria-label="anchor" href="#installing-the-environment-on-hpc"></a></h3>
+<p>Installing the environment on a HPC like <a href="https://supercomputing.swin.edu.au/ngarrgu-tindebeek" class="external-link">Ngarrgu
+Tindebeek</a> will require loading the <code>gcc</code> and
+<code>CUDA</code> modules and installing <a href="https://docs.astral.sh/uv/" class="external-link"><code>uv</code></a>.</p>
+<p>Installing <code>uv</code> should require no change to the Linux
+installation instructions as the bash script that runs should install
+<code>uv</code> to your home directory on the login node of the HPC.
+Using <code>uv</code> to install the environment on Ngarrgu
+Tindebeek:</p>
+<pre class="shell"><code>$ module load gcc/13.3.0 cuda/12.8.0
+# Note the uv will manage the python version you're using, no need to load the python module
+$ uv init gpu-tutorial
+
+$ cd gpu-tutorial
+
+$ uv add numpy \
+       numba \
+       numba-cuda \
+       cupy \
+       matplotlib \
+       pytest
+
+$ source .venv/bin/activate</code></pre>
+</div>
+<div class="section level3">
+<h3 id="running-python-on-a-hpc">Running Python on a HPC<a class="anchor" aria-label="anchor" href="#running-python-on-a-hpc"></a></h3>
+<p>Running the code in this tutorial, will require you to interact with
+SLURM on Ngarrgu Tindebeek, you can do this via
+<code>sinteractive</code> or via <code>sbatch</code>. Starting an
+interactive session with Ngarrgu Tindebeek will require you to run this
+command (or some variation of it):</p>
+<pre class="shell"><code># You may want to make the time longer or shorter depending on what you need
+$ sinteractive --job-name="gpu-tutorial" --partition=milan-gpu --gres=gpu:1 --mem 16G --cpus-per-task=8 --time=04:00:00</code></pre>
+<p>Once you’re in the interactive shell, you’ll need to reload the
+modules and the environment before running any code:</p>
+<pre class="shell"><code>$ module load gcc/13.3.0 cuda/12.8.0
+$ source .venv/bin/activate
+
+# From here you can run code as you need
+$ python some_python_file_here.py
+# Or start an interactive python session
+$ python</code></pre>
+<p>Alternatively, you can also use <code>sbatch</code> to do things in a
+less interactive way. The same interactive command but via an
+<code>sbatch</code> script</p>
+<div class="codewrapper sourceCode" id="cb5">
+<h3 class="code-label">BASH<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode bash" tabindex="0"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1" aria-label="code-block-5-1"></a><span class="co">#!/bin/bash </span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1" aria-label="code-block-5-2"></a><span class="co">#SBATCH --job-name=gpu-tutorial </span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1" aria-label="code-block-5-3"></a><span class="co">#SBATCH --partition=milan-gpu</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1" aria-label="code-block-5-4"></a><span class="co">#SBATCH --gres=gpu:1 </span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1" aria-label="code-block-5-5"></a><span class="co">#SBATCH --cpus-per-task=8</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1" aria-label="code-block-5-6"></a><span class="co">#SBATCH --mem=10G </span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1" aria-label="code-block-5-7"></a><span class="co">#SBATCH --time=00:15:00 </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1" aria-label="code-block-5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1" aria-label="code-block-5-9"></a><span class="ex">module</span> load gcc/13.3.0 cuda/12.8.0</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1" aria-label="code-block-5-10"></a><span class="bu">source</span> .venv/bin/activate</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a><span class="ex">python</span> some_python_file_here.py</span></code></pre>
+</div>
+<p>Then run the script on the cluster via <code>sbatch</code>:</p>
+<pre class="shell"><code>$ sbatch run_python_script.sh</code></pre>
+</div>
+<div class="section level3">
+<h3 id="using-jupyter-notebooks-on-a-hpc-for-the-tutorial">Using Jupyter Notebooks on a HPC for the Tutorial<a class="anchor" aria-label="anchor" href="#using-jupyter-notebooks-on-a-hpc-for-the-tutorial"></a></h3>
+<p>If you wish to use jupyter notebooks with Ngarrgu Tindebeek, you can
+do so by first adding <code>jupyter</code> to the uv environment
+via:</p>
+<pre class="shell"><code>$ uv add jupyter</code></pre>
+<p>Then either inside an interactive or running job, run jupyter
+notebook via this command (it’s easier to do this inside an
+<code>sbatch</code> replacing the python command above with the jupyter
+command below):</p>
+<pre class="shell"><code># It's important to include the --no-browser and --ip 0.0.0.0 arguments
+# The ip being 0.0.0.0 is a broadcast address, which will allow you to access the notebook kernel from the login node via the name of the node.
+$ jupyter notebook --no-browser --ip 0.0.0.0</code></pre>
+<p>If this is inside an sbatch, a slurm output file would have been
+produced (<code>slurm-&lt;job_id&gt;.output</code>), which will contain
+the URL for the running jupyter notebook. It should look something like
+this:</p>
+<pre><code>http://&lt;node-name&gt;:&lt;port&gt;/tree?token=somelongtokenhere</code></pre>
+<p>From there, you have two main options to interact with the running
+notebook.</p>
+<p>If you are using an IDE like VSCode or PyCharm (which have support
+for running jupyter notebooks) connected to the login node via SSH, then
+follow the instructions for connecting to existing jupyter notebooks to
+connect to the running notebook, the instructions for adding
+existing/external servers can be found in the links for <a href="https://code.visualstudio.com/docs/datascience/jupyter-kernel-management#_existing-jupyter-server" class="external-link">VSCode</a>
+and <a href="https://www.jetbrains.com/help/pycharm/configuring-jupyter-notebook.html#setup-configured-server" class="external-link">PyCharm</a>.
+<strong>For the external URL, it’s critical you use the URL that
+contains the name of the node, not <code>localhost</code></strong>.</p>
+<p>If you wish to use jupyter notebook in the browser, then you will
+need to reconnect to the login node with an altered SSH command to
+forward the notebook ports from the login node to your local machine,
+using the <code>&lt;port&gt;</code> and the
+<code>&lt;node-name&gt;</code> from the url above:</p>
+<pre class="shell"><code>$ ssh user@nt.swin.edu.au -L &lt;port&gt;:&lt;node-name&gt;:&lt;port&gt;</code></pre>
+<p>Once the connection is established use that url found inside the
+<code>slurm-&lt;job-id&gt;.output</code> above but replace
+<code>&lt;node-name&gt;</code> with <code>localhost</code> on a browser
+inside your browser on your local machine.</p>
+<div class="information">
+<p>As the <a href="https://supercomputing.swin.edu.au/docs/2-ozstar/Notebooks.html#working-with-jupyter-notebooks" class="external-link">Swinburne
+OzStar documentation</a>, running notebooks should generally be used for
+learning, development, testing or simple analysis purposes.
+Computationally intensive work should be submitted as a batch job to the
+cluster, rather than a notebook running on the cluster. In general when
+working with a HPC, it’s best to create python scripts and run them via
+the <code>sbatch</code>.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="using-pip-instead">Using pip instead<a class="anchor" aria-label="anchor" href="#using-pip-instead"></a></h3>
+<p>The above instructions will work using <code>pip</code> and standard
+<code>venv</code> instead, replace the <code>uv</code> commands with the
+corresponding <code>pip</code> commands. Using <code>pip</code> will
+also mean you need to load the <code>python</code> module on a HPC
+environment, for <code>Ngarrgu Tindebeek</code> utilise the
+<code>python/3.13.1</code> module. In general setting up the environment
+will look like this:</p>
+<pre class="shell"><code>$ module load gcc/14.2.0 cuda/12.8.0 python/3.13.1
+$ mkdir gpu-tutorial
+$ python -m venv .venv
+$ source .venv/bin/activate
+$ pip install numpy \
+       numba \
+       numba-cuda \
+       cupy \
+       matplotlib \
+       pytest</code></pre>
+<p>The pip install for <code>cupy</code> will take some time to complete
+as it will rebuild the wheel on the login node, if you compare
+<code>pip</code> to <code>uv</code> in this case you will
+<em>really</em> notice just how <em>fast</em> <code>uv</code> is.</p>
+</div>
+<div class="section level3">
+<h3 id="imports">Imports<a class="anchor" aria-label="anchor" href="#imports"></a></h3>
 <p>We will frequently omit imports from the code snippets listed
 throughout this tutorial. The following imports should be assumed:</p>
-<div class="codewrapper sourceCode" id="cb2">
+<div class="codewrapper sourceCode" id="cb12">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" tabindex="-1" aria-label="code-block-2-1"></a><span class="co"># Python imports</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1" aria-label="code-block-2-2"></a><span class="im">import</span> math</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1" aria-label="code-block-2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="co"># Package imports</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="im">import</span> cupy</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a><span class="im">import</span> cupyx</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="im">from</span> numba <span class="im">import</span> cuda, njit, prange</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1" aria-label="code-block-12-1"></a><span class="co"># Python imports</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1" aria-label="code-block-12-2"></a><span class="im">import</span> math</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1" aria-label="code-block-12-3"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1" aria-label="code-block-12-4"></a><span class="co"># Package imports</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1" aria-label="code-block-12-5"></a><span class="im">import</span> cupy</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1" aria-label="code-block-12-6"></a><span class="im">import</span> cupyx</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1" aria-label="code-block-12-7"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1" aria-label="code-block-12-8"></a><span class="im">from</span> numba <span class="im">import</span> cuda, njit, prange</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1" aria-label="code-block-12-9"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre>
 </div>
 <!--
 Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
  -->
+</div>
 </section></section></main><nav class="bottom-pagination mx-md-4" aria-label="Next Chapter"><!-- content for small screens --><div class="d-block d-sm-block d-md-none">
         <a class="chapter-link float-end" href="parallelism.html">Next<i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i></a>
       </div>
@@ -489,9 +635,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://carpentries.github.io/workbench-template-md/index.html",
   "identifier": "https://carpentries.github.io/workbench-template-md/index.html",
-  "dateCreated": "2026-06-16",
-  "dateModified": "2026-06-16",
-  "datePublished": "2026-06-16"
+  "dateCreated": "2026-06-22",
+  "dateModified": "2026-06-22",
+  "datePublished": "2026-06-22"
 }
 
   </script><script>
