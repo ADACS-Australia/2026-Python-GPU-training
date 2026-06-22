@@ -661,7 +661,7 @@ element-wise square root of an array. Verify correctness against
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -902,7 +902,7 @@ parallelise with <code>prange</code>, and if not, why not.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <ul>
 <li>A is safe: threads read from the same values, but since these are
@@ -1684,7 +1684,7 @@ first.</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1903,9 +1903,25 @@ by n), followed by a sum along the second dimension:</p>
 <p>This is a function with elementwise multiplication, complex
 exponentiation, scalar multiplication and summation. When our inputs are
 GPU arrays it happens entirely on the GPU.</p>
-<p>Also take note of the function
-<code>cupy.get_array_module(arr)</code>: this is a useful helper
-function to write device-agnostic code.</p>
+<div id="callout2" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div class="callout-inner">
+<div class="callout-content">
+<p>Did you spot the function
+<code>xp = cupy.get_array_module(arr)</code>? This is a very useful
+helper function to write device-agnostic code.</p>
+<p>When passed a numpy array, this function will return the numpy
+module, and when passed a CuPy array it will return the CuPy module.
+This allows you to dispatch on the array type: instead of hardcoding
+calls to <code>np</code> or <code>cupy</code>, you can use
+<code>xp</code> to write functions that work seamlessly with both CPU or
+GPU arrays.</p>
+</div>
+</div>
+</div>
 <div id="discussion4" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
@@ -1932,7 +1948,7 @@ might need to experiment with a few different options.)</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <p>Since <code>@cupy.fuse</code> does a fair bit of black magic, it
 takes some experimentation to find the right subset of instructions to
@@ -2061,7 +2077,7 @@ result.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb19">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2150,7 +2166,7 @@ operations are <strong>asynchronous</strong>: when you call
 immediately continues without waiting for the result. We can continue
 dispatching operations or we can wait for the operations to complete by
 calling <code>sychronize()</code> (and some operations will implicitly
-syncrhonize, like device to host transfers).</p>
+synchronize, like device to host transfers).</p>
 <p>But don’t be fooled by this aysnchronous operation: on the GPU, each
 of our operations proceed sequentially, one after the other. This
 ordering of operations on the GPU is managed by CUDA’s concept of the
@@ -2160,16 +2176,16 @@ will block pending operations until they are completed. In most cases,
 this is the right thing to do.</p>
 <p>Up until now we’ve been (implicitly) using the default stream, which
 has meant our GPU operations have proceeded serially. But there are
-times you might want to overlap or multiplex operations. For example,
-perhaps you want to perform a memory transfer <em>at the same time</em>
-as you run a computation over data that has already been transferred.
-CUDA’s answer to this is to use <em>multiple</em> streams. Whilst each
-stream manages its queue sequentially, no such guarantee exists between
-streams. In fact, the different streams are free to execute
-concurrently, and the GPU can interleave work from multiple streams to
-maximize utilization.</p>
+times when you might want to overlap or multiplex operations. For
+example, perhaps you want to perform a memory transfer <em>at the same
+time</em> as you run a computation over data that has already been
+transferred. CUDA’s answer to this is to use <em>multiple</em> streams.
+Whilst each stream manages its queue sequentially, no such guarantee
+exists between streams. In fact, the different streams are free to
+execute concurrently, and the GPU can interleave work from multiple
+streams to maximize utilization.</p>
 <p>By default, every CuPy operation is submitted to the <strong>default
-stream</strong>. You can access the current streams as:</p>
+stream</strong>. You can access the current stream as:</p>
 <div class="codewrapper sourceCode" id="cb23">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -2229,7 +2245,7 @@ concurrently—the GPU schedules them based on available resources.</li>
 <code>stream.synchronize()</code> to block the CPU until all operations
 in that stream have completed.</li>
 </ol>
-<div id="callout2" class="callout">
+<div id="callout3" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -2271,8 +2287,9 @@ example:</p>
 <div class="callout-content">
 <p>Create three arrays on the GPU, then perform three independent
 computations (e.g., <code>a * 2</code>, <code>b ** 2</code>,
-<code>cupy.sin(c)</code>) each on its own stream. Synchronize all three
-streams and verify the results are correct.</p>
+<code>cupy.sin(c)</code>) each in their own respective stream.
+Synchronize all three streams and verify that the results are
+correct.</p>
 </div>
 </div>
 </div>
@@ -2281,7 +2298,7 @@ streams and verify the results are correct.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb27">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2329,11 +2346,11 @@ that is similarly independent.</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Selecting the GPU prior to running the program:</strong> The
-environment varaible <code>CUDA_VISIBLE_DEVICES</code> can be used at
+environment variable <code>CUDA_VISIBLE_DEVICES</code> can be used at
 program startup to filter which devices can be seen by the program. For
 example, a program started as
 <code>CUDA_VISIBLE_DEVICES=2 python program.py</code> will only be able
-to see GPU device 2.</li>
+to see GPU device 2 and will default to using this device.</li>
 <li>
 <strong>Setting a default GPU from within the program:</strong> CuPy
 will always set a default GPU which you can view as
@@ -2380,7 +2397,7 @@ then creates a small array on each device and prints its device ID.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb29">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
