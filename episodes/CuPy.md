@@ -67,6 +67,15 @@ Note the convention of appending `_d` to the names of arrays that are on the GPU
 
 (There's also `cupy.asarray(otherarray)`: this will return `otherarray` unchanged if it's already a CuPy GPU array, otherwise it will copy to the GPU. It's a handy function to ensure an array is on the GPU without an unnecessary copy if it's already there.)
 
+::: callout
+
+CuPy is often imported using `import cupy as cp` (compare with the usual `import numpy as np`), and so you might see this a lot in the documentation or in code you find online.
+
+This only changes the name of the import. e.g. `cupy.array(...)` becomes `cp.array(...)`.
+
+For clarity, we will use the full `cupy` name in this workshop.
+
+:::
 
 ## An aside: on benchmarking
 
@@ -496,3 +505,160 @@ plan = cupyx.scipy.fft.get_fft_plan(a, axes=(1, 2))
 with plan:
     A = cupy.fft.fftn(a, axes=(1, 2))
 ```
+
+## Advanced topic: Streams and concurrency
+
+We saw earlier in the *benchmarking* section that CuPy operations are **asynchronous**: when you call `a += b`, the work is dispatched to the GPU and Python immediately continues without waiting for the result. We can continue dispatching operations or we can wait for the operations to complete by calling `sychronize()` (and some operations will implicitly syncrhonize, like device to host transfers).
+
+But don't be fooled by this aysnchronous operation: on the GPU, each of our operations proceed sequentially, one after the other. This ordering of operations on the GPU is managed by CUDA's concept of the **stream**. Think of it as a queue: operations submitted to the same stream are executed in the order they were submitted, and each will block pending operations until they are completed. In most cases, this is the right thing to do.
+
+Up until now we've been (implicitly) using the default stream, which has meant our GPU operations have proceeded serially. But there are times you might want to overlap or multiplex operations. For example, perhaps you want to perform a memory transfer _at the same time_ as you run a computation over data that has already been transferred. CUDA's answer to this is to use _multiple_ streams. Whilst each stream manages its queue sequentially, no such guarantee exists between streams. In fact, the different streams are free to execute concurrently, and the GPU can interleave work from multiple streams to maximize utilization.
+
+By default, every CuPy operation is submitted to the **default stream**. You can access the current streams as:
+
+```python
+current = cupy.cuda.get_current_stream()
+print(current)  # <Non-blocking Stream id at 0x...>
+```
+
+The default stream serializes operations. If you want to overlap work, create your own streams:
+
+```python
+stream1 = cupy.cuda.Stream()
+stream2 = cupy.cuda.Stream()
+```
+
+Use `Stream.use()` as a context manager to direct operations to a specific stream:
+
+```python
+# Operations in stream1
+with stream1.use():
+    a = cupy.random.normal(size=1_000_000)
+    b = cupy.random.normal(size=1_000_000)
+    result1 = a + b
+
+# Operations in stream2 (may run concurrently with stream1)
+with stream2.use():
+    c = cupy.random.normal(size=1_000_000)
+    d = cupy.random.normal(size=1_000_000)
+    result2 = c + d
+
+# Synchronize both streams to wait for completion
+stream1.synchronize()
+stream2.synchronize()
+```
+
+From Python's perspective, each step will appear to execute immediately until we reach the calls to `synchronize()`, which will block. In reality, what we've done is to queue up these operations into each of `stream1` and `stream2`, which (may) execute their operations concurrently.
+
+Importantly: notice how we group together the data dependencies for each sequence _within_ the same stream. For example, notice that arrays `a` and `b` are created in the same stream where they are later used. (If we had data dependencies _between_ streams we would need to carefully and judiciously add calls to `synchronize()`.)
+
+The key semantics are:
+
+1. **Within a stream**: operations are guanteed to execute in submission order.
+2. **Between streams**: operations *may* execute concurrently—the GPU schedules them based on available resources.
+3. **Synchronization**: call `stream.synchronize()` to block the CPU until all operations in that stream have completed.
+
+::: callout
+
+A common idiom when using streams is to use them in combination with Python threads, where each Python thread has an associated default stream. If you're already comfortable with Python threading, this can often simplify managing state.
+
+To do this we must start Python with the environment variable `CUPY_CUDA_PER_THREAD_DEFAULT_STREAM=1`. Then each Python thread will, by default, dispatch operations to its own stream. For example:
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+
+def compute(c):
+    # Each thread implicity uses its own stream on the GPU
+    a = cupy.random.normal(size=1_000_000)
+    b = cupy.random.normal(size=1_000_000)
+    return c * (a + b)
+
+with ThreadPoolExecutor as executor:
+    results = executor.map(compute, [1, 2, 3, 4, 5])
+```
+
+:::
+
+::: challenge
+
+Create three arrays on the GPU, then perform three independent computations (e.g., `a * 2`, `b ** 2`, `cupy.sin(c)`) each on its own stream. Synchronize all three streams and verify the results are correct.
+
+:::
+
+::: solution
+
+```python
+s1 = cupy.cuda.Stream()
+s2 = cupy.cuda.Stream()
+s3 = cupy.cuda.Stream()
+
+with s1.use():
+    a = cupy.random.normal(size=1_000_000)
+    r1 = a * 2
+
+with s2.use():
+    b = cupy.random.normal(size=1_000_000)
+    r2 = b ** 2
+
+with s3.use():
+    c = cupy.random.normal(size=1_000_000)
+    r3 = cupy.sin(c)
+
+s1.synchronize()
+s2.synchronize()
+s3.synchronize()
+
+# Verify
+cupy.testing.assert_allclose(r1, a * 2)
+cupy.testing.assert_allclose(r2, b ** 2)
+cupy.testing.assert_allclose(r3, cupy.sin(c))
+```
+:::
+
+## Advanced topic: Device selection
+
+Many systems have multiple GPUs available, especially in supercomputing environments. To make full use of your allocation you need to be able to dispatch work across these GPUs.
+
+Each GPU is fully independent: each has its own memory, its own streams, and its own computational availability. This degree of independence means that it is usually best to distribute work to GPUs that is similarly independent.
+
+GPU selection can be done in varying levels of granularity:
+
+1. **Selecting the GPU prior to running the program:** The environment varaible `CUDA_VISIBLE_DEVICES` can be used at program startup to filter which devices can be seen by the program. For example, a program started as `CUDA_VISIBLE_DEVICES=2 python program.py` will only be able to see GPU device 2.
+2. **Setting a default GPU from within the program:** CuPy will always set a default GPU which you can view as `cupy.cuda.Device()`. You can view the number of available GPUs by calling `cupy.cuda.runtime.getDeviceCount()`, and the default can be changed at any point by calling `cupy.setDevice(idx)`.
+3. **Dispatching data and operations to different GPUs on an adhoc basis.**
+
+For adhoc GPU device selection you can choose to either nominate the device for each call or use the device a context manager (similar to streams):
+
+```python
+# Option 1: Manually nominate the destination GPU
+a_d2 = cupy.array([1, 2, 3], device=2)
+b_d2 = cupy.array([4, 5, 6], device=2)
+
+# Both arrays _must_ exist on the same device before performing a computation
+result = a_d2 + b_d2
+
+# Option 2: use a context manager
+with cupy.cuda.Device(3):
+    arr = cupy.array([1, 2, 3])
+    print(arr.device)  # <CUDA Device 3>
+```
+
+::: challenge
+
+Write code that discovers how many GPUs are available in the system, then creates a small array on each device and prints its device ID.
+
+:::
+
+::: solution
+
+```python
+import cupy
+
+n_devices = cupy.cuda.runtime.getDeviceCount()
+
+for i in range(n_devices):
+    arr = cupy.array([1, 2, 3], device=i)
+    print(f"Device {i}: {arr.device}")
+```
+
+:::
