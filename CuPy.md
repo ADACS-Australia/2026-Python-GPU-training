@@ -335,7 +335,13 @@ def DFT(xs):
 
 This is a function with elementwise multiplication, complex exponentiation, scalar multiplication and summation. When our inputs are GPU arrays it happens entirely on the GPU.
 
-Also take note of the function `cupy.get_array_module(arr)`: this is a useful helper function to write device-agnostic code.
+::: callout
+
+Did you spot the function `xp = cupy.get_array_module(arr)`? This is a very useful helper function to write device-agnostic code.
+
+When passed a numpy array, this function will return the numpy module, and when passed a CuPy array it will return the CuPy module. This allows you to dispatch on the array type: instead of hardcoding calls to `np` or `cupy`, you can use `xp` to write functions that work seamlessly with both CPU or GPU arrays.
+
+:::
 
 ::: challenge
 
@@ -508,13 +514,13 @@ with plan:
 
 ## Advanced topic: Streams and concurrency
 
-We saw earlier in the *benchmarking* section that CuPy operations are **asynchronous**: when you call `a += b`, the work is dispatched to the GPU and Python immediately continues without waiting for the result. We can continue dispatching operations or we can wait for the operations to complete by calling `sychronize()` (and some operations will implicitly syncrhonize, like device to host transfers).
+We saw earlier in the *benchmarking* section that CuPy operations are **asynchronous**: when you call `a += b`, the work is dispatched to the GPU and Python immediately continues without waiting for the result. We can continue dispatching operations or we can wait for the operations to complete by calling `sychronize()` (and some operations will implicitly synchronize, like device to host transfers).
 
 But don't be fooled by this aysnchronous operation: on the GPU, each of our operations proceed sequentially, one after the other. This ordering of operations on the GPU is managed by CUDA's concept of the **stream**. Think of it as a queue: operations submitted to the same stream are executed in the order they were submitted, and each will block pending operations until they are completed. In most cases, this is the right thing to do.
 
-Up until now we've been (implicitly) using the default stream, which has meant our GPU operations have proceeded serially. But there are times you might want to overlap or multiplex operations. For example, perhaps you want to perform a memory transfer _at the same time_ as you run a computation over data that has already been transferred. CUDA's answer to this is to use _multiple_ streams. Whilst each stream manages its queue sequentially, no such guarantee exists between streams. In fact, the different streams are free to execute concurrently, and the GPU can interleave work from multiple streams to maximize utilization.
+Up until now we've been (implicitly) using the default stream, which has meant our GPU operations have proceeded serially. But there are times when you might want to overlap or multiplex operations. For example, perhaps you want to perform a memory transfer _at the same time_ as you run a computation over data that has already been transferred. CUDA's answer to this is to use _multiple_ streams. Whilst each stream manages its queue sequentially, no such guarantee exists between streams. In fact, the different streams are free to execute concurrently, and the GPU can interleave work from multiple streams to maximize utilization.
 
-By default, every CuPy operation is submitted to the **default stream**. You can access the current streams as:
+By default, every CuPy operation is submitted to the **default stream**. You can access the current stream as:
 
 ```python
 current = cupy.cuda.get_current_stream()
@@ -581,7 +587,7 @@ with ThreadPoolExecutor as executor:
 
 ::: challenge
 
-Create three arrays on the GPU, then perform three independent computations (e.g., `a * 2`, `b ** 2`, `cupy.sin(c)`) each on its own stream. Synchronize all three streams and verify the results are correct.
+Create three arrays on the GPU, then perform three independent computations (e.g., `a * 2`, `b ** 2`, `cupy.sin(c)`) each in their own respective stream. Synchronize all three streams and verify that the results are correct.
 
 :::
 
@@ -623,7 +629,7 @@ Each GPU is fully independent: each has its own memory, its own streams, and its
 
 GPU selection can be done in varying levels of granularity:
 
-1. **Selecting the GPU prior to running the program:** The environment varaible `CUDA_VISIBLE_DEVICES` can be used at program startup to filter which devices can be seen by the program. For example, a program started as `CUDA_VISIBLE_DEVICES=2 python program.py` will only be able to see GPU device 2.
+1. **Selecting the GPU prior to running the program:** The environment variable `CUDA_VISIBLE_DEVICES` can be used at program startup to filter which devices can be seen by the program. For example, a program started as `CUDA_VISIBLE_DEVICES=2 python program.py` will only be able to see GPU device 2 and will default to using this device.
 2. **Setting a default GPU from within the program:** CuPy will always set a default GPU which you can view as `cupy.cuda.Device()`. You can view the number of available GPUs by calling `cupy.cuda.runtime.getDeviceCount()`, and the default can be changed at any point by calling `cupy.setDevice(idx)`.
 3. **Dispatching data and operations to different GPUs on an adhoc basis.**
 
