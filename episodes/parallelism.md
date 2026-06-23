@@ -284,13 +284,13 @@ Serial code is very easy to reason about: first this happens, then this, and fin
 Parallel code tends to be much more complex:
 
 - Each thread is doing only part of the overall computation
-- You can no longer guarantee the ordering of operations: threads may start, suspended, and stop at different times
+- You can no longer guarantee the ordering of operations: threads may start, suspend, and stop at different times
 - Compiler optimisations become visible between threads
 - Significant programmer work is required to reason about and handle synchronisation
 
 These complexities mean that bugs are more likely, and you must weigh this against the performance benefits you expect.
 
-We recommend to always write your algorithm in a single threaded, serial form first, and use this to test your parallel code later for correctness.
+**Always write your algorithm in a single threaded, serial form first, and use this to test your parallel code later for correctness.**
 
 ::: challenge
 
