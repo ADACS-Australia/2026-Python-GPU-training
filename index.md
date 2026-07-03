@@ -8,19 +8,24 @@ This is an advanced course in GPU programming using Python. You will learn about
 
 This course can be separated into two days:
 
-* **Day 1:**
+* **Day 1:** (21st July) 
 
    * GPU fundamentals
    * High-level GPU programming with CuPy
    * Writing your first kernel
 
-* **Day 2:**
+* **Day 2:** (22nd July)
 
    * Kernel optimisation, including:
       * Floating point precision
       * Shared memory optimisations
       * Thread coarsening
       * Explicit FMA instructions
+
+**Where**: The workshop will be held at Swinburne university in the [Engineering building](https://maps.app.goo.gl/vyjQiu5cBgsyp5T9A). 
+
+**When**: The workshop will run on the 21-22nd of July, 10am - 4pm each day. Arrive by 9:30 for setup.
+
 
 ### Why use GPU acceleration?
 

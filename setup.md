@@ -18,6 +18,11 @@ Additionally, the examples given here are aimed towards people coming from a phy
 
 ## Setup
 
+It is expected that you will be working on ozstar for this workshop, but if you have a CUDA based GPU you can work on your local machine (not recommended).
+
+To work on ozstar you will need an account (sign up here), and you will need to have joined the group `oz983`.
+Making an account and joining the group takes time as there is a human approval process required for each.
+
 ### Installing the environment on a local machine
 
 You will need a computer with an NVIDIA GPU and [CUDA toolkit](https://developer.nvidia.com/cuda/toolkit) installed. (CuPy _does_ have some support AMD GPUs, but `numba-cuda` does not.)
