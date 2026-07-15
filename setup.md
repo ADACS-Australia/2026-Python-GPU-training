@@ -18,158 +18,176 @@ Additionally, the examples given here are aimed towards people coming from a phy
 
 ## Setup
 
-It is expected that you will be working on ozstar for this workshop, but if you have a CUDA based GPU you can work on your local machine (not recommended).
+It is expected that you will be working on [OzStar] for this workshop, but if you have a CUDA based GPU you can work on your local machine (not recommended).
 
-To work on ozstar you will need an account (sign up here), and you will need to have joined the group `oz983`.
-Making an account and joining the group takes time as there is a human approval process required for each.
+To work on ozstar you will need an [account](https://supercomputing.swin.edu.au/account-management/), and you will need to have joined the group `oz983`.
 
-### Installing the environment on a local machine
+Making an account and joining the group takes time as there is a human approval process required for each, so please make sure that you do this before attending the workshop.
 
-You will need a computer with an NVIDIA GPU and [CUDA toolkit](https://developer.nvidia.com/cuda/toolkit) installed. (CuPy _does_ have some support AMD GPUs, but `numba-cuda` does not.)
 
-We recommend installing the requisite packages using [`uv`](https://docs.astral.sh/uv/) (although `pip` should work too):
+### Connecting to Ozstar
 
-```shell
-$ uv init gpu-tutorial
+Log into ozstar using ssh via:
 
-$ cd gpu-tutorial
-
-$ uv add numpy \
-       numba \
-       numba-cuda \
-       cupy \
-       matplotlib \
-       pytest
-
-$ source .venv/bin/activate
+```bash
+ssh <USERNAME>@ozstar.swin.edu.au
 ```
+
+This should connect you to either `farnarkle1` or `farnarkle2` as these are the login nodes.
+
+See the documentation [here](https://supercomputing.swin.edu.au/docs/1-getting_started/Access.html) for tips on how to setup easy access via ssh.
+
+
+
 
 ### Installing the environment on HPC
 
-Installing the environment on a HPC like [Ngarrgu Tindebeek](https://supercomputing.swin.edu.au/ngarrgu-tindebeek) will require loading the `gcc` and `CUDA` modules and installing [`uv`](https://docs.astral.sh/uv/). 
+Installing the environment on a HPC like [OzStar] will require loading the `gcc` and `CUDA` modules and installing [`uv`](https://docs.astral.sh/uv/). 
 
 Installing `uv` should require no change to the Linux installation instructions as the bash script that runs should install `uv` to your home directory on the login node of the HPC.
-Using `uv` to install the environment on Ngarrgu Tindebeek:
+Using `uv` to install the environment on OzStar:
 
-```shell
-$ module load gcc/13.3.0 cuda/12.8.0
-# Note the uv will manage the python version you're using, no need to load the python module
-$ uv init gpu-tutorial
-
-$ cd gpu-tutorial
-
-$ uv add numpy \
+```bash
+# Work in your home directory
+cd ~
+# Load the required software modules
+module load gcc/13.3.0 cuda/12.8.0 python/3.12.3
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Now make a new direcotyr and environment for us to work in
+uv init gpu-tutorial
+cd gpu-tutorial
+# Note that the following may take up to 1/2 hour to complete (thanks cupy!)
+uv add numpy \
        numba \
        numba-cuda \
        cupy \
        matplotlib \
        pytest
-
-$ source .venv/bin/activate
+# Activate this new environment
+source .venv/bin/activate
+# Test that everything is working
+python -c 'import numpy, numba, numba.cuda, cupy, pytest, matplotlib'
 ```
+
+If you can run all of the above without generating errors then you are ready to go.
+If you find errors then either email the organisers of the workshop, or be sure to arrive early on the first day to get in-person help.
+
 
 ### Running Python on a HPC
 
-Running the code in this tutorial, will require you to interact with SLURM on Ngarrgu Tindebeek, you can do this via `sinteractive` or via `sbatch`. Starting an interactive session with Ngarrgu Tindebeek will require you to run this command (or some variation of it):
+Running the code in this tutorial, will require you to interact with SLURM on OzStar, you can do this via `sinteractive` (recommended) or via `sbatch` (optional).
+
+::: tab
+
+### sinteractive
+
+Start an interactive session with OzStar:
 
 ```shell
 # You may want to make the time longer or shorter depending on what you need
-$ sinteractive --job-name="gpu-tutorial" --partition=milan-gpu --gres=gpu:1 --mem 16G --cpus-per-task=8 --time=04:00:00
+sinteractive --gres=gpu:1 --mem 16G --cpus-per-task=8 --time=04:00:00 --reservation=curtin_training 
 ```
+You will then see something like the following
+
+```output
+srun: job 14313053 queued and waiting for resources
+srun: job 14313053 has been allocated resources
+[phancock@john26 gpu-tutorial]$ 
+```
+
+There may be a delay between the "waitin" and "allocated" stage, though with the reservation in place this may only a be a few seconds.
+You will know that your job has been allocated because your command prompt should now be `[<user>@<node> <working directory>]`, where `<node>` is **not** `farnarkle[12]`.
 
 Once you're in the interactive shell, you'll need to reload the modules and the environment before running any code:
 
-```shell
-$ module load gcc/13.3.0 cuda/12.8.0
-$ source .venv/bin/activate
-
-# From here you can run code as you need
-$ python some_python_file_here.py
-# Or start an interactive python session
-$ python
+```bash
+module load gcc/13.3.0 cuda/12.8.0 python/3.12.3
+cd ~/gpu-tutorial
+source .venv/bin/activate
 ```
 
-Alternatively, you can also use `sbatch` to do things in a less interactive way. The same interactive command but via an `sbatch` script
+### sbatch
 
+The usual way to run scripts on an HPC is to submit a job script which contains all the information about the job you are running, and how it should run.
+
+In a file called `run_python_script.sh` you would include:
 ```bash
 #!/bin/bash 
-#SBATCH --job-name=gpu-tutorial 
-#SBATCH --partition=milan-gpu
+#SBATCH --job-name=myjob 
+#SBATCH --out=myjob-%j.out
 #SBATCH --gres=gpu:1 
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=10G 
+#SBATCH --mem=16G 
 #SBATCH --time=00:15:00 
+#SBATCH --reservation=curtin_training
 
-module load gcc/13.3.0 cuda/12.8.0
+module load gcc/13.3.0 cuda/12.8.0 python/3.12.3
+cd ~/gpu-tutorial
 source .venv/bin/activate
 
 python some_python_file_here.py
 ```
 
-Then run the script on the cluster via `sbatch`:
+Then submit this script to the job scheduler using `sbatch`:
 
 ```shell
 $ sbatch run_python_script.sh
 ```
 
-### Using Jupyter Notebooks on a HPC for the Tutorial
+When the job runs it will put any output (STDERR + STDOUT) into the file `myjob-<jobid>.out` in the current directory.
+This file will include a short summary from the job scheduler about the resources used.
 
-If you wish to use jupyter notebooks with Ngarrgu Tindebeek, you can do so by first adding `jupyter` to the uv environment via:
-
-```shell
-$ uv add jupyter
-```
-
-Then either inside an interactive or running job, run jupyter notebook via this command (it's easier to do this inside an `sbatch` replacing the python command above with the jupyter command below):
-
-```shell
-# It's important to include the --no-browser and --ip 0.0.0.0 arguments
-# The ip being 0.0.0.0 is a broadcast address, which will allow you to access the notebook kernel from the login node via the name of the node.
-$ jupyter notebook --no-browser --ip 0.0.0.0
-```
-
-If this is inside an sbatch, a slurm output file would have been produced (`slurm-<job_id>.output`), which will contain the URL for the running jupyter notebook. It should look something like this:
-
-```
-http://<node-name>:<port>/tree?token=somelongtokenhere
-```
-
-From there, you have two main options to interact with the running notebook.
-
-If you are using an IDE like VSCode or PyCharm (which have support for running jupyter notebooks) connected to the login node via SSH, then follow the instructions for connecting to existing jupyter notebooks to connect to the running notebook, the instructions for adding existing/external servers can be found in the links for [VSCode](https://code.visualstudio.com/docs/datascience/jupyter-kernel-management#_existing-jupyter-server) and [PyCharm](https://www.jetbrains.com/help/pycharm/configuring-jupyter-notebook.html#setup-configured-server). **For the external URL, it's critical you use the URL that contains the name of the node, not `localhost`**. 
-
-If you wish to use jupyter notebook in the browser, then you will need to reconnect to the login node with an altered SSH command to forward the notebook ports from the login node to your local machine, using the `<port>` and the `<node-name>` from the url above:
-
-```shell
-$ ssh user@nt.swin.edu.au -L <port>:<node-name>:<port>
-```
-
-Once the connection is established use that url found inside the `slurm-<job-id>.output` above but replace `<node-name>` with `localhost` on a browser inside your browser on your local machine.
-
-::: information
-As the [Swinburne OzStar documentation](https://supercomputing.swin.edu.au/docs/2-ozstar/Notebooks.html#working-with-jupyter-notebooks), running notebooks should generally be used for learning, development, testing or simple analysis purposes. Computationally intensive work should be submitted as a batch job to the cluster, rather than a notebook running on the cluster. In general when working with a HPC, it's best to create python scripts and run them via the `sbatch`.
 :::
 
-### Using pip instead
+### Editing your files on an HPC
 
-The above instructions will work using `pip` and standard `venv` instead, replace the `uv` commands with the corresponding `pip` commands. Using `pip` will also mean you need to load the `python` module on a HPC environment, for `Ngarrgu Tindebeek` utilise the `python/3.13.1` module. In general setting up the environment will look like this:
+There are many options available for the edit/run/fix loop that we will be engaged in during this workshop.
+Depending on your prefered editor (and patience) we recommend the following:
 
-```shell
-$ module load gcc/14.2.0 cuda/12.8.0 python/3.13.1
-$ mkdir gpu-tutorial
-$ python -m venv .venv
-$ source .venv/bin/activate
-$ pip install numpy \
-       numba \
-       numba-cuda \
-       cupy \
-       matplotlib \
-       pytest
-```
 
-The pip install for `cupy` will take some time to complete as it will rebuild the wheel on the login node, if you compare `pip` to `uv` in this case you will _really_ notice just how _fast_ `uv` is.
+::: tab
 
-### Imports
+### VSCode
+
+1. [Download](https://code.visualstudio.com/download?_exp_download=fb315fc982) and install VSCode on your local machine.
+1. Install the extension [remote-ssh](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh), plus whatever other extensions you love.
+1. Press the `><` looking button on the bottom left of your window.
+1. Choose "Connect to host"
+       1. If you set up your `.ssh/config` file you should see "ozstar" as an option
+       1. Otherwise choose "Add new SSH host" and enter `ssh <username>@ozstar.swin.edu.au` and then your password if/when requested.
+1. Choose File -> Open workspace from Folder"
+1. Enter `/home/<username>>/gpu-tutorial/`
+1. You should see the files on the remote system in your file explorer tab
+1. Open the built in terminal (default is `<Ctrl>+~`)/
+1. This terminal is already logged into ozstar so you can use the `sinteractive` commands above to join an interactive session
+1. From here, you can edit/save files in VSCode, and run them in the terminal without having to swap between them.
+
+### vim/emacs/nano
+
+The workflow here is:
+
+1. ssh into ozstar
+1. sinteractive to get a node with a gpu
+1. use vim/emacs/nano to create/edit files
+1. save file, quit editor
+1. run file using `python myfile.py`
+1. observe success or errors
+1. if errors GOTO 3
+1. success
+
+This works just fine for short scripts but the continually open/edit/save/run loop can become tedious, especially when you are making typo level errors.
+
+
+
+### Other
+
+Whatever your prefered editor is.
+We'll try to help if you have problems, but consider this a self supported option!
+
+:::
+
+## Imports
 
 We will frequently omit imports from the code snippets listed throughout this tutorial. The following imports should be assumed:
 
@@ -184,3 +202,11 @@ import matplotlib.pyplot as plt
 from numba import cuda, njit, prange
 import numpy as np
 ```
+
+
+## AI Declaration
+
+With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
+
+* The shared memory optimisation animation (using Gemini 3).
+* Final proof and code checking (using Qwen 3.6)

@@ -8,23 +8,28 @@ This is an advanced course in GPU programming using Python. You will learn about
 
 This course can be separated into two days:
 
-* **Day 1:** (21st July) 
+::: tab
 
-   * GPU fundamentals
-   * High-level GPU programming with CuPy
-   * Writing your first kernel
+### **Day 1**
 
-* **Day 2:** (22nd July)
+* [An intro to parallelism](parallelism.md)
+* [GPU fundamentals](gpu-deepdive.md)
+* [High-level GPU programming with CuPy](CuPy.md)
+* [Writing your first kernel](first-kernels.md)
 
-   * Kernel optimisation, including:
-      * Floating point precision
-      * Shared memory optimisations
-      * Thread coarsening
-      * Explicit FMA instructions
+### **Day 2:**
+
+* [Kernel optimisation](optimisation.md), including:
+   * Floating point precision
+   * Shared memory optimisations
+   * Thread coarsening
+   * Explicit FMA instructions
+
+:::
 
 **Where**: The workshop will be held at Swinburne university in the [Engineering building](https://maps.app.goo.gl/vyjQiu5cBgsyp5T9A). 
 
-**When**: The workshop will run on the 21-22nd of July, 10am - 4pm each day. Arrive by 9:30 for setup.
+**When**: The workshop will run on the 21st-22nd of July, 10am - 4pm each day. Arrive as early as 9am if you need help setting up your computer/environment.
 
 
 ### Why use GPU acceleration?
@@ -46,10 +51,3 @@ Source: [Nvidia on Youtube](https://web.archive.org/web/20241001024753/https://w
 This course is taught using Python and a number of libraries that allow writing CUDA kernels directly using Python. Python has been chosen to make this course as accessible as possible, which allows us to focus on the underlying concepts without getting snagged on unfamiliar syntax. Under the hood, the Python kernels are [compiled](https://en.wikipedia.org/wiki/Just-in-time_compilation) to CUDA kernels and run just as fast as if we had written them in C.
 
 And rest assured: the concepts learned here can be applied wholesale to CUDA programming in C or C++ (or Julia, Rust, ...).
-
-## AI Declaration
-
-With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
-
-* The shared memory optimisation animation (using Gemini 3).
-* Final code proofing and feedback (Claude 4.6)
