@@ -4,16 +4,18 @@ title: Optimisation
 
 ::: questions
 
-- What are the main bottlenecks in GPU performance?
-- How do Warp Shuffles improve on Shared Memory?
+- Why is accessing global memory in a kernel's hot loop a performance bottleneck?
+- How can threads within a block cooperate to share the cost of reading data from global memory?
+- When does using lower-precision floating point numbers make your kernel faster?
 
 :::
 
 ::: objectives
 
-- Identify and fix Memory Coalescing issues.
-- Use Fused Multiply-Add (FMA) for performance and precision.
-- Implement a complex kernel using shfl_sync for warp-level communication.
+- Recognise when a kernel is memory-bound versus compute-bound and apply targeted optimisations.
+- Reduce global memory traffic by caching data in shared memory and coalescing memory accesses.
+- Choose appropriate floating-point precision and use specialised CUDA math functions to improve throughput.
+- Explain the trade-offs of thread coarsening: fewer thread blocks in exchange for higher computational intensity per thread.
 
 :::
 

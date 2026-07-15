@@ -6,17 +6,17 @@ exercises: 15
 
 ::: questions
 
-- What is the difference between task and data parallelism?
-- How does Amdahl's Law constrain the maximum speedup from parallelism?
-- What is a data race and how do you avoid one?
+- Why does adding more cores not always make a program faster?
+- What distinguishes data parallelism from task parallelism, and why do GPUs rely on the former?
+- Why does a parallel program sometimes give a different answer each time you run it?
 
 :::
 
 ::: objectives
 
-- Identify "embarrassingly parallel" problems.
-- Define and identify a data race.
-- Use Numba's `@njit` and `prange` to parallelise Python loops on the CPU.
+- Use Amdahl's Law to estimate the maximum speedup achievable by parallelising a program.
+- Identify code patterns that are safe to parallelise versus those that introduce data races.
+- Write CPU-parallel code with Numba's `@njit` and `prange` as a stepping stone to GPU kernels.
 
 :::
 
@@ -55,6 +55,8 @@ Think about your own code: which parts are parallelisable and which are fundamen
 ## Task parallelism versus data parallelism
 
 Parallel code comes in two principal forms.
+
+<center><img src="fig/data-vs-task-parallelism.svg" width=500px></center>
 
 ### Task parallelism
 
@@ -137,6 +139,7 @@ import numpy as np
 @njit(parallel=True)
 def add(xs, ys, zs):
     for i in prange(len(xs)):
+        # Things run in parallel inside the prange loop
         zs[i] = xs[i] + ys[i]
 
 N = 1_000_000
@@ -150,18 +153,21 @@ np.testing.assert_allclose(zs, xs + ys)
 
 Two things changed here:
 
-* We use `prange` for the loop instead of the regular `range`
-* We set `parallel=True` in the decorator
+* We use `prange` for the loop instead of the regular `range`.
+* We set `parallel=True` in the decorator which enables special functions—like `prange`—to run in parallel. (But it does not make the _whole_ function run in parallel.)
 
 Each iteration of the loop is independent — thread `i` reads from and writes to index `i`, and no other thread touches that index. This is the hallmark of a good data parallel problem: the work is decomposed into independent units that can proceed in any order.
 
-Keep in mind that while `prange` looks like `range` the iterations are not guaranteed to execute in order, nor are they guaranteed to execute all at once. Numba decides how to distribute the work across available CPU threads.
+Keep in mind that while `prange` looks like `range`, the iterations are not guaranteed to execute in order nor are they guaranteed to execute all at once. Numba decides how to distribute the work across available CPU threads.
 
 ::: challenge
 
 Write a `prange`-parallel function that computes the element-wise square root of an array. Verify correctness against `numpy.sqrt`.
 
 ```python
+import numpy as np
+from numba import njit, prange
+
 @njit(parallel=True)
 def parallel_sqrt(xs, ys):
     # TODO: use prange to fill ys with the square root of each element of xs
@@ -211,6 +217,7 @@ def racy_sum(xs):
     # then Numba will secretly fix our race condition.
     x_sum = np.zeros(1)
     for i in prange(len(xs)):
+        # Parallel sum
         x_sum[0] += xs[i]
     return x_sum[0]
 
@@ -245,7 +252,9 @@ from numba import njit, prange, get_num_threads, get_thread_id
 def safe_sum(xs):
     # Each thread gets its own slot
     x_sums = np.zeros(get_num_threads())
+
     for i in prange(len(xs)):
+        # Parallel sum, but each thread writes to its own slot
         x_sums[get_thread_id()] += xs[i]
 
     # Serial reduction of per-thread sums

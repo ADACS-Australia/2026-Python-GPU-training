@@ -4,16 +4,18 @@ title: "CuPy: A Numpy-like GPU experience"
 
 ::: questions
 
-- When is a high-level library like CuPy preferred over custom kernels?
-- How do we manage data movement between the Host (CPU) and Device (GPU)?
+- If NumPy arrays live in CPU memory, where do CuPy arrays live and what does that mean for your code?
+- Why does benchmarking GPU code give misleadingly fast results if you aren't careful?
+- How can you overlap independent computations and data transfers on the GPU?
 
 :::
 
 ::: objectives
 
-- Use CuPy as a drop-in replacement for NumPy.
-- Profile the cost of PCIe data transfers.
-- Implement GPU-accelerated FFTs and linear algebra.
+- Move data between host and device and perform NumPy-style computation on the GPU using CuPy.
+- Benchmark GPU code correctly by accounting for asynchronous execution.
+- Use CuPy features including broadcasting, linear algebra, FFTs, and operation fusion to accelerate array workloads.
+- Run computations concurrently using CUDA streams.
 
 :::
 
@@ -22,6 +24,12 @@ title: "CuPy: A Numpy-like GPU experience"
 [Numpy's](https://numpy.org/) innovation has been to make high-performance [array programming](https://en.wikipedia.org/wiki/Array_programming) easily accessible from within Python. It has done this thanks to its multidimensional `ndarray` type which can be manipulated using scalar and elementwise operators, a range of mathematical functions, and very flexible broadcasting rules.
 
 CuPy is the GPU equivalent to Numpy, and likewise it is based on its own `ndarray` type that lives on the GPU. If you are comfortable with numpy, CuPy should feel very familiar. Before attempting more advanced GPU programming techniques, CuPy should be your first port of call.
+
+::: callout
+
+Almost all of the Numpy functions that you are familiar with have a CuPy equivalent, and usually by the same name. [This comparison page](https://docs.cupy.dev/en/stable/reference/comparison.html) shows an exhaustive list of numpy (and scipy) functions and their CuPy equivalent, with only a handful of gaps where a CuPy equivalent is missing.
+
+:::
 
 ## CPU arrays versus GPU arrays
 
@@ -235,53 +243,6 @@ To have this compute on the GPU we did just two things:
 
 The nitty gritty of _how_ CuPy compiles this to GPU code and the way in which it chooses to parallelise the code is out of our hands. In return, we get operations that are no more complicated than Numpy.
 
-### Fusing operations
-
-Just like numpy, a series of array operations are applied to CuPy arrays sequentially. This means that each operator (e.g. an addition, a scalar multiplication, perhaps a trigonometric function) is applied as a separate kernel, which must in turn read and write through the entirety of the arrays each time. This kernel dispatch overhead and the associated memory churn can be a considerable performance penalty.
-
-CuPy offers the (experimental) ability to fuse multiple operations into a single pass by using the function decorator `@cupy.fuse`. In practice this means the operators are applied as a single kernel and in a single pass of the array. Conceptually, it's like taking multiple loops of the same data and merging them into just one:
-
-```python
-# VERSION 1: Non fused
-for i in range(len(xs)):
-    xs[i] = xs[i] + 1
-
-for i in range(len(xs)):
-    xs[i] = 2 * xs[i]
-
-for i in range(len(xs)):
-    xs[i] = np.cos(xs[i])
-
-# VERSION 2: Fused into a single loop
-for i in range(len(xs)):
-    xs[i] = np.cos(2 * (xs[i] + 1))
-```
-
-This functionality is experimental, and it comes with some limitations:
-
-- Arrays must be fully allocated _outside_ the decorated function
-- Array shapes must be fixed: reductions (like sum) or certain broadcasting operations that expand singleton axes will perform poorly
-
-When fusing works, it works well. However, it can take some time to separate out the core computation that performs best with `@cupy.fuse`. As always, test and benchmark your code.
-
-::: challenge
-
-Try running the following on your own machine and compare the performance to the non-fused example:
-
-```python
-@cupy.fuse
-def exp_fused(xs, ys, degree=12):
-    for n in range(degree):
-        ys += xs**n / math.factorial(n)
-
-xs = cupy.random.uniform(-1, 1, size=1000)
-ys = cupy.zeros_like(xs)
-exp_fused(xs, ys)
-cupy.testing.assert_allclose(ys, cupy.exp(xs))
-
-print(cupyx.profiler.benchmark(lambda: exp_fused(xs, ys), n_repeat=100))
-```
-
 :::
 
 ## Broadcasting
@@ -345,32 +306,109 @@ When passed a numpy array, this function will return the numpy module, and when 
 
 ::: challenge
 
-1. Benchmark this code on both the CPU and GPU using a 1D input with normally distributed real and imaginary components: `xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)`
-2. Rewrite the code by extracting the elementwise component of the calculation into its own helper function and using the decorator `@cupy.fuse`. Does this speed up the computation? (Hint: you might need to experiment with a few different options.)
+Benchmark this code on both the CPU and GPU using a 1D input.
+
+Create the input array by using normally distributed real and imaginary components: `xs = np.random.normal(size=N) + 1j * np.random.normal(size=N)`, and vary `N` between 100 and 5000.
 
 :::
 
 ::: solution
 
-Since `@cupy.fuse` does a fair bit of black magic, it takes some experimentation to find the right subset of instructions to attempt to fuse. I found that any broadcast operations that resulted in "stretched" dimensions resulted in an overall slowdown of the code.
-
-The following resulted in a moderate speed increase:
+In my own benchmarking, I see that the time taken for the DFT on the GPU stays fairly flat for $100 < N < 1000$ and only then starts to increase in time. This suggests that time taken on the GPU is initially dominated by the memory allocation and not the actual computation. The CPU, on the other hand, rapidly rises to take almost a second for $N = 5000$.
 
 ```python
-@cupy.fuse
-def _DFT_fused(kns, N):
-    return cupy.exp(-2j * np.pi * kns / N)
+import cupy
+import cupyx
+import numpy as np
 
-def DFT_fused(xs):
+
+def DFT(xs):
+    # This function returns either np or cupy module depending on array type
+    # which lets us write device-agnostic code.
+    xp = cupy.get_array_module(xs)
+
     N = len(xs)
-    ks = cupy.arange(0, N)
-    ns = cupy.arange(0, N)
+    ks = xp.arange(0, N)
+    ns = xp.arange(0, N)
 
-    # This broadcast operation results in a "stretch" of the dimensions
-    kns = ks[:, None] * ns[None, :]
+    phases = ks[:, None] * ns[None, :] / N
+    return xp.sum(
+        xs[None, :] * xp.exp(-2j * np.pi * phases),
+        axis=1
+    )
 
-    # The sum is a reduction operation that shouldn't be fused
-    return cupy.sum(xs[None, :] * _DFT_fused(kns, N), axis=1)
+
+for N in[100, 200, 500, 1000, 2000, 5000]:
+    print(f"N = {N}")
+    for name, xp in [("Numpy", np), ("Cupy", cupy)]:
+        xs = xp.random.normal(size=N) + 1j * xp.random.normal(size=N)
+        print(f"  {name}:", cupyx.profiler.benchmark(lambda: DFT(xs), n_repeat=10))
+```
+
+### Fusing operations
+
+Just like numpy, a series of array operations are applied to CuPy arrays sequentially. And this is true even if those operations all occur on the same line. This means that each operator (e.g. an addition, a scalar multiplication, perhaps a trigonometric function) is applied as a separate pass over the Numpy array, allocating intermediate arrays as though go, which means reading and writing through the entirety of the arrays each time. This memory churn can be a considerable performance penalty.
+
+CuPy offers the (experimental) ability to _fuse_ multiple operations into a single pass by using the function decorator `@cupy.fuse`. In practice this means that multiple operators are applied as part of a single pass over the array and without using intermediate arrays.
+
+```python
+# This one line in Numpy is actually three separate operations:
+# - A subtraction
+# - A multiplication
+# - and a cosine
+# and each step creates intermediate arrays:
+xs = np.cos(2 * (xs - 1))
+
+# Numpy does all three operations separately.
+# This is equivalent to three passes of the array `xs`, e.g.
+tmp1 = np.empty_like(xs)
+for i in range(len(xs)):
+    tmp1[i] = xs[i] + 1
+
+tmp2 = np.empty_like(xs)
+for i in range(len(xs)):
+    tmp2[i] = 2 * xs[i]
+
+for i in range(len(xs)):
+    xs[i] = np.cos(xs[i])
+
+# But, if we could fuse the operations, this would be equivalent
+# to a single pass of the array `xs` with no intermediate arrays
+for i in range(len(xs)):
+    xs[i] = np.cos(2 * (xs[i] + 1))
+```
+
+This functionality is experimental, and it comes with some limitations:
+
+- Arrays must be fully allocated _outside_ the decorated function
+- Array shapes must be fixed: reductions (like sum) or certain broadcasting operations that expand singleton axes will perform poorly
+
+::: callout
+
+Fusing is experimental and works best with combining simple, elementwise operations. It can take some experimentation to find which parts of your code work best with fusing. As always, benchark your code.
+
+:::
+
+::: challenge
+
+Try running the following yourself and compare the performance between the regular and fused examples:
+
+```
+import cupy
+import cupyx
+
+def unfused(xs, ys):
+    ys[:] = cupy.cos(2 * (xs - 1))
+
+@cupy.fuse
+def fused(xs, ys):
+    ys[:] = cupy.cos(2 * (xs - 1))
+
+xs = cupy.random.normal(size=100_000_000)
+ys = cupy.empty(100_000_000)
+
+print(cupyx.profiler.benchmark(lambda: unfused(xs, ys), n_repeat=100))
+print(cupyx.profiler.benchmark(lambda: fused(xs, ys), n_repeat=100))
 ```
 
 :::
@@ -520,6 +558,10 @@ But don't be fooled by this aysnchronous operation: on the GPU, each of our oper
 
 Up until now we've been (implicitly) using the default stream, which has meant our GPU operations have proceeded serially. But there are times when you might want to overlap or multiplex operations. For example, perhaps you want to perform a memory transfer _at the same time_ as you run a computation over data that has already been transferred. CUDA's answer to this is to use _multiple_ streams. Whilst each stream manages its queue sequentially, no such guarantee exists between streams. In fact, the different streams are free to execute concurrently, and the GPU can interleave work from multiple streams to maximize utilization.
 
+Graphically, this interleaving of data transfer and computation can look something like this:
+
+![alt text](fig/streams.svg)
+
 By default, every CuPy operation is submitted to the **default stream**. You can access the current stream as:
 
 ```python
@@ -527,7 +569,7 @@ current = cupy.cuda.get_current_stream()
 print(current)  # <Non-blocking Stream id at 0x...>
 ```
 
-The default stream serializes operations. If you want to overlap work, create your own streams:
+The default stream serializes operations. If you want to overlap work, you can create your own streams:
 
 ```python
 stream1 = cupy.cuda.Stream()
