@@ -17,7 +17,7 @@ This course can be separated into two days:
 * [High-level GPU programming with CuPy](CuPy.md)
 * [Writing your first kernel](first-kernels.md)
 
-### **Day 2:**
+### **Day 2**
 
 * [Kernel optimisation](optimisation.md), including:
    * Floating point precision
