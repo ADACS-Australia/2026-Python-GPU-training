@@ -333,7 +333,7 @@ then how to write your own, highly optimised kernels.</p>
 </button>
 <button class="nav-link" id="nav-tab-1-2" data-bs-toggle="tab" data-bs-target="#nav-tabpanel-1-2" type="button" role="tab" aria-controls="nav-tabpanel-1-2" aria-selected="false">
   <h3 class="tab-header" id="nav-tab-heading-1-2">
-  Day 2:
+  Day 2
   </h3>
 </button>
 </div>
@@ -527,7 +527,7 @@ Using <code>uv</code> to install the environment on OzStar:</p>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="ex">module</span> load gcc/13.3.0 cuda/12.8.0 python/3.12.3</span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="co"># Install uv</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a><span class="ex">curl</span> <span class="at">-LsSf</span> https://astral.sh/uv/install.sh <span class="kw">|</span> <span class="fu">sh</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="co"># Now make a new direcotyr and environment for us to work in</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a><span class="co"># Now make a new directory and environment for us to work in</span></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a><span class="ex">uv</span> init gpu-tutorial</span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a><span class="bu">cd</span> gpu-tutorial</span>
 <span id="cb2-10"><a href="#cb2-10" tabindex="-1" aria-label="code-block-2-10"></a><span class="co"># Note that the following may take up to 1/2 hour to complete (thanks cupy!)</span></span>
@@ -566,10 +566,14 @@ SLURM on OzStar, you can do this via <code>sinteractive</code>
 </button>
 </div>
 </nav><div id="nav-tabContent-1" class="tab-content">
-<div id="nav-tabpanel-1-1" class="tab-pane show active" aria-labelledby="nav-tab-1-1" role="tabpanel">
+<div id="nav-tabpanel-1-1" class="tab-pane show active" role="tabpanel" aria-labelledby="nav-tab-1-1">
 <p>Start an interactive session with OzStar:</p>
-<pre class="shell"><code># You may want to make the time longer or shorter depending on what you need
-sinteractive --gres=gpu:1 --mem 16G --cpus-per-task=8 --time=04:00:00 --reservation=curtin_training </code></pre>
+<div class="codewrapper sourceCode" id="cb3">
+<h3 class="code-label">BASH<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode bash" tabindex="0"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="co"># You may want to make the time longer or shorter depending on what you need</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="ex">sinteractive</span> <span class="at">--gres</span><span class="op">=</span>gpu:1 <span class="at">--mem</span> 16G <span class="at">--cpus-per-task</span><span class="op">=</span>8 <span class="at">--time</span><span class="op">=</span>04:00:00 <span class="at">--reservation</span><span class="op">=</span>curtin_training </span></code></pre>
+</div>
 <p>You will then see something like the following</p>
 <div class="codewrapper">
 <h3 class="code-label">OUTPUT<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -578,7 +582,7 @@ sinteractive --gres=gpu:1 --mem 16G --cpus-per-task=8 --time=04:00:00 --reservat
 srun: job 14313053 has been allocated resources
 [phancock@john26 gpu-tutorial]$ </code></pre>
 </div>
-<p>There may be a delay between the “waitin” and “allocated” stage,
+<p>There may be a delay between the “waiting” and “allocated” stage,
 though with the reservation in place this may only a be a few seconds.
 You will know that your job has been allocated because your command
 prompt should now be
@@ -595,7 +599,7 @@ modules and the environment before running any code:</p>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1" aria-label="code-block-5-3"></a><span class="bu">source</span> .venv/bin/activate</span></code></pre>
 </div>
 </div>
-<div id="nav-tabpanel-1-2" class="tab-pane" aria-labelledby="nav-tab-1-2" role="tabpanel">
+<div id="nav-tabpanel-1-2" class="tab-pane" role="tabpanel" aria-labelledby="nav-tab-1-2">
 <p>The usual way to run scripts on an HPC is to submit a job script
 which contains all the information about the job you are running, and
 how it should run.</p>
@@ -654,7 +658,7 @@ editor (and patience) we recommend the following:</p>
 </button>
 </div>
 </nav><div id="nav-tabContent-2" class="tab-content">
-<div id="nav-tabpanel-2-1" class="tab-pane show active" aria-labelledby="nav-tab-2-1" role="tabpanel">
+<div id="nav-tabpanel-2-1" class="tab-pane show active" role="tabpanel" aria-labelledby="nav-tab-2-1">
 <ol style="list-style-type: decimal"><li>
 <a href="https://code.visualstudio.com/download?_exp_download=fb315fc982" class="external-link">Download</a>
 and install VSCode on your local machine.</li>
@@ -673,14 +677,14 @@ password if/when requested.</li>
 <li>You should see the files on the remote system in your file explorer
 tab</li>
 <li>Open the built in terminal (default is
-<code>&lt;Ctrl&gt;+~</code>)/</li>
+<code>&lt;Ctrl&gt;+~</code>)</li>
 <li>This terminal is already logged into ozstar so you can use the
 <code>sinteractive</code> commands above to join an interactive
 session</li>
 <li>From here, you can edit/save files in VSCode, and run them in the
 terminal without having to swap between them.</li>
 </ol></div>
-<div id="nav-tabpanel-2-2" class="tab-pane" aria-labelledby="nav-tab-2-2" role="tabpanel">
+<div id="nav-tabpanel-2-2" class="tab-pane" role="tabpanel" aria-labelledby="nav-tab-2-2">
 <p>The workflow here is:</p>
 <ol style="list-style-type: decimal"><li>ssh into ozstar</li>
 <li>sinteractive to get a node with a gpu</li>
@@ -695,7 +699,7 @@ terminal without having to swap between them.</li>
 open/edit/save/run loop can become tedious, especially when you are
 making typo level errors.</p>
 </div>
-<div id="nav-tabpanel-2-3" class="tab-pane" aria-labelledby="nav-tab-2-3" role="tabpanel">
+<div id="nav-tabpanel-2-3" class="tab-pane" role="tabpanel" aria-labelledby="nav-tab-2-3">
 <p>Whatever your prefered editor is. We’ll try to help if you have
 problems, but consider this a self supported option!</p>
 </div>
