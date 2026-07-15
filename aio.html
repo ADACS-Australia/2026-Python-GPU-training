@@ -362,7 +362,7 @@
         
 <section id="aio-parallelism"><p>Content from <a href="parallelism.html">An introduction to parallelism</a></p>
 <hr>
-<p>Last updated on 2026-06-23 |
+<p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/parallelism.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -376,10 +376,11 @@
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What is the difference between task and data parallelism?</li>
-<li>How does Amdahl’s Law constrain the maximum speedup from
-parallelism?</li>
-<li>What is a data race and how do you avoid one?</li>
+<li>Why does adding more cores not always make a program faster?</li>
+<li>What distinguishes data parallelism from task parallelism, and why
+do GPUs rely on the former?</li>
+<li>Why does a parallel program sometimes give a different answer each
+time you run it?</li>
 </ul>
 </div>
 </div>
@@ -389,10 +390,12 @@ parallelism?</li>
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Identify “embarrassingly parallel” problems.</li>
-<li>Define and identify a data race.</li>
-<li>Use Numba’s <code>@njit</code> and <code>prange</code> to
-parallelise Python loops on the CPU.</li>
+<li>Use Amdahl’s Law to estimate the maximum speedup achievable by
+parallelising a program.</li>
+<li>Identify code patterns that are safe to parallelise versus those
+that introduce data races.</li>
+<li>Write CPU-parallel code with Numba’s <code>@njit</code> and
+<code>prange</code> as a stepping stone to GPU kernels.</li>
 </ul>
 </div>
 </div>
@@ -464,6 +467,9 @@ speedup you could expect?</p>
 </h2>
 <hr class="half-width">
 <p>Parallel code comes in two principal forms.</p>
+<center>
+<img src="fig/data-vs-task-parallelism.svg" width="500px" class="figure">
+</center>
 <div class="section level3">
 <h3 id="task-parallelism">Task parallelism<a class="anchor" aria-label="anchor" href="#task-parallelism"></a>
 </h3>
@@ -603,22 +609,24 @@ iterations across CPU threads:</p>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1" aria-label="code-block-2-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1" aria-label="code-block-2-5"></a><span class="kw">def</span> add(xs, ys, zs):</span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1" aria-label="code-block-2-6"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a>        zs[i] <span class="op">=</span> xs[i] <span class="op">+</span> ys[i]</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a>N <span class="op">=</span> <span class="dv">1_000_000</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1" aria-label="code-block-2-10"></a>xs <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1" aria-label="code-block-2-11"></a>ys <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1" aria-label="code-block-2-12"></a>zs <span class="op">=</span> np.empty(N)</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1" aria-label="code-block-2-13"></a></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1" aria-label="code-block-2-14"></a>add(xs, ys, zs)</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1" aria-label="code-block-2-15"></a>np.testing.assert_allclose(zs, xs <span class="op">+</span> ys)</span></code></pre>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1" aria-label="code-block-2-7"></a>        <span class="co"># Things run in parallel inside the prange loop</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1" aria-label="code-block-2-8"></a>        zs[i] <span class="op">=</span> xs[i] <span class="op">+</span> ys[i]</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1" aria-label="code-block-2-9"></a></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1" aria-label="code-block-2-10"></a>N <span class="op">=</span> <span class="dv">1_000_000</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1" aria-label="code-block-2-11"></a>xs <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1" aria-label="code-block-2-12"></a>ys <span class="op">=</span> np.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1" aria-label="code-block-2-13"></a>zs <span class="op">=</span> np.empty(N)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1" aria-label="code-block-2-14"></a></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1" aria-label="code-block-2-15"></a>add(xs, ys, zs)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1" aria-label="code-block-2-16"></a>np.testing.assert_allclose(zs, xs <span class="op">+</span> ys)</span></code></pre>
 </div>
 <p>Two things changed here:</p>
 <ul>
 <li>We use <code>prange</code> for the loop instead of the regular
-<code>range</code>
-</li>
-<li>We set <code>parallel=True</code> in the decorator</li>
+<code>range</code>.</li>
+<li>We set <code>parallel=True</code> in the decorator which enables
+special functions—like <code>prange</code>—to run in parallel. (But it
+does not make the <em>whole</em> function run in parallel.)</li>
 </ul>
 <p>Each iteration of the loop is independent — thread <code>i</code>
 reads from and writes to index <code>i</code>, and no other thread
@@ -626,8 +634,8 @@ touches that index. This is the hallmark of a good data parallel
 problem: the work is decomposed into independent units that can proceed
 in any order.</p>
 <p>Keep in mind that while <code>prange</code> looks like
-<code>range</code> the iterations are not guaranteed to execute in
-order, nor are they guaranteed to execute all at once. Numba decides how
+<code>range</code>, the iterations are not guaranteed to execute in
+order nor are they guaranteed to execute all at once. Numba decides how
 to distribute the work across available CPU threads.</p>
 <div id="discussion2" class="callout discussion">
 <div class="callout-square">
@@ -643,15 +651,18 @@ element-wise square root of an array. Verify correctness against
 <div class="codewrapper sourceCode" id="cb3">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="kw">def</span> parallel_sqrt(xs, ys):</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a>    <span class="co"># </span><span class="al">TODO</span><span class="co">: use prange to fill ys with the square root of each element of xs</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a>    <span class="cf">pass</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a>xs <span class="op">=</span> np.random.uniform(<span class="dv">0</span>, <span class="dv">10</span>, size<span class="op">=</span><span class="dv">1_000_000</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a>ys <span class="op">=</span> np.empty_like(xs)</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a>parallel_sqrt(xs, ys)</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>np.testing.assert_allclose(ys, np.sqrt(xs))</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" tabindex="-1" aria-label="code-block-3-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1" aria-label="code-block-3-2"></a><span class="im">from</span> numba <span class="im">import</span> njit, prange</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1" aria-label="code-block-3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1" aria-label="code-block-3-4"></a><span class="at">@njit</span>(parallel<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1" aria-label="code-block-3-5"></a><span class="kw">def</span> parallel_sqrt(xs, ys):</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1" aria-label="code-block-3-6"></a>    <span class="co"># </span><span class="al">TODO</span><span class="co">: use prange to fill ys with the square root of each element of xs</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1" aria-label="code-block-3-7"></a>    <span class="cf">pass</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1" aria-label="code-block-3-8"></a></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1" aria-label="code-block-3-9"></a>xs <span class="op">=</span> np.random.uniform(<span class="dv">0</span>, <span class="dv">10</span>, size<span class="op">=</span><span class="dv">1_000_000</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1" aria-label="code-block-3-10"></a>ys <span class="op">=</span> np.empty_like(xs)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1" aria-label="code-block-3-11"></a>parallel_sqrt(xs, ys)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1" aria-label="code-block-3-12"></a>np.testing.assert_allclose(ys, np.sqrt(xs))</span></code></pre>
 </div>
 </div>
 </div>
@@ -661,7 +672,7 @@ element-wise square root of an array. Verify correctness against
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -724,13 +735,14 @@ no synchronisation between them.</p>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1" aria-label="code-block-5-5"></a>    <span class="co"># then Numba will secretly fix our race condition.</span></span>
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1" aria-label="code-block-5-6"></a>    x_sum <span class="op">=</span> np.zeros(<span class="dv">1</span>)</span>
 <span id="cb5-7"><a href="#cb5-7" tabindex="-1" aria-label="code-block-5-7"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1" aria-label="code-block-5-8"></a>        x_sum[<span class="dv">0</span>] <span class="op">+=</span> xs[i]</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1" aria-label="code-block-5-9"></a>    <span class="cf">return</span> x_sum[<span class="dv">0</span>]</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1" aria-label="code-block-5-10"></a></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, racy_sum(xs))</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1" aria-label="code-block-5-13"></a><span class="co"># Expected: 1000000.0</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1" aria-label="code-block-5-14"></a><span class="co"># Actual:   ? (likely wrong, and varies each run!)</span></span></code></pre>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1" aria-label="code-block-5-8"></a>        <span class="co"># Parallel sum</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1" aria-label="code-block-5-9"></a>        x_sum[<span class="dv">0</span>] <span class="op">+=</span> xs[i]</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1" aria-label="code-block-5-10"></a>    <span class="cf">return</span> x_sum[<span class="dv">0</span>]</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1" aria-label="code-block-5-11"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1" aria-label="code-block-5-12"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1" aria-label="code-block-5-13"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, racy_sum(xs))</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1" aria-label="code-block-5-14"></a><span class="co"># Expected: 1000000.0</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1" aria-label="code-block-5-15"></a><span class="co"># Actual:   ? (likely wrong, and varies each run!)</span></span></code></pre>
 </div>
 <p>The problem is that <code>x_sum[0] += xs[i]</code> is not a single
 operation — it is three:</p>
@@ -775,14 +787,16 @@ accumulator:</p>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1" aria-label="code-block-6-4"></a><span class="kw">def</span> safe_sum(xs):</span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1" aria-label="code-block-6-5"></a>    <span class="co"># Each thread gets its own slot</span></span>
 <span id="cb6-6"><a href="#cb6-6" tabindex="-1" aria-label="code-block-6-6"></a>    x_sums <span class="op">=</span> np.zeros(get_num_threads())</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1" aria-label="code-block-6-7"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1" aria-label="code-block-6-8"></a>        x_sums[get_thread_id()] <span class="op">+=</span> xs[i]</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1" aria-label="code-block-6-9"></a></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1" aria-label="code-block-6-10"></a>    <span class="co"># Serial reduction of per-thread sums</span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1" aria-label="code-block-6-11"></a>    <span class="cf">return</span> x_sums.<span class="bu">sum</span>()</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1" aria-label="code-block-6-12"></a></span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1" aria-label="code-block-6-13"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1" aria-label="code-block-6-14"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, safe_sum(xs))  <span class="co"># 1000000.0 — correct and deterministic</span></span></code></pre>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1" aria-label="code-block-6-7"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1" aria-label="code-block-6-8"></a>    <span class="cf">for</span> i <span class="kw">in</span> prange(<span class="bu">len</span>(xs)):</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1" aria-label="code-block-6-9"></a>        <span class="co"># Parallel sum, but each thread writes to its own slot</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1" aria-label="code-block-6-10"></a>        x_sums[get_thread_id()] <span class="op">+=</span> xs[i]</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1" aria-label="code-block-6-11"></a></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1" aria-label="code-block-6-12"></a>    <span class="co"># Serial reduction of per-thread sums</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1" aria-label="code-block-6-13"></a>    <span class="cf">return</span> x_sums.<span class="bu">sum</span>()</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1" aria-label="code-block-6-14"></a></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1" aria-label="code-block-6-15"></a>xs <span class="op">=</span> np.ones(<span class="dv">1_000_000</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1" aria-label="code-block-6-16"></a><span class="bu">print</span>(<span class="st">"Sum:"</span>, safe_sum(xs))  <span class="co"># 1000000.0 — correct and deterministic</span></span></code></pre>
 </div>
 <p>Each thread writes only to its own index, so there is no contention.
 The final serial reduction is cheap because there is one entry per CPU
@@ -902,7 +916,7 @@ parallelise with <code>prange</code>, and if not, why not.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <ul>
 <li>A is safe: threads read from the same values, but since these are
@@ -924,7 +938,7 @@ any links that you are not going to use.
 </div>
 </section></section><section id="aio-gpu-deepdive"><p>Content from <a href="gpu-deepdive.html">A GPU Deep Dive</a></p>
 <hr>
-<p>Last updated on 2026-06-11 |
+<p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -938,10 +952,12 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>How does a GPU SM (Streaming Multiprocessor) differ from a CPU
-core?</li>
-<li>What is a “Warp” and why is it the fundamental unit of
-execution?</li>
+<li>How is a GPU organised internally, and how does that differ from a
+CPU?</li>
+<li>Why does the GPU have multiple types of memory with very different
+speeds and sizes?</li>
+<li>How does a GPU avoid sitting idle while waiting for slow memory
+operations?</li>
 </ul>
 </div>
 </div>
@@ -951,10 +967,12 @@ execution?</li>
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Explain Latency Hiding and why it requires high occupancy.</li>
-<li>Describe the GPU memory hierarchy (Registers → Shared →
-Global).</li>
-<li>Explain why thread counts should be multiples of 32.</li>
+<li>Describe the GPU hardware hierarchy: streaming multiprocessors,
+cores, warps, and thread blocks.</li>
+<li>Explain the GPU memory hierarchy and when to use registers, shared
+memory, or global memory.</li>
+<li>Describe how latency hiding uses massive concurrency to keep GPU
+cores busy.</li>
 </ul>
 </div>
 </div>
@@ -1231,7 +1249,7 @@ are SMs?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <ol style="list-style-type: decimal">
 <li>
@@ -1298,7 +1316,7 @@ SMs? What might affect this limit in practice?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <ol style="list-style-type: decimal">
 <li>Total threads = (thread blocks) <span class="math inline">\(\times\)</span> (threads per block) = <span class="math inline">\(2000 \times 256 = 512000\)</span>
@@ -1426,7 +1444,7 @@ any links that you are not going to use.
 </li>
 </ul></section></section><section id="aio-CuPy"><p>Content from <a href="CuPy.html">CuPy: A Numpy-like GPU experience</a></p>
 <hr>
-<p>Last updated on 2026-06-22 |
+<p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/CuPy.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -1440,10 +1458,12 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>When is a high-level library like CuPy preferred over custom
-kernels?</li>
-<li>How do we manage data movement between the Host (CPU) and Device
-(GPU)?</li>
+<li>If NumPy arrays live in CPU memory, where do CuPy arrays live and
+what does that mean for your code?</li>
+<li>Why does benchmarking GPU code give misleadingly fast results if you
+aren’t careful?</li>
+<li>How can you overlap independent computations and data transfers on
+the GPU?</li>
 </ul>
 </div>
 </div>
@@ -1453,9 +1473,13 @@ kernels?</li>
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Use CuPy as a drop-in replacement for NumPy.</li>
-<li>Profile the cost of PCIe data transfers.</li>
-<li>Implement GPU-accelerated FFTs and linear algebra.</li>
+<li>Move data between host and device and perform NumPy-style
+computation on the GPU using CuPy.</li>
+<li>Benchmark GPU code correctly by accounting for asynchronous
+execution.</li>
+<li>Use CuPy features including broadcasting, linear algebra, FFTs, and
+operation fusion to accelerate array workloads.</li>
+<li>Run computations concurrently using CUDA streams.</li>
 </ul>
 </div>
 </div>
@@ -1476,6 +1500,21 @@ own <code>ndarray</code> type that lives on the GPU. If you are
 comfortable with numpy, CuPy should feel very familiar. Before
 attempting more advanced GPU programming techniques, CuPy should be your
 first port of call.</p>
+<div id="callout1" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div class="callout-inner">
+<div class="callout-content">
+<p>Almost all of the Numpy functions that you are familiar with have a
+CuPy equivalent, and usually by the same name. <a href="https://docs.cupy.dev/en/stable/reference/comparison.html" class="external-link">This
+comparison page</a> shows an exhaustive list of numpy (and scipy)
+functions and their CuPy equivalent, with only a handful of gaps where a
+CuPy equivalent is missing.</p>
+</div>
+</div>
+</div>
 </section><section><h2 class="section-heading" id="cpu-arrays-versus-gpu-arrays">CPU arrays versus GPU arrays<a class="anchor" aria-label="anchor" href="#cpu-arrays-versus-gpu-arrays"></a>
 </h2>
 <hr class="half-width">
@@ -1533,7 +1572,7 @@ where an array is located.</p>
 otherwise it will copy to the GPU. It’s a handy function to ensure an
 array is on the GPU without an unnecessary copy if it’s already
 there.)</p>
-<div id="callout1" class="callout">
+<div id="callout2" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -1755,79 +1794,6 @@ in GPU arrays:</p>
 the way in which it chooses to parallelise the code is out of our hands.
 In return, we get operations that are no more complicated than
 Numpy.</p>
-<div class="section level3">
-<h3 id="fusing-operations">Fusing operations<a class="anchor" aria-label="anchor" href="#fusing-operations"></a>
-</h3>
-<p>Just like numpy, a series of array operations are applied to CuPy
-arrays sequentially. This means that each operator (e.g. an addition, a
-scalar multiplication, perhaps a trigonometric function) is applied as a
-separate kernel, which must in turn read and write through the entirety
-of the arrays each time. This kernel dispatch overhead and the
-associated memory churn can be a considerable performance penalty.</p>
-<p>CuPy offers the (experimental) ability to fuse multiple operations
-into a single pass by using the function decorator
-<code>@cupy.fuse</code>. In practice this means the operators are
-applied as a single kernel and in a single pass of the array.
-Conceptually, it’s like taking multiple loops of the same data and
-merging them into just one:</p>
-<div class="codewrapper sourceCode" id="cb10">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" tabindex="-1" aria-label="code-block-10-1"></a><span class="co"># VERSION 1: Non fused</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1" aria-label="code-block-10-2"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1" aria-label="code-block-10-3"></a>    xs[i] <span class="op">=</span> xs[i] <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1" aria-label="code-block-10-4"></a></span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1" aria-label="code-block-10-5"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1" aria-label="code-block-10-6"></a>    xs[i] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xs[i]</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1" aria-label="code-block-10-7"></a></span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1" aria-label="code-block-10-8"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1" aria-label="code-block-10-9"></a>    xs[i] <span class="op">=</span> np.cos(xs[i])</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1" aria-label="code-block-10-10"></a></span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1" aria-label="code-block-10-11"></a><span class="co"># VERSION 2: Fused into a single loop</span></span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1" aria-label="code-block-10-12"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1" aria-label="code-block-10-13"></a>    xs[i] <span class="op">=</span> np.cos(<span class="dv">2</span> <span class="op">*</span> (xs[i] <span class="op">+</span> <span class="dv">1</span>))</span></code></pre>
-</div>
-<p>This functionality is experimental, and it comes with some
-limitations:</p>
-<ul>
-<li>Arrays must be fully allocated <em>outside</em> the decorated
-function</li>
-<li>Array shapes must be fixed: reductions (like sum) or certain
-broadcasting operations that expand singleton axes will perform
-poorly</li>
-</ul>
-<p>When fusing works, it works well. However, it can take some time to
-separate out the core computation that performs best with
-<code>@cupy.fuse</code>. As always, test and benchmark your code.</p>
-<div id="discussion2" class="callout discussion">
-<div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
-</div>
-<span class="callout-header">Discussion</span>
-<div class="callout-inner">
-<h3 class="callout-title">Challenge</h3>
-<div class="callout-content">
-<p>Try running the following on your own machine and compare the
-performance to the non-fused example:</p>
-<div class="codewrapper sourceCode" id="cb11">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" tabindex="-1" aria-label="code-block-11-1"></a><span class="at">@cupy.fuse</span></span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1" aria-label="code-block-11-2"></a><span class="kw">def</span> exp_fused(xs, ys, degree<span class="op">=</span><span class="dv">12</span>):</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1" aria-label="code-block-11-3"></a>    <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(degree):</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a>        ys <span class="op">+=</span> xs<span class="op">**</span>n <span class="op">/</span> math.factorial(n)</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1" aria-label="code-block-11-5"></a></span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1" aria-label="code-block-11-6"></a>xs <span class="op">=</span> cupy.random.uniform(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, size<span class="op">=</span><span class="dv">1000</span>)</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a>ys <span class="op">=</span> cupy.zeros_like(xs)</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a>exp_fused(xs, ys)</span>
-<span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a>cupy.testing.assert_allclose(ys, cupy.exp(xs))</span>
-<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a></span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a><span class="bu">print</span>(cupyx.profiler.benchmark(<span class="kw">lambda</span>: exp_fused(xs, ys), n_repeat<span class="op">=</span><span class="dv">100</span>))</span></code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
 </section><section><h2 class="section-heading" id="broadcasting">Broadcasting<a class="anchor" aria-label="anchor" href="#broadcasting"></a>
 </h2>
 <hr class="half-width">
@@ -1847,14 +1813,14 @@ CuPy.</p>
 <p>We can write this by broadcasting multiplication over <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> so as to produce as <span class="math inline">\(m \times n \times p\)</span> 3-dimensional array,
 followed by a sum over the second dimension. (Pause and check this is
 true).</p>
-<div class="codewrapper sourceCode" id="cb12">
+<div class="codewrapper sourceCode" id="cb10">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1" aria-label="code-block-12-1"></a><span class="kw">def</span> matmul(A, B):</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1" aria-label="code-block-12-2"></a>    <span class="co"># Matrix multiplication using broadcasting</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1" aria-label="code-block-12-3"></a>    <span class="cf">return</span> (A[:, :, <span class="va">None</span>] <span class="op">*</span> B[<span class="va">None</span>, :, :]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" tabindex="-1" aria-label="code-block-10-1"></a><span class="kw">def</span> matmul(A, B):</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1" aria-label="code-block-10-2"></a>    <span class="co"># Matrix multiplication using broadcasting</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1" aria-label="code-block-10-3"></a>    <span class="cf">return</span> (A[:, :, <span class="va">None</span>] <span class="op">*</span> B[<span class="va">None</span>, :, :]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
 </div>
-<div id="discussion3" class="callout discussion">
+<div id="discussion2" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -1882,28 +1848,28 @@ Fourier transform</a> is defined as:</p>
 n}{N}}\)</span></p>
 <p>We can write this as a broadcasting operation across 2 dimensions (k
 by n), followed by a sum along the second dimension:</p>
-<div class="codewrapper sourceCode" id="cb13">
+<div class="codewrapper sourceCode" id="cb11">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" tabindex="-1" aria-label="code-block-13-1"></a><span class="kw">def</span> DFT(xs):</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1" aria-label="code-block-13-2"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1" aria-label="code-block-13-7"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a></span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1" aria-label="code-block-13-10"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1" aria-label="code-block-13-11"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1" aria-label="code-block-13-12"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> xp.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1" aria-label="code-block-13-13"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1" aria-label="code-block-13-14"></a>    )</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" tabindex="-1" aria-label="code-block-11-1"></a><span class="kw">def</span> DFT(xs):</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1" aria-label="code-block-11-2"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1" aria-label="code-block-11-3"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1" aria-label="code-block-11-5"></a></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1" aria-label="code-block-11-6"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1" aria-label="code-block-11-12"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> xp.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1" aria-label="code-block-11-13"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1" aria-label="code-block-11-14"></a>    )</span></code></pre>
 </div>
 <p>This is a function with elementwise multiplication, complex
 exponentiation, scalar multiplication and summation. When our inputs are
 GPU arrays it happens entirely on the GPU.</p>
-<div id="callout2" class="callout">
+<div id="callout3" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -1922,7 +1888,7 @@ GPU arrays.</p>
 </div>
 </div>
 </div>
-<div id="discussion4" class="callout discussion">
+<div id="discussion3" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -1930,16 +1896,11 @@ GPU arrays.</p>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
-<ol style="list-style-type: decimal">
-<li>Benchmark this code on both the CPU and GPU using a 1D input with
-normally distributed real and imaginary components:
-<code>xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)</code>
-</li>
-<li>Rewrite the code by extracting the elementwise component of the
-calculation into its own helper function and using the decorator
-<code>@cupy.fuse</code>. Does this speed up the computation? (Hint: you
-might need to experiment with a few different options.)</li>
-</ol>
+<p>Benchmark this code on both the CPU and GPU using a 1D input.</p>
+<p>Create the input array by using normally distributed real and
+imaginary components:
+<code>xs = np.random.normal(size=N) + 1j * np.random.normal(size=N)</code>,
+and vary <code>N</code> between 100 and 5000.</p>
 </div>
 </div>
 </div>
@@ -1950,30 +1911,140 @@ might need to experiment with a few different options.)</li>
 </button>
 <div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
-<p>Since <code>@cupy.fuse</code> does a fair bit of black magic, it
-takes some experimentation to find the right subset of instructions to
-attempt to fuse. I found that any broadcast operations that resulted in
-“stretched” dimensions resulted in an overall slowdown of the code.</p>
-<p>The following resulted in a moderate speed increase:</p>
-<div class="codewrapper sourceCode" id="cb14">
+<p>In my own benchmarking, I see that the time taken for the DFT on the
+GPU stays fairly flat for <span class="math inline">\(100 &lt; N &lt;
+1000\)</span> and only then starts to increase in time. This suggests
+that time taken on the GPU is initially dominated by the memory
+allocation and not the actual computation. The CPU, on the other hand,
+rapidly rises to take almost a second for <span class="math inline">\(N
+= 5000\)</span>.</p>
+<div class="codewrapper sourceCode" id="cb12">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a><span class="at">@cupy.fuse</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a><span class="kw">def</span> _DFT_fused(kns, N):</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>    <span class="cf">return</span> cupy.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> kns <span class="op">/</span> N)</span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1" aria-label="code-block-14-5"></a><span class="kw">def</span> DFT_fused(xs):</span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1" aria-label="code-block-14-6"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1" aria-label="code-block-14-7"></a>    ks <span class="op">=</span> cupy.arange(<span class="dv">0</span>, N)</span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1" aria-label="code-block-14-8"></a>    ns <span class="op">=</span> cupy.arange(<span class="dv">0</span>, N)</span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1" aria-label="code-block-14-9"></a></span>
-<span id="cb14-10"><a href="#cb14-10" tabindex="-1" aria-label="code-block-14-10"></a>    <span class="co"># This broadcast operation results in a "stretch" of the dimensions</span></span>
-<span id="cb14-11"><a href="#cb14-11" tabindex="-1" aria-label="code-block-14-11"></a>    kns <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :]</span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1" aria-label="code-block-14-12"></a></span>
-<span id="cb14-13"><a href="#cb14-13" tabindex="-1" aria-label="code-block-14-13"></a>    <span class="co"># The sum is a reduction operation that shouldn't be fused</span></span>
-<span id="cb14-14"><a href="#cb14-14" tabindex="-1" aria-label="code-block-14-14"></a>    <span class="cf">return</span> cupy.<span class="bu">sum</span>(xs[<span class="va">None</span>, :] <span class="op">*</span> _DFT_fused(kns, N), axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1" aria-label="code-block-12-1"></a><span class="im">import</span> cupy</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1" aria-label="code-block-12-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1" aria-label="code-block-12-3"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1" aria-label="code-block-12-4"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1" aria-label="code-block-12-5"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1" aria-label="code-block-12-6"></a><span class="kw">def</span> DFT(xs):</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1" aria-label="code-block-12-7"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1" aria-label="code-block-12-8"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1" aria-label="code-block-12-9"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1" aria-label="code-block-12-10"></a></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1" aria-label="code-block-12-11"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1" aria-label="code-block-12-12"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1" aria-label="code-block-12-13"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1" aria-label="code-block-12-14"></a></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1" aria-label="code-block-12-15"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1" aria-label="code-block-12-16"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1" aria-label="code-block-12-17"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> xp.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1" aria-label="code-block-12-18"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1" aria-label="code-block-12-19"></a>    )</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1" aria-label="code-block-12-20"></a></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1" aria-label="code-block-12-21"></a></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1" aria-label="code-block-12-22"></a><span class="cf">for</span> N <span class="kw">in</span>[<span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>, <span class="dv">2000</span>, <span class="dv">5000</span>]:</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1" aria-label="code-block-12-23"></a>    <span class="bu">print</span>(<span class="ss">f"N = </span><span class="sc">{</span>N<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1" aria-label="code-block-12-24"></a>    <span class="cf">for</span> name, xp <span class="kw">in</span> [(<span class="st">"Numpy"</span>, np), (<span class="st">"Cupy"</span>, cupy)]:</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1" aria-label="code-block-12-25"></a>        xs <span class="op">=</span> xp.random.normal(size<span class="op">=</span>N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> xp.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1" aria-label="code-block-12-26"></a>        <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">:"</span>, cupyx.profiler.benchmark(<span class="kw">lambda</span>: DFT(xs), n_repeat<span class="op">=</span><span class="dv">10</span>))</span></code></pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="fusing-operations">Fusing operations<a class="anchor" aria-label="anchor" href="#fusing-operations"></a>
+</h3>
+<p>Just like numpy, a series of array operations are applied to CuPy
+arrays sequentially. And this is true even if those operations all occur
+on the same line. This means that each operator (e.g. an addition, a
+scalar multiplication, perhaps a trigonometric function) is applied as a
+separate pass over the Numpy array, allocating intermediate arrays as
+though go, which means reading and writing through the entirety of the
+arrays each time. This memory churn can be a considerable performance
+penalty.</p>
+<p>CuPy offers the (experimental) ability to <em>fuse</em> multiple
+operations into a single pass by using the function decorator
+<code>@cupy.fuse</code>. In practice this means that multiple operators
+are applied as part of a single pass over the array and without using
+intermediate arrays.</p>
+<div class="codewrapper sourceCode" id="cb13">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" tabindex="-1" aria-label="code-block-13-1"></a><span class="co"># This one line in Numpy is actually three separate operations:</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1" aria-label="code-block-13-2"></a><span class="co"># - A subtraction</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a><span class="co"># - A multiplication</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a><span class="co"># - and a cosine</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a><span class="co"># and each step creates intermediate arrays:</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a>xs <span class="op">=</span> np.cos(<span class="dv">2</span> <span class="op">*</span> (xs <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1" aria-label="code-block-13-7"></a></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a><span class="co"># Numpy does all three operations separately.</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a><span class="co"># This is equivalent to three passes of the array `xs`, e.g.</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1" aria-label="code-block-13-10"></a>tmp1 <span class="op">=</span> np.empty_like(xs)</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1" aria-label="code-block-13-11"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1" aria-label="code-block-13-12"></a>    tmp1[i] <span class="op">=</span> xs[i] <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1" aria-label="code-block-13-13"></a></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1" aria-label="code-block-13-14"></a>tmp2 <span class="op">=</span> np.empty_like(xs)</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1" aria-label="code-block-13-15"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1" aria-label="code-block-13-16"></a>    tmp2[i] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xs[i]</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1" aria-label="code-block-13-17"></a></span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1" aria-label="code-block-13-18"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1" aria-label="code-block-13-19"></a>    xs[i] <span class="op">=</span> np.cos(xs[i])</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1" aria-label="code-block-13-20"></a></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1" aria-label="code-block-13-21"></a><span class="co"># But, if we could fuse the operations, this would be equivalent</span></span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1" aria-label="code-block-13-22"></a><span class="co"># to a single pass of the array `xs` with no intermediate arrays</span></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1" aria-label="code-block-13-23"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1" aria-label="code-block-13-24"></a>    xs[i] <span class="op">=</span> np.cos(<span class="dv">2</span> <span class="op">*</span> (xs[i] <span class="op">+</span> <span class="dv">1</span>))</span></code></pre>
+</div>
+<p>This functionality is experimental, and it comes with some
+limitations:</p>
+<ul>
+<li>Arrays must be fully allocated <em>outside</em> the decorated
+function</li>
+<li>Array shapes must be fixed: reductions (like sum) or certain
+broadcasting operations that expand singleton axes will perform
+poorly</li>
+</ul>
+<div id="callout4" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div class="callout-inner">
+<div class="callout-content">
+<p>Fusing is experimental and works best with combining simple,
+elementwise operations. It can take some experimentation to find which
+parts of your code work best with fusing. As always, benchark your
+code.</p>
+</div>
+</div>
+</div>
+<div id="discussion4" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>Try running the following yourself and compare the performance
+between the regular and fused examples:</p>
+<pre><code>import cupy
+import cupyx
+
+def unfused(xs, ys):
+    ys[:] = cupy.cos(2 * (xs - 1))
+
+@cupy.fuse
+def fused(xs, ys):
+    ys[:] = cupy.cos(2 * (xs - 1))
+
+xs = cupy.random.normal(size=100_000_000)
+ys = cupy.empty(100_000_000)
+
+print(cupyx.profiler.benchmark(lambda: unfused(xs, ys), n_repeat=100))
+print(cupyx.profiler.benchmark(lambda: fused(xs, ys), n_repeat=100))</code></pre>
 </div>
 </div>
 </div>
@@ -2184,7 +2255,10 @@ Whilst each stream manages its queue sequentially, no such guarantee
 exists between streams. In fact, the different streams are free to
 execute concurrently, and the GPU can interleave work from multiple
 streams to maximize utilization.</p>
-<p>By default, every CuPy operation is submitted to the <strong>default
+<p>Graphically, this interleaving of data transfer and computation can
+look something like this:</p>
+<figure><img src="fig/streams.svg" alt="alt text" class="figure mx-auto d-block"><div class="figcaption">alt text</div>
+</figure><p>By default, every CuPy operation is submitted to the <strong>default
 stream</strong>. You can access the current stream as:</p>
 <div class="codewrapper sourceCode" id="cb23">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2193,7 +2267,7 @@ stream</strong>. You can access the current stream as:</p>
 <span id="cb23-2"><a href="#cb23-2" tabindex="-1" aria-label="code-block-23-2"></a><span class="bu">print</span>(current)  <span class="co"># &lt;Non-blocking Stream id at 0x...&gt;</span></span></code></pre>
 </div>
 <p>The default stream serializes operations. If you want to overlap
-work, create your own streams:</p>
+work, you can create your own streams:</p>
 <div class="codewrapper sourceCode" id="cb24">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -2245,7 +2319,7 @@ concurrently—the GPU schedules them based on available resources.</li>
 <code>stream.synchronize()</code> to block the CPU until all operations
 in that stream have completed.</li>
 </ol>
-<div id="callout3" class="callout">
+<div id="callout5" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -2420,7 +2494,7 @@ any links that you are not going to use.
  -->
 </section></section><section id="aio-first-kernels"><p>Content from <a href="first-kernels.html">Writing your first GPU kernels</a></p>
 <hr>
-<p>Last updated on 2026-06-15 |
+<p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/first-kernels.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -2434,9 +2508,12 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>How does a kernel map a single function to thousands of
-threads?</li>
-<li>How can threads safely combine results (Reductions)?</li>
+<li>How does a single function body know which piece of data to process
+when launched thousands of times?</li>
+<li>How do you configure a kernel launch so every element of an array is
+covered, regardless of its size?</li>
+<li>How can threads safely combine their results into a single
+value?</li>
 </ul>
 </div>
 </div>
@@ -2446,11 +2523,15 @@ threads?</li>
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Write a basic GPU kernel using <code>@cuda.jit</code> with both 1D
-and 2D indexing.</li>
-<li>Implement a Grid-Stride Loop to handle any array size.</li>
-<li>Use cuda.atomic.add and cuda.shared.array to perform a block-level
-reduction.</li>
+<li>Write and launch a GPU kernel with <code>@cuda.jit</code>,
+configuring grid dimensions with appropriate block and thread
+counts.</li>
+<li>Use the grid-stride loop pattern so kernels handle arrays of any
+size.</li>
+<li>Map a single thread index to multi-dimensional array
+coordinates.</li>
+<li>Implement a parallel reduction using shared memory, thread
+synchronisation, and atomic operations.</li>
 </ul>
 </div>
 </div>
@@ -2550,7 +2631,8 @@ that loop, when to run the kernels, and the order they execute in.</p>
 </div>
 <p>There’s a lot to unpack in this brief snippet of code:</p>
 <ul>
-<li>First, we added a new import: <code>numba.cuda</code>.</li>
+<li>First, we added a new import:
+<code>from numba import cuda</code>.</li>
 <li>
 <strong>We’ve wrapped our kernel with the decorator
 <code>@cuda.jit</code>.</strong> Just like <code>@numba.jit</code>, this
@@ -2611,7 +2693,7 @@ respective speeds swaps?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb4">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2790,7 +2872,7 @@ and threads per block to 256? Why?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
 <div class="accordion-body">
 <p>Your kernel should look something like this:</p>
 <div class="codewrapper sourceCode" id="cb6">
@@ -2836,7 +2918,7 @@ indices directly, instead of <code>grid()</code> and
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution3" aria-expanded="false" aria-controls="collapseSolution3">
   <h4 class="accordion-header" id="headingSolution3"> Show me the solution </h4>
 </button>
-<div id="collapseSolution3" class="accordion-collapse collapse" data-bs-parent="#accordionSolution3" aria-labelledby="headingSolution3">
+<div id="collapseSolution3" class="accordion-collapse collapse" aria-labelledby="headingSolution3" data-bs-parent="#accordionSolution3">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb7">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -2922,7 +3004,7 @@ y_i\)</span>. Use the grid stride loop pattern.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution4" aria-expanded="false" aria-controls="collapseSolution4">
   <h4 class="accordion-header" id="headingSolution4"> Show me the solution </h4>
 </button>
-<div id="collapseSolution4" class="accordion-collapse collapse" data-bs-parent="#accordionSolution4" aria-labelledby="headingSolution4">
+<div id="collapseSolution4" class="accordion-collapse collapse" aria-labelledby="headingSolution4" data-bs-parent="#accordionSolution4">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb9">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3026,7 +3108,7 @@ configurations. Which is the preferred choice and why?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution5" aria-expanded="false" aria-controls="collapseSolution5">
   <h4 class="accordion-header" id="headingSolution5"> Show me the solution </h4>
 </button>
-<div id="collapseSolution5" class="accordion-collapse collapse" data-bs-parent="#accordionSolution5" aria-labelledby="headingSolution5">
+<div id="collapseSolution5" class="accordion-collapse collapse" aria-labelledby="headingSolution5" data-bs-parent="#accordionSolution5">
 <div class="accordion-body">
 <p>Two considerations stand out when comparing the kernel options:</p>
 <ul>
@@ -3097,7 +3179,7 @@ definition and grid configuration.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution6" aria-expanded="false" aria-controls="collapseSolution6">
   <h4 class="accordion-header" id="headingSolution6"> Show me the solution </h4>
 </button>
-<div id="collapseSolution6" class="accordion-collapse collapse" data-bs-parent="#accordionSolution6" aria-labelledby="headingSolution6">
+<div id="collapseSolution6" class="accordion-collapse collapse" aria-labelledby="headingSolution6" data-bs-parent="#accordionSolution6">
 <div class="accordion-body">
 <p>One solution looks like this:</p>
 <div class="codewrapper sourceCode" id="cb13">
@@ -3162,7 +3244,7 @@ yourself with the Python function <code>divmod()</code>.</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution7" aria-expanded="false" aria-controls="collapseSolution7">
   <h4 class="accordion-header" id="headingSolution7"> Show me the solution </h4>
 </button>
-<div id="collapseSolution7" class="accordion-collapse collapse" data-bs-parent="#accordionSolution7" aria-labelledby="headingSolution7">
+<div id="collapseSolution7" class="accordion-collapse collapse" aria-labelledby="headingSolution7" data-bs-parent="#accordionSolution7">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb16">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3228,7 +3310,7 @@ stage, set <code>N</code> to be small (~100).</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution8" aria-expanded="false" aria-controls="collapseSolution8">
   <h4 class="accordion-header" id="headingSolution8"> Show me the solution </h4>
 </button>
-<div id="collapseSolution8" class="accordion-collapse collapse" data-bs-parent="#accordionSolution8" aria-labelledby="headingSolution8">
+<div id="collapseSolution8" class="accordion-collapse collapse" aria-labelledby="headingSolution8" data-bs-parent="#accordionSolution8">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb18">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3267,7 +3349,7 @@ parallel? What is the unit of parallelisation?</p>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution9" aria-expanded="false" aria-controls="collapseSolution9">
   <h4 class="accordion-header" id="headingSolution9"> Show me the solution </h4>
 </button>
-<div id="collapseSolution9" class="accordion-collapse collapse" data-bs-parent="#accordionSolution9" aria-labelledby="headingSolution9">
+<div id="collapseSolution9" class="accordion-collapse collapse" aria-labelledby="headingSolution9" data-bs-parent="#accordionSolution9">
 <div class="accordion-body">
 <p>We parallelise over <span class="math inline">\(k\)</span> but not
 <span class="math inline">\(n\)</span>, since including <span class="math inline">\(n\)</span> would introduce race conditions.</p>
@@ -3332,7 +3414,7 @@ for real values). That is: replace <code>np.exp(1j * phase)</code> with
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution10" aria-expanded="false" aria-controls="collapseSolution10">
   <h4 class="accordion-header" id="headingSolution10"> Show me the solution </h4>
 </button>
-<div id="collapseSolution10" class="accordion-collapse collapse" data-bs-parent="#accordionSolution10" aria-labelledby="headingSolution10">
+<div id="collapseSolution10" class="accordion-collapse collapse" aria-labelledby="headingSolution10" data-bs-parent="#accordionSolution10">
 <div class="accordion-body">
 <div class="codewrapper sourceCode" id="cb20">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -3490,7 +3572,7 @@ any links that you are not going to use.
  -->
 </section></section><section id="aio-optimisation"><p>Content from <a href="optimisation.html">Optimisation</a></p>
 <hr>
-<p>Last updated on 2026-06-16 |
+<p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/optimisation.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 <div class="text-end">
@@ -3504,8 +3586,12 @@ any links that you are not going to use.
 <div class="inner">
 <h3 class="card-title">Questions</h3>
 <ul>
-<li>What are the main bottlenecks in GPU performance?</li>
-<li>How do Warp Shuffles improve on Shared Memory?</li>
+<li>Why is accessing global memory in a kernel’s hot loop a performance
+bottleneck?</li>
+<li>How can threads within a block cooperate to share the cost of
+reading data from global memory?</li>
+<li>When does using lower-precision floating point numbers make your
+kernel faster?</li>
 </ul>
 </div>
 </div>
@@ -3515,10 +3601,14 @@ any links that you are not going to use.
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
 <ul>
-<li>Identify and fix Memory Coalescing issues.</li>
-<li>Use Fused Multiply-Add (FMA) for performance and precision.</li>
-<li>Implement a complex kernel using shfl_sync for warp-level
-communication.</li>
+<li>Recognise when a kernel is memory-bound versus compute-bound and
+apply targeted optimisations.</li>
+<li>Reduce global memory traffic by caching data in shared memory and
+coalescing memory accesses.</li>
+<li>Choose appropriate floating-point precision and use specialised CUDA
+math functions to improve throughput.</li>
+<li>Explain the trade-offs of thread coarsening: fewer thread blocks in
+exchange for higher computational intensity per thread.</li>
 </ul>
 </div>
 </div>

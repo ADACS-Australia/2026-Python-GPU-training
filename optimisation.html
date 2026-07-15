@@ -338,7 +338,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>Optimisation</h1>
-        <p>Last updated on 2026-06-16 |
+        <p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/optimisation.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -357,8 +357,12 @@
 <div class="card-body">
 <div class="inner">
 <h3 class="card-title">Questions</h3>
-<ul><li>What are the main bottlenecks in GPU performance?</li>
-<li>How do Warp Shuffles improve on Shared Memory?</li>
+<ul><li>Why is accessing global memory in a kernel’s hot loop a performance
+bottleneck?</li>
+<li>How can threads within a block cooperate to share the cost of
+reading data from global memory?</li>
+<li>When does using lower-precision floating point numbers make your
+kernel faster?</li>
 </ul></div>
 </div>
 </div>
@@ -366,10 +370,14 @@
 <div class="card-body">
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
-<ul><li>Identify and fix Memory Coalescing issues.</li>
-<li>Use Fused Multiply-Add (FMA) for performance and precision.</li>
-<li>Implement a complex kernel using shfl_sync for warp-level
-communication.</li>
+<ul><li>Recognise when a kernel is memory-bound versus compute-bound and
+apply targeted optimisations.</li>
+<li>Reduce global memory traffic by caching data in shared memory and
+coalescing memory accesses.</li>
+<li>Choose appropriate floating-point precision and use specialised CUDA
+math functions to improve throughput.</li>
+<li>Explain the trade-offs of thread coarsening: fewer thread blocks in
+exchange for higher computational intensity per thread.</li>
 </ul></div>
 </div>
 </div>
@@ -2095,7 +2103,7 @@ any links that you are not going to use.
   "url": "https://ADACS-Australia.github.io/2026-Python-GPU-training/optimisation.html",
   "identifier": "https://ADACS-Australia.github.io/2026-Python-GPU-training/optimisation.html",
   "dateCreated": "2026-07-15",
-  "dateModified": "2026-06-16",
+  "dateModified": "2026-07-15",
   "datePublished": "2026-07-15"
 }
 

@@ -333,7 +333,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>CuPy: A Numpy-like GPU experience</h1>
-        <p>Last updated on 2026-06-22 |
+        <p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/CuPy.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -352,10 +352,12 @@
 <div class="card-body">
 <div class="inner">
 <h3 class="card-title">Questions</h3>
-<ul><li>When is a high-level library like CuPy preferred over custom
-kernels?</li>
-<li>How do we manage data movement between the Host (CPU) and Device
-(GPU)?</li>
+<ul><li>If NumPy arrays live in CPU memory, where do CuPy arrays live and
+what does that mean for your code?</li>
+<li>Why does benchmarking GPU code give misleadingly fast results if you
+aren’t careful?</li>
+<li>How can you overlap independent computations and data transfers on
+the GPU?</li>
 </ul></div>
 </div>
 </div>
@@ -363,9 +365,13 @@ kernels?</li>
 <div class="card-body">
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
-<ul><li>Use CuPy as a drop-in replacement for NumPy.</li>
-<li>Profile the cost of PCIe data transfers.</li>
-<li>Implement GPU-accelerated FFTs and linear algebra.</li>
+<ul><li>Move data between host and device and perform NumPy-style
+computation on the GPU using CuPy.</li>
+<li>Benchmark GPU code correctly by accounting for asynchronous
+execution.</li>
+<li>Use CuPy features including broadcasting, linear algebra, FFTs, and
+operation fusion to accelerate array workloads.</li>
+<li>Run computations concurrently using CUDA streams.</li>
 </ul></div>
 </div>
 </div>
@@ -383,6 +389,21 @@ own <code>ndarray</code> type that lives on the GPU. If you are
 comfortable with numpy, CuPy should feel very familiar. Before
 attempting more advanced GPU programming techniques, CuPy should be your
 first port of call.</p>
+<div id="callout1" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div class="callout-inner">
+<div class="callout-content">
+<p>Almost all of the Numpy functions that you are familiar with have a
+CuPy equivalent, and usually by the same name. <a href="https://docs.cupy.dev/en/stable/reference/comparison.html" class="external-link">This
+comparison page</a> shows an exhaustive list of numpy (and scipy)
+functions and their CuPy equivalent, with only a handful of gaps where a
+CuPy equivalent is missing.</p>
+</div>
+</div>
+</div>
 </section><section><h2 class="section-heading" id="cpu-arrays-versus-gpu-arrays">CPU arrays versus GPU arrays<a class="anchor" aria-label="anchor" href="#cpu-arrays-versus-gpu-arrays"></a></h2>
 <hr class="half-width"><p>Numpy’s and CuPy’s arrays are both multidimensional arrays, and they
 both expose similar APIs.</p>
@@ -438,7 +459,7 @@ where an array is located.</p>
 otherwise it will copy to the GPU. It’s a handy function to ensure an
 array is on the GPU without an unnecessary copy if it’s already
 there.)</p>
-<div id="callout1" class="callout">
+<div id="callout2" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -650,76 +671,6 @@ in GPU arrays:</p>
 the way in which it chooses to parallelise the code is out of our hands.
 In return, we get operations that are no more complicated than
 Numpy.</p>
-<div class="section level3">
-<h3 id="fusing-operations">Fusing operations<a class="anchor" aria-label="anchor" href="#fusing-operations"></a></h3>
-<p>Just like numpy, a series of array operations are applied to CuPy
-arrays sequentially. This means that each operator (e.g. an addition, a
-scalar multiplication, perhaps a trigonometric function) is applied as a
-separate kernel, which must in turn read and write through the entirety
-of the arrays each time. This kernel dispatch overhead and the
-associated memory churn can be a considerable performance penalty.</p>
-<p>CuPy offers the (experimental) ability to fuse multiple operations
-into a single pass by using the function decorator
-<code>@cupy.fuse</code>. In practice this means the operators are
-applied as a single kernel and in a single pass of the array.
-Conceptually, it’s like taking multiple loops of the same data and
-merging them into just one:</p>
-<div class="codewrapper sourceCode" id="cb10">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" tabindex="-1" aria-label="code-block-10-1"></a><span class="co"># VERSION 1: Non fused</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1" aria-label="code-block-10-2"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1" aria-label="code-block-10-3"></a>    xs[i] <span class="op">=</span> xs[i] <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1" aria-label="code-block-10-4"></a></span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1" aria-label="code-block-10-5"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1" aria-label="code-block-10-6"></a>    xs[i] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xs[i]</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1" aria-label="code-block-10-7"></a></span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1" aria-label="code-block-10-8"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1" aria-label="code-block-10-9"></a>    xs[i] <span class="op">=</span> np.cos(xs[i])</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1" aria-label="code-block-10-10"></a></span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1" aria-label="code-block-10-11"></a><span class="co"># VERSION 2: Fused into a single loop</span></span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1" aria-label="code-block-10-12"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1" aria-label="code-block-10-13"></a>    xs[i] <span class="op">=</span> np.cos(<span class="dv">2</span> <span class="op">*</span> (xs[i] <span class="op">+</span> <span class="dv">1</span>))</span></code></pre>
-</div>
-<p>This functionality is experimental, and it comes with some
-limitations:</p>
-<ul><li>Arrays must be fully allocated <em>outside</em> the decorated
-function</li>
-<li>Array shapes must be fixed: reductions (like sum) or certain
-broadcasting operations that expand singleton axes will perform
-poorly</li>
-</ul><p>When fusing works, it works well. However, it can take some time to
-separate out the core computation that performs best with
-<code>@cupy.fuse</code>. As always, test and benchmark your code.</p>
-<div id="discussion2" class="callout discussion">
-<div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
-</div>
-<span class="callout-header">Discussion</span>
-<div class="callout-inner">
-<h3 class="callout-title">Challenge</h3>
-<div class="callout-content">
-<p>Try running the following on your own machine and compare the
-performance to the non-fused example:</p>
-<div class="codewrapper sourceCode" id="cb11">
-<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
-</h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" tabindex="-1" aria-label="code-block-11-1"></a><span class="at">@cupy.fuse</span></span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1" aria-label="code-block-11-2"></a><span class="kw">def</span> exp_fused(xs, ys, degree<span class="op">=</span><span class="dv">12</span>):</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1" aria-label="code-block-11-3"></a>    <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(degree):</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a>        ys <span class="op">+=</span> xs<span class="op">**</span>n <span class="op">/</span> math.factorial(n)</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1" aria-label="code-block-11-5"></a></span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1" aria-label="code-block-11-6"></a>xs <span class="op">=</span> cupy.random.uniform(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, size<span class="op">=</span><span class="dv">1000</span>)</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a>ys <span class="op">=</span> cupy.zeros_like(xs)</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a>exp_fused(xs, ys)</span>
-<span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a>cupy.testing.assert_allclose(ys, cupy.exp(xs))</span>
-<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a></span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a><span class="bu">print</span>(cupyx.profiler.benchmark(<span class="kw">lambda</span>: exp_fused(xs, ys), n_repeat<span class="op">=</span><span class="dv">100</span>))</span></code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
 </section><section><h2 class="section-heading" id="broadcasting">Broadcasting<a class="anchor" aria-label="anchor" href="#broadcasting"></a></h2>
 <hr class="half-width"><p>Most complex computation will rely on Numpy’s <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html" class="external-link">broadcasting
 rules</a>. Broadcasting rules control how array dimensions are matched,
@@ -736,14 +687,14 @@ CuPy.</p>
 <p>We can write this by broadcasting multiplication over <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> so as to produce as <span class="math inline">\(m \times n \times p\)</span> 3-dimensional array,
 followed by a sum over the second dimension. (Pause and check this is
 true).</p>
-<div class="codewrapper sourceCode" id="cb12">
+<div class="codewrapper sourceCode" id="cb10">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1" aria-label="code-block-12-1"></a><span class="kw">def</span> matmul(A, B):</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1" aria-label="code-block-12-2"></a>    <span class="co"># Matrix multiplication using broadcasting</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1" aria-label="code-block-12-3"></a>    <span class="cf">return</span> (A[:, :, <span class="va">None</span>] <span class="op">*</span> B[<span class="va">None</span>, :, :]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" tabindex="-1" aria-label="code-block-10-1"></a><span class="kw">def</span> matmul(A, B):</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1" aria-label="code-block-10-2"></a>    <span class="co"># Matrix multiplication using broadcasting</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1" aria-label="code-block-10-3"></a>    <span class="cf">return</span> (A[:, :, <span class="va">None</span>] <span class="op">*</span> B[<span class="va">None</span>, :, :]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
 </div>
-<div id="discussion3" class="callout discussion">
+<div id="discussion2" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -770,28 +721,28 @@ Fourier transform</a> is defined as:</p>
 n}{N}}\)</span></p>
 <p>We can write this as a broadcasting operation across 2 dimensions (k
 by n), followed by a sum along the second dimension:</p>
-<div class="codewrapper sourceCode" id="cb13">
+<div class="codewrapper sourceCode" id="cb11">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" tabindex="-1" aria-label="code-block-13-1"></a><span class="kw">def</span> DFT(xs):</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1" aria-label="code-block-13-2"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1" aria-label="code-block-13-7"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a></span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1" aria-label="code-block-13-10"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1" aria-label="code-block-13-11"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1" aria-label="code-block-13-12"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> xp.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1" aria-label="code-block-13-13"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1" aria-label="code-block-13-14"></a>    )</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" tabindex="-1" aria-label="code-block-11-1"></a><span class="kw">def</span> DFT(xs):</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1" aria-label="code-block-11-2"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1" aria-label="code-block-11-3"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1" aria-label="code-block-11-4"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1" aria-label="code-block-11-5"></a></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1" aria-label="code-block-11-6"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1" aria-label="code-block-11-7"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1" aria-label="code-block-11-8"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1" aria-label="code-block-11-9"></a></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1" aria-label="code-block-11-10"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1" aria-label="code-block-11-11"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1" aria-label="code-block-11-12"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> xp.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1" aria-label="code-block-11-13"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1" aria-label="code-block-11-14"></a>    )</span></code></pre>
 </div>
 <p>This is a function with elementwise multiplication, complex
 exponentiation, scalar multiplication and summation. When our inputs are
 GPU arrays it happens entirely on the GPU.</p>
-<div id="callout2" class="callout">
+<div id="callout3" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -810,7 +761,7 @@ GPU arrays.</p>
 </div>
 </div>
 </div>
-<div id="discussion4" class="callout discussion">
+<div id="discussion3" class="callout discussion">
 <div class="callout-square">
 <i class="callout-icon" data-feather="message-circle"></i>
 </div>
@@ -818,15 +769,12 @@ GPU arrays.</p>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
-<ol style="list-style-type: decimal"><li>Benchmark this code on both the CPU and GPU using a 1D input with
-normally distributed real and imaginary components:
-<code>xs = np.random.normal(size=1000) + 1j * np.random.normal(size=1000)</code>
-</li>
-<li>Rewrite the code by extracting the elementwise component of the
-calculation into its own helper function and using the decorator
-<code>@cupy.fuse</code>. Does this speed up the computation? (Hint: you
-might need to experiment with a few different options.)</li>
-</ol></div>
+<p>Benchmark this code on both the CPU and GPU using a 1D input.</p>
+<p>Create the input array by using normally distributed real and
+imaginary components:
+<code>xs = np.random.normal(size=N) + 1j * np.random.normal(size=N)</code>,
+and vary <code>N</code> between 100 and 5000.</p>
+</div>
 </div>
 </div>
 <div id="accordionSolution2" class="accordion challenge-accordion accordion-flush">
@@ -836,30 +784,137 @@ might need to experiment with a few different options.)</li>
 </button>
 <div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
-<p>Since <code>@cupy.fuse</code> does a fair bit of black magic, it
-takes some experimentation to find the right subset of instructions to
-attempt to fuse. I found that any broadcast operations that resulted in
-“stretched” dimensions resulted in an overall slowdown of the code.</p>
-<p>The following resulted in a moderate speed increase:</p>
-<div class="codewrapper sourceCode" id="cb14">
+<p>In my own benchmarking, I see that the time taken for the DFT on the
+GPU stays fairly flat for <span class="math inline">\(100 &lt; N &lt;
+1000\)</span> and only then starts to increase in time. This suggests
+that time taken on the GPU is initially dominated by the memory
+allocation and not the actual computation. The CPU, on the other hand,
+rapidly rises to take almost a second for <span class="math inline">\(N
+= 5000\)</span>.</p>
+<div class="codewrapper sourceCode" id="cb12">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
-<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" tabindex="-1" aria-label="code-block-14-1"></a><span class="at">@cupy.fuse</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1" aria-label="code-block-14-2"></a><span class="kw">def</span> _DFT_fused(kns, N):</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1" aria-label="code-block-14-3"></a>    <span class="cf">return</span> cupy.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> kns <span class="op">/</span> N)</span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1" aria-label="code-block-14-4"></a></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1" aria-label="code-block-14-5"></a><span class="kw">def</span> DFT_fused(xs):</span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1" aria-label="code-block-14-6"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1" aria-label="code-block-14-7"></a>    ks <span class="op">=</span> cupy.arange(<span class="dv">0</span>, N)</span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1" aria-label="code-block-14-8"></a>    ns <span class="op">=</span> cupy.arange(<span class="dv">0</span>, N)</span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1" aria-label="code-block-14-9"></a></span>
-<span id="cb14-10"><a href="#cb14-10" tabindex="-1" aria-label="code-block-14-10"></a>    <span class="co"># This broadcast operation results in a "stretch" of the dimensions</span></span>
-<span id="cb14-11"><a href="#cb14-11" tabindex="-1" aria-label="code-block-14-11"></a>    kns <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :]</span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1" aria-label="code-block-14-12"></a></span>
-<span id="cb14-13"><a href="#cb14-13" tabindex="-1" aria-label="code-block-14-13"></a>    <span class="co"># The sum is a reduction operation that shouldn't be fused</span></span>
-<span id="cb14-14"><a href="#cb14-14" tabindex="-1" aria-label="code-block-14-14"></a>    <span class="cf">return</span> cupy.<span class="bu">sum</span>(xs[<span class="va">None</span>, :] <span class="op">*</span> _DFT_fused(kns, N), axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1" aria-label="code-block-12-1"></a><span class="im">import</span> cupy</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1" aria-label="code-block-12-2"></a><span class="im">import</span> cupyx</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1" aria-label="code-block-12-3"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1" aria-label="code-block-12-4"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1" aria-label="code-block-12-5"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1" aria-label="code-block-12-6"></a><span class="kw">def</span> DFT(xs):</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1" aria-label="code-block-12-7"></a>    <span class="co"># This function returns either np or cupy module depending on array type</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1" aria-label="code-block-12-8"></a>    <span class="co"># which lets us write device-agnostic code.</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1" aria-label="code-block-12-9"></a>    xp <span class="op">=</span> cupy.get_array_module(xs)</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1" aria-label="code-block-12-10"></a></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1" aria-label="code-block-12-11"></a>    N <span class="op">=</span> <span class="bu">len</span>(xs)</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1" aria-label="code-block-12-12"></a>    ks <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1" aria-label="code-block-12-13"></a>    ns <span class="op">=</span> xp.arange(<span class="dv">0</span>, N)</span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1" aria-label="code-block-12-14"></a></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1" aria-label="code-block-12-15"></a>    phases <span class="op">=</span> ks[:, <span class="va">None</span>] <span class="op">*</span> ns[<span class="va">None</span>, :] <span class="op">/</span> N</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1" aria-label="code-block-12-16"></a>    <span class="cf">return</span> xp.<span class="bu">sum</span>(</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1" aria-label="code-block-12-17"></a>        xs[<span class="va">None</span>, :] <span class="op">*</span> xp.exp(<span class="op">-</span><span class="ot">2j</span> <span class="op">*</span> np.pi <span class="op">*</span> phases),</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1" aria-label="code-block-12-18"></a>        axis<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1" aria-label="code-block-12-19"></a>    )</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1" aria-label="code-block-12-20"></a></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1" aria-label="code-block-12-21"></a></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1" aria-label="code-block-12-22"></a><span class="cf">for</span> N <span class="kw">in</span>[<span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>, <span class="dv">2000</span>, <span class="dv">5000</span>]:</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1" aria-label="code-block-12-23"></a>    <span class="bu">print</span>(<span class="ss">f"N = </span><span class="sc">{</span>N<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1" aria-label="code-block-12-24"></a>    <span class="cf">for</span> name, xp <span class="kw">in</span> [(<span class="st">"Numpy"</span>, np), (<span class="st">"Cupy"</span>, cupy)]:</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1" aria-label="code-block-12-25"></a>        xs <span class="op">=</span> xp.random.normal(size<span class="op">=</span>N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> xp.random.normal(size<span class="op">=</span>N)</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1" aria-label="code-block-12-26"></a>        <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">:"</span>, cupyx.profiler.benchmark(<span class="kw">lambda</span>: DFT(xs), n_repeat<span class="op">=</span><span class="dv">10</span>))</span></code></pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="fusing-operations">Fusing operations<a class="anchor" aria-label="anchor" href="#fusing-operations"></a></h3>
+<p>Just like numpy, a series of array operations are applied to CuPy
+arrays sequentially. And this is true even if those operations all occur
+on the same line. This means that each operator (e.g. an addition, a
+scalar multiplication, perhaps a trigonometric function) is applied as a
+separate pass over the Numpy array, allocating intermediate arrays as
+though go, which means reading and writing through the entirety of the
+arrays each time. This memory churn can be a considerable performance
+penalty.</p>
+<p>CuPy offers the (experimental) ability to <em>fuse</em> multiple
+operations into a single pass by using the function decorator
+<code>@cupy.fuse</code>. In practice this means that multiple operators
+are applied as part of a single pass over the array and without using
+intermediate arrays.</p>
+<div class="codewrapper sourceCode" id="cb13">
+<h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
+</h3>
+<pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" tabindex="-1" aria-label="code-block-13-1"></a><span class="co"># This one line in Numpy is actually three separate operations:</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1" aria-label="code-block-13-2"></a><span class="co"># - A subtraction</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1" aria-label="code-block-13-3"></a><span class="co"># - A multiplication</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1" aria-label="code-block-13-4"></a><span class="co"># - and a cosine</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1" aria-label="code-block-13-5"></a><span class="co"># and each step creates intermediate arrays:</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1" aria-label="code-block-13-6"></a>xs <span class="op">=</span> np.cos(<span class="dv">2</span> <span class="op">*</span> (xs <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1" aria-label="code-block-13-7"></a></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1" aria-label="code-block-13-8"></a><span class="co"># Numpy does all three operations separately.</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1" aria-label="code-block-13-9"></a><span class="co"># This is equivalent to three passes of the array `xs`, e.g.</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1" aria-label="code-block-13-10"></a>tmp1 <span class="op">=</span> np.empty_like(xs)</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1" aria-label="code-block-13-11"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1" aria-label="code-block-13-12"></a>    tmp1[i] <span class="op">=</span> xs[i] <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1" aria-label="code-block-13-13"></a></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1" aria-label="code-block-13-14"></a>tmp2 <span class="op">=</span> np.empty_like(xs)</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1" aria-label="code-block-13-15"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1" aria-label="code-block-13-16"></a>    tmp2[i] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xs[i]</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1" aria-label="code-block-13-17"></a></span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1" aria-label="code-block-13-18"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1" aria-label="code-block-13-19"></a>    xs[i] <span class="op">=</span> np.cos(xs[i])</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1" aria-label="code-block-13-20"></a></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1" aria-label="code-block-13-21"></a><span class="co"># But, if we could fuse the operations, this would be equivalent</span></span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1" aria-label="code-block-13-22"></a><span class="co"># to a single pass of the array `xs` with no intermediate arrays</span></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1" aria-label="code-block-13-23"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(xs)):</span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1" aria-label="code-block-13-24"></a>    xs[i] <span class="op">=</span> np.cos(<span class="dv">2</span> <span class="op">*</span> (xs[i] <span class="op">+</span> <span class="dv">1</span>))</span></code></pre>
+</div>
+<p>This functionality is experimental, and it comes with some
+limitations:</p>
+<ul><li>Arrays must be fully allocated <em>outside</em> the decorated
+function</li>
+<li>Array shapes must be fixed: reductions (like sum) or certain
+broadcasting operations that expand singleton axes will perform
+poorly</li>
+</ul><div id="callout4" class="callout">
+<div class="callout-square">
+<i class="callout-icon" data-feather="bell"></i>
+</div>
+<span class="callout-header">Callout</span>
+<div class="callout-inner">
+<div class="callout-content">
+<p>Fusing is experimental and works best with combining simple,
+elementwise operations. It can take some experimentation to find which
+parts of your code work best with fusing. As always, benchark your
+code.</p>
+</div>
+</div>
+</div>
+<div id="discussion4" class="callout discussion">
+<div class="callout-square">
+<i class="callout-icon" data-feather="message-circle"></i>
+</div>
+<span class="callout-header">Discussion</span>
+<div class="callout-inner">
+<h3 class="callout-title">Challenge</h3>
+<div class="callout-content">
+<p>Try running the following yourself and compare the performance
+between the regular and fused examples:</p>
+<pre><code>import cupy
+import cupyx
+
+def unfused(xs, ys):
+    ys[:] = cupy.cos(2 * (xs - 1))
+
+@cupy.fuse
+def fused(xs, ys):
+    ys[:] = cupy.cos(2 * (xs - 1))
+
+xs = cupy.random.normal(size=100_000_000)
+ys = cupy.empty(100_000_000)
+
+print(cupyx.profiler.benchmark(lambda: unfused(xs, ys), n_repeat=100))
+print(cupyx.profiler.benchmark(lambda: fused(xs, ys), n_repeat=100))</code></pre>
 </div>
 </div>
 </div>
@@ -1062,7 +1117,10 @@ Whilst each stream manages its queue sequentially, no such guarantee
 exists between streams. In fact, the different streams are free to
 execute concurrently, and the GPU can interleave work from multiple
 streams to maximize utilization.</p>
-<p>By default, every CuPy operation is submitted to the <strong>default
+<p>Graphically, this interleaving of data transfer and computation can
+look something like this:</p>
+<figure><img src="fig/streams.svg" alt="alt text" class="figure mx-auto d-block"><div class="figcaption">alt text</div>
+</figure><p>By default, every CuPy operation is submitted to the <strong>default
 stream</strong>. You can access the current stream as:</p>
 <div class="codewrapper sourceCode" id="cb23">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
@@ -1071,7 +1129,7 @@ stream</strong>. You can access the current stream as:</p>
 <span id="cb23-2"><a href="#cb23-2" tabindex="-1" aria-label="code-block-23-2"></a><span class="bu">print</span>(current)  <span class="co"># &lt;Non-blocking Stream id at 0x...&gt;</span></span></code></pre>
 </div>
 <p>The default stream serializes operations. If you want to overlap
-work, create your own streams:</p>
+work, you can create your own streams:</p>
 <div class="codewrapper sourceCode" id="cb24">
 <h3 class="code-label">PYTHON<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
@@ -1121,7 +1179,7 @@ concurrently—the GPU schedules them based on available resources.</li>
 <strong>Synchronization</strong>: call
 <code>stream.synchronize()</code> to block the CPU until all operations
 in that stream have completed.</li>
-</ol><div id="callout3" class="callout">
+</ol><div id="callout5" class="callout">
 <div class="callout-square">
 <i class="callout-icon" data-feather="bell"></i>
 </div>
@@ -1353,7 +1411,7 @@ any links that you are not going to use.
   "url": "https://ADACS-Australia.github.io/2026-Python-GPU-training/CuPy.html",
   "identifier": "https://ADACS-Australia.github.io/2026-Python-GPU-training/CuPy.html",
   "dateCreated": "2026-07-15",
-  "dateModified": "2026-06-22",
+  "dateModified": "2026-07-15",
   "datePublished": "2026-07-15"
 }
 

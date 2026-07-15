@@ -327,7 +327,7 @@
       </div>
       <hr></nav><main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>A GPU Deep Dive</h1>
-        <p>Last updated on 2026-06-11 |
+        <p>Last updated on 2026-07-15 |
 
         <a href="https://github.com/ADACS-Australia/2026-Python-GPU-training/edit/main/episodes/gpu-deepdive.md" class="external-link">Edit this page <i aria-hidden="true" data-feather="edit"></i></a></p>
 
@@ -346,10 +346,12 @@
 <div class="card-body">
 <div class="inner">
 <h3 class="card-title">Questions</h3>
-<ul><li>How does a GPU SM (Streaming Multiprocessor) differ from a CPU
-core?</li>
-<li>What is a “Warp” and why is it the fundamental unit of
-execution?</li>
+<ul><li>How is a GPU organised internally, and how does that differ from a
+CPU?</li>
+<li>Why does the GPU have multiple types of memory with very different
+speeds and sizes?</li>
+<li>How does a GPU avoid sitting idle while waiting for slow memory
+operations?</li>
 </ul></div>
 </div>
 </div>
@@ -357,10 +359,12 @@ execution?</li>
 <div class="card-body">
 <div class="inner bordered">
 <h3 class="card-title">Objectives</h3>
-<ul><li>Explain Latency Hiding and why it requires high occupancy.</li>
-<li>Describe the GPU memory hierarchy (Registers → Shared →
-Global).</li>
-<li>Explain why thread counts should be multiples of 32.</li>
+<ul><li>Describe the GPU hardware hierarchy: streaming multiprocessors,
+cores, warps, and thread blocks.</li>
+<li>Explain the GPU memory hierarchy and when to use registers, shared
+memory, or global memory.</li>
+<li>Describe how latency hiding uses massive concurrency to keep GPU
+cores busy.</li>
 </ul></div>
 </div>
 </div>
@@ -603,7 +607,7 @@ are SMs?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution1" aria-expanded="false" aria-controls="collapseSolution1">
   <h4 class="accordion-header" id="headingSolution1"> Show me the solution </h4>
 </button>
-<div id="collapseSolution1" class="accordion-collapse collapse" aria-labelledby="headingSolution1" data-bs-parent="#accordionSolution1">
+<div id="collapseSolution1" class="accordion-collapse collapse" data-bs-parent="#accordionSolution1" aria-labelledby="headingSolution1">
 <div class="accordion-body">
 <ol style="list-style-type: decimal"><li>
 <p>Thread blocks exist because they are the unit of scheduling and
@@ -660,7 +664,7 @@ SMs? What might affect this limit in practice?</li>
 <button class="accordion-button solution-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolution2" aria-expanded="false" aria-controls="collapseSolution2">
   <h4 class="accordion-header" id="headingSolution2"> Show me the solution </h4>
 </button>
-<div id="collapseSolution2" class="accordion-collapse collapse" aria-labelledby="headingSolution2" data-bs-parent="#accordionSolution2">
+<div id="collapseSolution2" class="accordion-collapse collapse" data-bs-parent="#accordionSolution2" aria-labelledby="headingSolution2">
 <div class="accordion-body">
 <ol style="list-style-type: decimal"><li>Total threads = (thread blocks) <span class="math inline">\(\times\)</span> (threads per block) = <span class="math inline">\(2000 \times 256 = 512000\)</span>
 </li>
@@ -836,7 +840,7 @@ any links that you are not going to use.
   "url": "https://ADACS-Australia.github.io/2026-Python-GPU-training/gpu-deepdive.html",
   "identifier": "https://ADACS-Australia.github.io/2026-Python-GPU-training/gpu-deepdive.html",
   "dateCreated": "2026-07-15",
-  "dateModified": "2026-06-11",
+  "dateModified": "2026-07-15",
   "datePublished": "2026-07-15"
 }
 
