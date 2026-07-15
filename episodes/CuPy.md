@@ -243,8 +243,6 @@ To have this compute on the GPU we did just two things:
 
 The nitty gritty of _how_ CuPy compiles this to GPU code and the way in which it chooses to parallelise the code is out of our hands. In return, we get operations that are no more complicated than Numpy.
 
-:::
-
 ## Broadcasting
 
 Most complex computation will rely on Numpy's [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html). Broadcasting rules control how array dimensions are matched, with special rules that apply to dimensions having a length of 1. We are going to assume you are already familiar with these rules and work through a couple of examples that demonstrate the flexibility of CuPy.
@@ -344,6 +342,8 @@ for N in[100, 200, 500, 1000, 2000, 5000]:
         xs = xp.random.normal(size=N) + 1j * xp.random.normal(size=N)
         print(f"  {name}:", cupyx.profiler.benchmark(lambda: DFT(xs), n_repeat=10))
 ```
+
+:::
 
 ### Fusing operations
 
