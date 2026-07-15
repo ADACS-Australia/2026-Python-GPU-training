@@ -4,16 +4,18 @@ title: "Writing your first GPU kernels"
 
 ::: questions
 
-- How does a kernel map a single function to thousands of threads?
-- How can threads safely combine results (Reductions)?
+- How does a single function body know which piece of data to process when launched thousands of times?
+- How do you configure a kernel launch so every element of an array is covered, regardless of its size?
+- How can threads safely combine their results into a single value?
 
 :::
 
 ::: objectives
 
-- Write a basic GPU kernel using `@cuda.jit` with both 1D and 2D indexing.
-- Implement a Grid-Stride Loop to handle any array size.
-- Use cuda.atomic.add and cuda.shared.array to perform a block-level reduction.
+- Write and launch a GPU kernel with `@cuda.jit`, configuring grid dimensions with appropriate block and thread counts.
+- Use the grid-stride loop pattern so kernels handle arrays of any size.
+- Map a single thread index to multi-dimensional array coordinates.
+- Implement a parallel reduction using shared memory, thread synchronisation, and atomic operations.
 
 :::
 
@@ -93,7 +95,7 @@ adder_gpu[nblocks, nthreads](xs_d, ys_d, zs_d)
 
 There's a lot to unpack in this brief snippet of code:
 
-* First, we added a new import: `numba.cuda`.
+* First, we added a new import: `from numba import cuda`.
 * **We've wrapped our kernel with the decorator `@cuda.jit`.** Just like `@numba.jit`, this will allow the kernel to compile "just in time" (jit) when we call it based on the input types (e.g. the types of `xs`, `ys`, and `zs`). The difference is `@numba.jit` compiled this kernel for the CPU, whereas `@cuda.jit` is compiled for the GPU. There is an overhead associated with this initial compilation but subsequent calls will re-use the cached kernel so long as the input types remain unchanged.
 * **We've called `cuda.grid(1)` to determine the index of the kernel.** Unlike our previous example, the index is not passed in as an argument. We've also added a condition to check the index is within range.
 * **We've allocated our GPU arrays using `cupy.array()`.** CuPy GPU arrays are compatible with `numba.cuda` kernels. Numba provides its own methods too, such as `cuda.device_array()`, `cuda.to_device()` and `array_d.copy_to_host()`, and you might want to use these instead if you don't want CuPy as a dependency in your project.

@@ -4,16 +4,17 @@ title: "A GPU Deep Dive"
 
 ::: questions
 
-- How does a GPU SM (Streaming Multiprocessor) differ from a CPU core?
-- What is a "Warp" and why is it the fundamental unit of execution?
+- How is a GPU organised internally, and how does that differ from a CPU?
+- Why does the GPU have multiple types of memory with very different speeds and sizes?
+- How does a GPU avoid sitting idle while waiting for slow memory operations?
 
 :::
 
 ::: objectives
 
-- Explain Latency Hiding and why it requires high occupancy.
-- Describe the GPU memory hierarchy (Registers → Shared → Global).
-- Explain why thread counts should be multiples of 32.
+- Describe the GPU hardware hierarchy: streaming multiprocessors, cores, warps, and thread blocks.
+- Explain the GPU memory hierarchy and when to use registers, shared memory, or global memory.
+- Describe how latency hiding uses massive concurrency to keep GPU cores busy.
 
 :::
 
