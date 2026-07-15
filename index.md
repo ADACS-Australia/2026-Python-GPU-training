@@ -46,10 +46,3 @@ Source: [Nvidia on Youtube](https://web.archive.org/web/20241001024753/https://w
 This course is taught using Python and a number of libraries that allow writing CUDA kernels directly using Python. Python has been chosen to make this course as accessible as possible, which allows us to focus on the underlying concepts without getting snagged on unfamiliar syntax. Under the hood, the Python kernels are [compiled](https://en.wikipedia.org/wiki/Just-in-time_compilation) to CUDA kernels and run just as fast as if we had written them in C.
 
 And rest assured: the concepts learned here can be applied wholesale to CUDA programming in C or C++ (or Julia, Rust, ...).
-
-## AI Declaration
-
-With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
-
-* The shared memory optimisation animation (using Gemini 3).
-* Final code proofing and feedback (Claude 4.6)
