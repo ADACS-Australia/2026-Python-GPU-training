@@ -54,7 +54,7 @@ cd ~
 module load gcc/13.3.0 cuda/12.8.0 python/3.12.3
 # Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
-# Now make a new direcotyr and environment for us to work in
+# Now make a new directory and environment for us to work in
 uv init gpu-tutorial
 cd gpu-tutorial
 # Note that the following may take up to 1/2 hour to complete (thanks cupy!)
@@ -84,7 +84,7 @@ Running the code in this tutorial, will require you to interact with SLURM on Oz
 
 Start an interactive session with OzStar:
 
-```shell
+```bash
 # You may want to make the time longer or shorter depending on what you need
 sinteractive --gres=gpu:1 --mem 16G --cpus-per-task=8 --time=04:00:00 --reservation=curtin_training 
 ```
@@ -96,7 +96,7 @@ srun: job 14313053 has been allocated resources
 [phancock@john26 gpu-tutorial]$ 
 ```
 
-There may be a delay between the "waitin" and "allocated" stage, though with the reservation in place this may only a be a few seconds.
+There may be a delay between the "waiting" and "allocated" stage, though with the reservation in place this may only a be a few seconds.
 You will know that your job has been allocated because your command prompt should now be `[<user>@<node> <working directory>]`, where `<node>` is **not** `farnarkle[12]`.
 
 Once you're in the interactive shell, you'll need to reload the modules and the environment before running any code:
@@ -112,6 +112,7 @@ source .venv/bin/activate
 The usual way to run scripts on an HPC is to submit a job script which contains all the information about the job you are running, and how it should run.
 
 In a file called `run_python_script.sh` you would include:
+
 ```bash
 #!/bin/bash 
 #SBATCH --job-name=myjob 
@@ -159,7 +160,7 @@ Depending on your prefered editor (and patience) we recommend the following:
 1. Choose File -> Open workspace from Folder"
 1. Enter `/home/<username>>/gpu-tutorial/`
 1. You should see the files on the remote system in your file explorer tab
-1. Open the built in terminal (default is `<Ctrl>+~`)/
+1. Open the built in terminal (default is `<Ctrl>+~`)
 1. This terminal is already logged into ozstar so you can use the `sinteractive` commands above to join an interactive session
 1. From here, you can edit/save files in VSCode, and run them in the terminal without having to swap between them.
 
