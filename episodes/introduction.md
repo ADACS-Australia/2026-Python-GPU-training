@@ -51,10 +51,3 @@ And rest assured: the concepts learned here can be applied wholesale to CUDA pro
 </video>
 
 Source: [Nvidia on Youtube](https://web.archive.org/web/20241001024753/https://www.youtube.com/watch?v=-P28LKWTzrI)
-
-## AI Declaration
-
-With the exception of the following, no AI or LLM tools were used to prepare these notes in any capacity (including planning, writing, or otherwise):
-
-* The shared memory optimisation animation (using Gemini 3).
-* Final proof and code checking (using Qwen 3.6)
