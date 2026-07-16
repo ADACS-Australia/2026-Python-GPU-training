@@ -560,7 +560,7 @@ Up until now we've been (implicitly) using the default stream, which has meant o
 
 Graphically, this interleaving of data transfer and computation can look something like this:
 
-![alt text](fig/streams.svg)
+![](fig/streams.svg)
 
 By default, every CuPy operation is submitted to the **default stream**. You can access the current stream as:
 
