@@ -44,10 +44,12 @@ By the end, we hope to be able to image the large radio lobes of Fornax A from t
 
 As always, we will approach this first on the CPU where we can ensure we first make things right before attempting a first pass at a kernel.
 
-Let's first set things up. Our data is stored in the file [`visibilities.npz`](https://github.com/ADACS-Australia/2026-Python-GPU-training/releases/download/mythbusters/visibilities.npz) and we will extract each datum and its associated baseline coordinates:
+Let's first set things up. 
+Our data is stored in the file [`visibilities.npz`](https://github.com/ADACS-Australia/2026-Python-GPU-training/releases/download/mythbusters/visibilities.npz) which is also available at `/fred/oz983/gpu-workshop/visibilities.npz` on the OzStar system.
+We will extract each datum and its associated baseline coordinates:
 
 ```python
-data = np.load("visibilities.npz")
+data = np.load("/fred/oz983/gpu-workshop/visibilities.npz")
 us, vs, ws, vis = data["u"], data["v"], data["w"], data["data"]
 ```
 
@@ -78,7 +80,7 @@ def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
     pass
     # TODO
 
-data = np.load("visibilities.npz")
+data = np.load("/fred/oz983/gpu-workshop/visibilities.npz")
 us, vs, ws, data = data["u"], data["v"], data["w"], data["data"]
 
 lpx, mpx = np.mgrid[-350:350, -350:350]
@@ -162,7 +164,7 @@ We can benchmark this code using the following harness:
 
 ```python
 # Load the visibility data
-data = np.load("visibilities.npz")
+data = np.load("/fred/oz983/gpu-workshop/visibilities.npz")
 us, vs, ws, data = data["u"], data["v"], data["w"], data["data"]
 
 # Initialise the image grid and the corresponding l, m and ndash coordinates
