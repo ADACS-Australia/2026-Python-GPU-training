@@ -53,7 +53,7 @@ data = np.load("/fred/oz983/gpu-workshop/visibilities.npz")
 us, vs, ws, vis = data["u"], data["v"], data["w"], data["data"]
 ```
 
-Next we will set up our imaging grid. We will image a 700 x 700 pixel grid. We will set the scale such that $\Delta l = \Delta m = 10^{-4}$ (this scale is somewhat arbitrary but is chosen to the main radio feature within the image).
+Next we will set up our imaging grid. We will image a 700 x 700 pixel grid. We will set the scale such that $\Delta l = \Delta m = 10^{-4}$ (this scale is somewhat arbitrary but is chosen to match the main radio feature within the image).
 
 ```python
 lpx, mpx = np.mgrid[-350:350, -350:350]
