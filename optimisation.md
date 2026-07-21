@@ -76,22 +76,22 @@ Note: below we reduce the data by 50x to speed things up. If things take too lon
 
 ```python
 @njit(parallel=True)
-def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
+def image_numba(us, vs, ws, vis, ls, ms, ndashes, img):
     pass
     # TODO
 
 data = np.load("/fred/oz983/gpu-workshop/visibilities.npz")
-us, vs, ws, data = data["u"], data["v"], data["w"], data["data"]
+us, vs, ws, vis = data["u"], data["v"], data["w"], data["data"]
 
 lpx, mpx = np.mgrid[-350:350, -350:350]
 ls, ms = lpx * 0.0005, mpx * 0.0005
 ndashes = np.sqrt(1 - ls**2 - ms**2) - 1
 
 # For now, reduce data by 50x since CPU is too slow
-us, vs, ws, data = us[::50], vs[::50], ws[::50], data[::50]
+us, vs, ws, vis = us[::50], vs[::50], ws[::50], vis[::50]
 
 img = np.zeros(ls.shape, dtype=complex)
-image_numba(us, vs, ws, data, ls, ms, ndashes, img)
+image_numba(us, vs, ws, vis, ls, ms, ndashes, img)
 
 plt.imshow(img.real, origin="lower")
 plt.savefig("output.png")
@@ -105,7 +105,7 @@ We parallelise over each pixel which, for a 700 x 700 pixel image, gives us just
 
 ```python
 @njit(parallel=True)
-def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
+def image_numba(us, vs, ws, vis, ls, ms, ndashes, img):
     # Parallelise over each output pixel
     for lmpx in prange(ls.size):
         # Convert 1D to 2D pixel index
@@ -115,7 +115,7 @@ def image_numba(us, vs, ws, data, ls, ms, ndashes, img):
         l, m, ndash = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
 
         # Perform the sum for this one pixel over all of the visibility data
-        for u, v, w, datum in zip(us, vs, ws, data):
+        for u, v, w, datum in zip(us, vs, ws, vis):
             phase = 2 * np.pi * (u * l + v * m + w * ndash)
             img[lpx, mpx] += datum * np.exp(1j * phase)
 ```
@@ -145,7 +145,7 @@ The implementation is very similar to that used in Numba's prange loop. Some poi
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     lmpx = cuda.grid(1)
 
     if lmpx < img.size:
@@ -155,7 +155,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
         l, m, ndash = ls[lpx, mpx], ms[lpx, mpx], ndashes[lpx, mpx]
 
         # Perform sum over all of the visibility data for just one pixel
-        for u, v, w, datum in zip(us, vs, ws, data):
+        for u, v, w, datum in zip(us, vs, ws, vis):
             phase = 2 * np.pi * (u * l + v * m + w * ndash)
             img[lpx, mpx] += datum * complex(math.cos(phase), math.sin(phase))
 ```
@@ -165,7 +165,7 @@ We can benchmark this code using the following harness:
 ```python
 # Load the visibility data
 data = np.load("/fred/oz983/gpu-workshop/visibilities.npz")
-us, vs, ws, data = data["u"], data["v"], data["w"], data["data"]
+us, vs, ws, vis = data["u"], data["v"], data["w"], data["data"]
 
 # Initialise the image grid and the corresponding l, m and ndash coordinates
 lpx, mpx = np.mgrid[-350:350, -350:350]
@@ -174,8 +174,8 @@ ndashes = np.sqrt(1 - ls**2 - ms**2) - 1
 
 # Transfer data to the GPU
 img_d = cupy.zeros(ls.shape, dtype=complex)
-us_d, vs_d, ws_d, data_d, ls_d, ms_d, ndashes_d = map(
-    cupy.array, [us, vs, ws, data, ls, ms, ndashes]
+us_d, vs_d, ws_d, vis_d, ls_d, ms_d, ndashes_d = map(
+    cupy.array, [us, vs, ws, vis, ls, ms, ndashes]
 )
 
 nthreads = 256
@@ -183,7 +183,7 @@ nblocks = math.ceil(img_d.size / nthreads)
 
 result = cupyx.profiler.benchmark(
     lambda: kernel[nblocks, nthreads](
-        us_d, vs_d, ws_d, data_d, ls_d, ms_d, ndashes_d, img_d
+        us_d, vs_d, ws_d, vis_d, ls_d, ms_d, ndashes_d, img_d
     ),
     n_repeat=3,
     n_warmup=1,
@@ -269,7 +269,7 @@ Rewrite the kernel to use a local accumulator variable.
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     lmpx = cuda.grid(1)
 
     if lmpx < img.size:
@@ -280,7 +280,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
         # Perform sum over all of the visibility data for just one pixel
         pixel = complex(0)
-        for u, v, w, datum in zip(us, vs, ws, data):
+        for u, v, w, datum in zip(us, vs, ws, vis):
             phase = 2 * np.pi * (u * l + v * m + w * ndash)
             pixel += datum * complex(math.cos(phase), math.sin(phase))
 
@@ -333,7 +333,7 @@ Some helpful hints:
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     lmpx = cuda.grid(1)
 
     if lmpx < img.size:
@@ -344,7 +344,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
         # Perform sum over all of the visibility data for just one pixel
         pixel = np.complex64(0)
-        for u, v, w, datum in zip(us, vs, ws, data):
+        for u, v, w, datum in zip(us, vs, ws, vis):
             phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
             pixel += datum * complex(
                 cuda.libdevice.cosf(phase), cuda.libdevice.sinf(phase)
@@ -356,7 +356,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
 # Transfer data to the GPU at 32 bit float precision
 img_d = cupy.zeros(ls.shape, dtype=np.complex64)
-data_d = cupy.array(data, dtype=np.complex64)
+vis_d = cupy.array(vis, dtype=np.complex64)
 us_d, vs_d, ws_d, ls_d, ms_d, ndashes_d = map(
     lambda x: cupy.array(x, dtype=np.float32), [us, vs, ws, ls, ms, ndashes]
 )
@@ -401,7 +401,7 @@ After some experimentation, `fast_sincosf()` produces the fastest results and re
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     lmpx = cuda.grid(1)
 
     if lmpx < img.size:
@@ -412,7 +412,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
         # Perform sum over all of the visibility data for just one pixel
         pixel = np.complex64(0)
-        for u, v, w, datum in zip(us, vs, ws, data):
+        for u, v, w, datum in zip(us, vs, ws, vis):
             phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
             sin, cos = cuda.libdevice.fast_sincosf(phase)
             pixel += datum * complex(cos, sin)
@@ -436,7 +436,7 @@ Consider the phase term in our kernel and think about the number of operations p
 
 ```python
 # VERSION 1
-for u, v, w, datum in zip(us, vs, ws, data):
+for u, v, w, datum in zip(us, vs, ws, vis):
     phase = 2 * np.float32(np.pi) * (u * l + v * m + w * ndash)
     # [...]
 
@@ -444,7 +444,7 @@ for u, v, w, datum in zip(us, vs, ws, data):
 l *= 2 * np.float32(np.pi)
 m *= 2 * np.float32(np.pi)
 ndash *= 2 * np.float32(np.pi)
-for u, v, w, datum in zip(us, vs, ws, data):
+for u, v, w, datum in zip(us, vs, ws, vis):
     phase = (u * l + v * m + w * ndash)
     # [...]
 ```
@@ -461,7 +461,7 @@ Our revised kernel now looks like this:
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     lmpx = cuda.grid(1)
 
     if lmpx < img.size:
@@ -474,7 +474,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
         # Perform sum over all of the visibility data for just one pixel
         pixel = np.complex64(0)
-        for u, v, w, datum in zip(us, vs, ws, data):
+        for u, v, w, datum in zip(us, vs, ws, vis):
             phase = u * l + v * m + w * ndash
             sin, cos = cuda.libdevice.fast_sincosf(phase)
             pixel += datum * complex(cos, sin)
@@ -496,7 +496,7 @@ Let me remind you to always optimise with a concrete goal in mind. If this perfo
 
 We've previously used a local accumulation variable to minimise _writes_ to global memory. In this section, however, we're going to use shared memory to minimise _reads_ from global memory.
 
-**Our problem is that each kernel needs to read through the entirety of each of the `us`, `vs`, `ws` and `data` arrays.** There's a lot of redundancy here: since each thread is fully independent, they are each reading the same data, from start to end. But what if we could somehow share the burden of these global memory reads amongst the threads?
+**Our problem is that each kernel needs to read through the entirety of each of the `us`, `vs`, `ws` and `vis` arrays.** There's a lot of redundancy here: since each thread is fully independent, they are each reading the same data, from start to end. But what if we could somehow share the burden of these global memory reads amongst the threads?
 
 A standard pattern in kernel design is for each thread in a thread block to cooperate by using shared memory as an intermediate cache. Remember that shared memory is much faster than global memory, and is visible from each thread within a thread block. In doing so, global reads reduce by a factor equal to threads per block. For a thread block with 256 threads, this will reduce global memory reads by a factor of 256.
 
@@ -596,14 +596,14 @@ Finally: there's a special exception. If every thread accesses the same shared m
 
 ::: challenge
 
-Modify the kernel to minimise global memory reads by caching the global values from `us`, `vs`, `ws`, and `data`.
+Modify the kernel to minimise global memory reads by caching the global values from `us`, `vs`, `ws`, and `vis`.
 
 Start by creating shared memory arrays at the top of the kernel:
 
 ```python
 NTHREADS = 256
 uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
-data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+vis_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
 ```
 Then proceed to complete the remaining TODOs.
 
@@ -611,7 +611,7 @@ Then proceed to complete the remaining TODOs.
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     # TODO:
     # Add the shared memory caches here
 
@@ -626,7 +626,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
     pixel = np.complex64(0)
 
     # Extract input data in batches of NTHREADS items
-    N = data.size
+    N = vis.size
     for offset in range(0, N, NTHREADS):
         # TODO:
         # 1. Fetch data and populate the caches
@@ -643,7 +643,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                 uvw_cache[j, 2] * ndash
             )
             sin, cos = cuda.libdevice.fast_sincosf(phase)
-            pixel += data_cache[j] * complex(cos, sin)
+            pixel += vis_cache[j] * complex(cos, sin)
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()
@@ -658,10 +658,10 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     NTHREADS = 256
     uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
-    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+    vis_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
 
     lmpx = cuda.grid(1)
 
@@ -678,16 +678,16 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
     pixel = np.complex64(0)
 
     # Extract input data in batches of NTHREADS items
-    N = data.size
+    N = vis.size
     for offset in range(0, N, NTHREADS):
         # Fetch data and populate cache
         i = offset + cuda.threadIdx.x
         if i < N:
             uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
-            data_cache[cuda.threadIdx.x] = data[i]
+            vis_cache[cuda.threadIdx.x] = vis[i]
         else:
             uvw_cache[cuda.threadIdx.x] = 0, 0, 0
-            data_cache[cuda.threadIdx.x] = 0
+            vis_cache[cuda.threadIdx.x] = 0
 
         # Wait for cache to be populated
         cuda.syncthreads()
@@ -700,7 +700,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                 uvw_cache[j, 2] * ndash
             )
             sin, cos = cuda.libdevice.fast_sincosf(phase)
-            pixel += data_cache[j] * complex(cos, sin)
+            pixel += vis_cache[j] * complex(cos, sin)
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()
@@ -826,10 +826,10 @@ And then complete the remainder of the TODOs:
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     NTHREADS = 256
     uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
-    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+    vis_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
 
     # TODO:
     # Allocate the local arrays here
@@ -841,16 +841,16 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             # Initialise the values of both of the static arrays
 
     # Extract input data in batches of NTHREADS items
-    N = data.size
+    N = vis.size
     for offset in range(0, N, NTHREADS):
         # Fetch data and populate cache
         i = offset + cuda.threadIdx.x
         if i < N:
             uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
-            data_cache[cuda.threadIdx.x] = data[i]
+            vis_cache[cuda.threadIdx.x] = vis[i]
         else:
             uvw_cache[cuda.threadIdx.x] = 0, 0, 0
-            data_cache[cuda.threadIdx.x] = 0
+            vis_cache[cuda.threadIdx.x] = 0
 
         # Wait for cache to be populated
         cuda.syncthreads()
@@ -863,7 +863,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                     # Compute phase using local arrays
                 )
                 sin, cos = cuda.libdevice.fast_sincosf(phase)
-                pixels[i] += data_cache[j] * complex(cos, sin)
+                pixels[i] += vis_cache[j] * complex(cos, sin)
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()
@@ -880,10 +880,10 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     NTHREADS = 256
     uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
-    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+    vis_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
 
     THREAD_COARSEN = 3
     lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
@@ -903,16 +903,16 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             pixels[i] = np.complex64(0)
 
     # Extract input data in batches of NTHREADS items
-    N = data.size
+    N = vis.size
     for offset in range(0, N, NTHREADS):
         # Fetch data and populate cache
         i = offset + cuda.threadIdx.x
         if i < N:
             uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
-            data_cache[cuda.threadIdx.x] = data[i]
+            vis_cache[cuda.threadIdx.x] = vis[i]
         else:
             uvw_cache[cuda.threadIdx.x] = 0, 0, 0
-            data_cache[cuda.threadIdx.x] = 0
+            vis_cache[cuda.threadIdx.x] = 0
 
         # Wait for cache to be populated
         cuda.syncthreads()
@@ -926,7 +926,7 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                     uvw_cache[j, 2] * lmns[i, 2]
                 )
                 sin, cos = cuda.libdevice.fast_sincosf(phase)
-                pixels[i] += data_cache[j] * complex(cos, sin)
+                pixels[i] += vis_cache[j] * complex(cos, sin)
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()
@@ -951,7 +951,7 @@ for j in range(NTHREADS):
             w * lmns[i, 2]
         )
         sin, cos = cuda.libdevice.fast_sincosf(phase)
-        pixels[i] += data_cache[j] * complex(cos, sin)
+        pixels[i] += vis_cache[j] * complex(cos, sin)
 ```
 
 This hot loop optimisation avoids unnecessary accesses to shared memory by instead placing those values into registers which are faster. However, at least for my environment, this version turned out to be actually slower (and I don't know why!). In both versions, the compiler _should_ recognise that these are in fact the same pattern and that it should compile to whichever method is faster, but this is clearly a case where the compiler fails us. As always, benchmark ruthlessly.
@@ -973,7 +973,7 @@ The CUDA compiler _should_ make an effort to automatically insert FMA instructio
 Let's consider the expression from our inner loop:
 
 ```python
-pixels[i] += data_cache[j] * complex(cos, sin)
+pixels[i] += vis_cache[j] * complex(cos, sin)
 ```
 
 How would we write this as an FMA instruction? The first and most immediate problem we encounter here is that `cuda.fma` is defined strictly for `np.float32` and `np.float64` types, whereas here we are dealing with complex numbers. Let's expand this a little into real and imaginary components:
@@ -996,7 +996,7 @@ Check that this makes sense to you!
 
 ::: challenge
 
-We are going to rewrite `pixels[i] += data_cache[j] * complex(cos, sin)` as a sequence of 4 FMA instructions.
+We are going to rewrite `pixels[i] += vis_cache[j] * complex(cos, sin)` as a sequence of 4 FMA instructions.
 
 There's a small problem here. Whilst we can retrieve the real and imaginary components of a complex number with the `.real` and `.imag` attributes respectively, we aren't able to modify these values. To simplify the presentation here, we will create the accumulation array `pixel` as 2D array, with the second dimension corresponding to the real and imaginary components:
 
@@ -1020,10 +1020,10 @@ Finally, we arrive at a kernel that looks like that shown below.
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     NTHREADS = 256
     uvw_cache = cuda.shared.array((NTHREADS, 3), dtype=np.float32)
-    data_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
+    vis_cache = cuda.shared.array(NTHREADS, dtype=np.complex64)
 
     THREAD_COARSEN = 3
     lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
@@ -1043,16 +1043,16 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
             pixels[i] = 0, 0
 
     # Extract input data in batches of NTHREADS items
-    N = data.size
+    N = vis.size
     for offset in range(0, N, NTHREADS):
         # Fetch data and populate cache
         i = offset + cuda.threadIdx.x
         if i < N:
             uvw_cache[cuda.threadIdx.x] = us[i], vs[i], ws[i]
-            data_cache[cuda.threadIdx.x] = data[i]
+            vis_cache[cuda.threadIdx.x] = vis[i]
         else:
             uvw_cache[cuda.threadIdx.x] = 0, 0, 0
-            data_cache[cuda.threadIdx.x] = 0
+            vis_cache[cuda.threadIdx.x] = 0
 
         # Wait for cache to be populated
         cuda.syncthreads()
@@ -1066,10 +1066,10 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
                     cuda.fma(uvw_cache[j, 1], lmns[i, 1], uvw_cache[j, 2] * lmns[i, 2]),
                 )
                 sin, cos = cuda.libdevice.fast_sincosf(phase)
-                pixels[i, 0] = cuda.fma(data_cache[j].real, cos, pixels[i, 0])
-                pixels[i, 0] = cuda.fma(data_cache[j].imag, -sin, pixels[i, 0])
-                pixels[i, 1] = cuda.fma(data_cache[j].real, sin, pixels[i, 1])
-                pixels[i, 1] = cuda.fma(data_cache[j].imag, cos, pixels[i, 1])
+                pixels[i, 0] = cuda.fma(vis_cache[j].real, cos, pixels[i, 0])
+                pixels[i, 0] = cuda.fma(vis_cache[j].imag, -sin, pixels[i, 0])
+                pixels[i, 1] = cuda.fma(vis_cache[j].real, sin, pixels[i, 1])
+                pixels[i, 1] = cuda.fma(vis_cache[j].imag, cos, pixels[i, 1])
 
         # Don't start updating cache until all threads are done
         cuda.syncthreads()
@@ -1091,7 +1091,7 @@ I hesitated to include this final section as it in fact doesn't substantially im
 
 However, I do want you to be aware of a few more intrinsics that might come in handy for your particular use case. Namely, there is a set of warp level intrinsics that let you move data _directly between registers_ amongst members of a warp (being the set of 32 threads that execute in lockstep). Normally, these intrinsics might be used as part of a reduction operation, or they might be used to broadcast a single value to the other members of the warp. Warp communication should usually be slightly faster than communicating values via shared memory.
 
-We're going to use these intrinsics to replace our shared memory cache. Instead of using shared memory, each warp member will load a unique (and successive) value of each of $u, v, w$ and $data$. But then we will have each thread "pass the parcel" 32 times using `cuda.shfl_sync()`, effectively daisychaining the input data amongst the warp, before they continue by reading in the next chunk of input data.
+We're going to use these intrinsics to replace our shared memory cache. Instead of using shared memory, each warp member will load a unique (and successive) value of each of $u, v, w$ and $vis$. But then we will have each thread "pass the parcel" 32 times using `cuda.shfl_sync()`, effectively daisychaining the input data amongst the warp, before they continue by reading in the next chunk of input data.
 
 `cuda.shfl_sync()` accepts 3 parameters:
 
@@ -1133,7 +1133,7 @@ Note that the threadsize for this kernel can be set to any arbitrary multiple of
 
 ```python
 @cuda.jit
-def kernel(us, vs, ws, data, ls, ms, ndashes, img):
+def kernel(us, vs, ws, vis, ls, ms, ndashes, img):
     THREAD_COARSEN = 3
     lmns = cuda.local.array((THREAD_COARSEN, 3), np.float32)
     pixels = cuda.local.array((THREAD_COARSEN, 2), np.float32)
@@ -1157,13 +1157,13 @@ def kernel(us, vs, ws, data, ls, ms, ndashes, img):
     nextwarpid = (cuda.threadIdx.x + 1) % WARPSIZE
 
     # Extract input data in batches of WARPSIZE items
-    N = data.size
+    N = vis.size
     for offset in range(0, N, WARPSIZE):
         # Each warp member loads its respective visibility data
         i = offset + warpid
         if i < N:
             u, v, w = us[i], vs[i], ws[i]
-            datum = data[i]
+            datum = vis[i]
         else:
             u, v, w, = np.float32(0), np.float32(0), np.float32(0)
             datum = np.complex64(0)
