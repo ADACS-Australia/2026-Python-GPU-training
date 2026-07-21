@@ -363,7 +363,7 @@ xs = np.cos(2 * (xs - 1))
 # This is equivalent to three passes of the array `xs`, e.g.
 tmp1 = np.empty_like(xs)
 for i in range(len(xs)):
-    tmp1[i] = xs[i] + 1
+    tmp1[i] = xs[i] - 1
 
 tmp2 = np.empty_like(xs)
 for i in range(len(xs)):
@@ -375,7 +375,7 @@ for i in range(len(xs)):
 # But, if we could fuse the operations, this would be equivalent
 # to a single pass of the array `xs` with no intermediate arrays
 for i in range(len(xs)):
-    xs[i] = np.cos(2 * (xs[i] + 1))
+    xs[i] = np.cos(2 * (xs[i] - 1))
 ```
 
 This functionality is experimental, and it comes with some limitations:
