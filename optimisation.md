@@ -130,7 +130,7 @@ Even with only a fifthieth of the data we start to see something resembling the 
 
 Now that we have a working CPU version, the next step is to extract the inner loop as a standalone kernel and configure an associated grid to work on the GPU.
 
-Try implementing a simple GPU kernel implementation using the `@numba.cuda` decorator.
+Try implementing a simple GPU kernel implementation using the `@cuda.jit` decorator.
 
 **Note:** As with the DFT function we have worked on earlier, you will need to rewrite the imaginary exponential using the identity $e^{i \phi} = \cos{\phi} + i \sin{\phi}$.
 
