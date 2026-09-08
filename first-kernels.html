@@ -323,7 +323,7 @@
       <div class="d-none d-sm-none d-md-block">
         <a class="chapter-link" href="CuPy.html" rel="prev">
           <i aria-hidden="true" class="small-arrow" data-feather="arrow-left"></i>
-          Previous: CuPy: A Numpy-like
+          Previous: CuPy: A Numpy-like GPU experience
         </a>
         <a class="chapter-link float-end" href="optimisation.html" rel="next">
           Next: Optimisation...
@@ -508,11 +508,11 @@ None).</strong> Kernels do not return values, and their “outputs” must
 be provided as a mutable input. In this case, the output is
 <code>zs</code> which must be allocated outside the kernel and passed as
 an argument to the kernel.</li>
-</ul><div id="discussion1" class="callout discussion">
+</ul><div id="challenge1" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -665,11 +665,11 @@ functions:</p>
 </ul><p>You should be comfortable with both versions as you’ll see them used
 interchangably. Additionally, the extra information about where a thread
 lies within its block will prove useful in later kernels.</p>
-<div id="discussion2" class="callout discussion">
+<div id="challenge2" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -721,11 +721,11 @@ of the GPU, also known as <em>occupancy</em>.</p>
 especially large, the kernel may exceed the shared resources of the SM,
 for example its register space. It’s rare that thread counts greater
 than 1024 are useful or performant.</p>
-<div id="discussion3" class="callout discussion">
+<div id="challenge3" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -782,11 +782,11 @@ configuration.</p>
 divergence occurs in exactly one warp: the warp whose index range
 breaches the length of the underlying arrays.</p>
 </section><section><h2 class="section-heading" id="multiplier">Multiplier<a class="anchor" aria-label="anchor" href="#multiplier"></a></h2>
-<hr class="half-width"><div id="discussion4" class="callout discussion">
+<hr class="half-width"><div id="challenge4" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -879,11 +879,11 @@ one (or both) of the input matrices? Is it an element of the output
 matrix? Is it a row or column?</li>
 <li>How should we configure our grid? What is the span of the grid and
 what is its dimension?</li>
-</ul><div id="discussion5" class="callout discussion">
+</ul><div id="challenge5" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -951,11 +951,11 @@ j\)</span>.</p>
 </div>
 </div>
 </div>
-<div id="discussion6" class="callout discussion">
+<div id="challenge6" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -1033,11 +1033,11 @@ why?</p>
 </div>
 </div>
 </div>
-<div id="discussion7" class="callout discussion">
+<div id="challenge7" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -1099,11 +1099,11 @@ n}{N}}\)</span></p>
 <pre class="sourceCode python" tabindex="0"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" tabindex="-1" aria-label="code-block-17-1"></a>xs <span class="op">=</span> np.random.normal(size<span class="op">=</span>N) <span class="op">+</span> <span class="ot">1j</span> <span class="op">*</span> np.random.normal(size<span class="op">=</span>N)</span></code></pre>
 </div>
 <p>for varying values of N.</p>
-<div id="part-1" class="callout discussion">
+<div id="part-1" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div id="part-1" class="callout-inner">
 <h3 class="callout-title">Part 1</h3>
 <div class="callout-content">
@@ -1137,11 +1137,11 @@ stage, set <code>N</code> to be small (~100).</p>
 </div>
 </div>
 </div>
-<div id="part-2" class="callout discussion">
+<div id="part-2" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div id="part-2" class="callout-inner">
 <h3 class="callout-title">Part 2</h3>
 <div class="callout-content">
@@ -1184,11 +1184,11 @@ parallel? What is the unit of parallelisation?</p>
 </div>
 </div>
 </div>
-<div id="part-3" class="callout discussion">
+<div id="part-3" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div id="part-3" class="callout-inner">
 <h3 class="callout-title">Part 3</h3>
 <div class="callout-content">
@@ -1381,7 +1381,7 @@ any links that you are not going to use.
       <div class="d-none d-sm-none d-md-block">
         <a class="chapter-link" href="CuPy.html" rel="prev">
           <i aria-hidden="true" class="small-arrow" data-feather="arrow-left"></i>
-          Previous: CuPy: A Numpy-like
+          Previous: CuPy: A Numpy-like GPU experience
         </a>
         <a class="chapter-link float-end" href="optimisation.html" rel="next">
           Next: Optimisation...
@@ -1413,7 +1413,7 @@ any links that you are not going to use.
         <p>Materials licensed under <a href="LICENSE.html">CC-BY 4.0</a> by the authors</p>
 
         <p>Template licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" class="external-link">CC-BY 4.0</a> by <a href="https://carpentries.org/" class="external-link">The Carpentries</a></p>
-        <p>Built with <a href="https://github.com/carpentries/sandpaper/tree/" class="external-link">sandpaper (0.20.2)</a>, <a href="https://github.com/carpentries/pegboard/tree/" class="external-link">pegboard (0.7.9)</a>, and <a href="https://github.com/adacs-australia/varnish/tree/3d0f995f5beafe80d7b61fc49da22ab66f29241c" class="external-link">varnish (1.0.9)</a></p>
+        <p>Built with <a href="https://github.com/carpentries/sandpaper/tree/" class="external-link">sandpaper (0.21.0)</a>, <a href="https://github.com/carpentries/pegboard/tree/" class="external-link">pegboard (0.7.9)</a>, and <a href="https://github.com/adacs-australia/varnish/tree/3d0f995f5beafe80d7b61fc49da22ab66f29241c" class="external-link">varnish (1.0.9)</a></p>
 		</div>
 		</footer></div> <!-- / div.container -->
 	<div id="to-top">
@@ -1434,9 +1434,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://ADACS-Australia.github.io/2026-Python-GPU-training/first-kernels.html",
   "identifier": "https://ADACS-Australia.github.io/2026-Python-GPU-training/first-kernels.html",
-  "dateCreated": "2026-07-22",
+  "dateCreated": "2026-09-01",
   "dateModified": "2026-07-15",
-  "datePublished": "2026-08-25"
+  "datePublished": "2026-09-08"
 }
 
   </script><script>

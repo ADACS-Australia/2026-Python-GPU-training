@@ -327,7 +327,7 @@
           Previous: A GPU Deep Dive
         </a>
         <a class="chapter-link float-end" href="../instructor/first-kernels.html" rel="next">
-          Next: Writing your first...
+          Next: Writing your first GPU kernels...
           <i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i>
         </a>
       </div>
@@ -584,11 +584,11 @@ immediately, whilst the GPU continued to execute in the background.</p>
 <p>For me, benchmarking shows 0.008 ms recorded by the CPU, and 1.7 ms
 on the GPU — both very similar to what we measured earlier before and
 after we added the explicit synchronisation.</p>
-<div id="discussion1" class="callout discussion">
+<div id="challenge1" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -696,11 +696,11 @@ true).</p>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1" aria-label="code-block-10-2"></a>    <span class="co"># Matrix multiplication using broadcasting</span></span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1" aria-label="code-block-10-3"></a>    <span class="cf">return</span> (A[:, :, <span class="va">None</span>] <span class="op">*</span> B[<span class="va">None</span>, :, :]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span></code></pre>
 </div>
-<div id="discussion2" class="callout discussion">
+<div id="challenge2" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -763,11 +763,11 @@ GPU arrays.</p>
 </div>
 </div>
 </div>
-<div id="discussion3" class="callout discussion">
+<div id="challenge3" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -892,11 +892,11 @@ code.</p>
 </div>
 </div>
 </div>
-<div id="discussion4" class="callout discussion">
+<div id="challenge4" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -989,11 +989,11 @@ notation</a>, e.g.:</p>
 <span id="cb17-6"><a href="#cb17-6" tabindex="-1" aria-label="code-block-17-6"></a></span>
 <span id="cb17-7"><a href="#cb17-7" tabindex="-1" aria-label="code-block-17-7"></a>cupy.testing.assert_allclose(C, A <span class="op">@</span> B)</span></code></pre>
 </div>
-<div id="discussion5" class="callout discussion">
+<div id="challenge5" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -1212,11 +1212,11 @@ example:</p>
 </div>
 </div>
 </div>
-<div id="discussion6" class="callout discussion">
+<div id="challenge6" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -1310,11 +1310,11 @@ streams):</p>
 <span id="cb28-10"><a href="#cb28-10" tabindex="-1" aria-label="code-block-28-10"></a>    arr <span class="op">=</span> cupy.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>])</span>
 <span id="cb28-11"><a href="#cb28-11" tabindex="-1" aria-label="code-block-28-11"></a>    <span class="bu">print</span>(arr.device)  <span class="co"># &lt;CUDA Device 3&gt;</span></span></code></pre>
 </div>
-<div id="discussion7" class="callout discussion">
+<div id="challenge7" class="callout challenge">
 <div class="callout-square">
-<i class="callout-icon" data-feather="message-circle"></i>
+<i class="callout-icon" data-feather="zap"></i>
 </div>
-<span class="callout-header">Discussion</span>
+<span class="callout-header">Challenge</span>
 <div class="callout-inner">
 <h3 class="callout-title">Challenge</h3>
 <div class="callout-content">
@@ -1361,7 +1361,7 @@ any links that you are not going to use.
           Previous: A GPU Deep Dive
         </a>
         <a class="chapter-link float-end" href="../instructor/first-kernels.html" rel="next">
-          Next: Writing your first...
+          Next: Writing your first GPU kernels...
           <i aria-hidden="true" class="small-arrow" data-feather="arrow-right"></i>
         </a>
       </div>
@@ -1390,7 +1390,7 @@ any links that you are not going to use.
         <p>Materials licensed under <a href="LICENSE.html">CC-BY 4.0</a> by the authors</p>
 
         <p>Template licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" class="external-link">CC-BY 4.0</a> by <a href="https://carpentries.org/" class="external-link">The Carpentries</a></p>
-        <p>Built with <a href="https://github.com/carpentries/sandpaper/tree/" class="external-link">sandpaper (0.20.2)</a>, <a href="https://github.com/carpentries/pegboard/tree/" class="external-link">pegboard (0.7.9)</a>, and <a href="https://github.com/adacs-australia/varnish/tree/3d0f995f5beafe80d7b61fc49da22ab66f29241c" class="external-link">varnish (1.0.9)</a></p>
+        <p>Built with <a href="https://github.com/carpentries/sandpaper/tree/" class="external-link">sandpaper (0.21.0)</a>, <a href="https://github.com/carpentries/pegboard/tree/" class="external-link">pegboard (0.7.9)</a>, and <a href="https://github.com/adacs-australia/varnish/tree/3d0f995f5beafe80d7b61fc49da22ab66f29241c" class="external-link">varnish (1.0.9)</a></p>
 		</div>
 		</footer></div> <!-- / div.container -->
 	<div id="to-top">
@@ -1411,9 +1411,9 @@ any links that you are not going to use.
   "creativeWorkStatus": "active",
   "url": "https://ADACS-Australia.github.io/2026-Python-GPU-training/instructor/CuPy.html",
   "identifier": "https://ADACS-Australia.github.io/2026-Python-GPU-training/instructor/CuPy.html",
-  "dateCreated": "2026-07-22",
+  "dateCreated": "2026-09-01",
   "dateModified": "2026-07-21",
-  "datePublished": "2026-08-25"
+  "datePublished": "2026-09-08"
 }
 
   </script><script>
